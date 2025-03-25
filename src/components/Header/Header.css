@@ -1,0 +1,33 @@
+.header{
+  position: relative;
+}
+
+.logo{
+  position: absolute;
+  top:25px;
+  left: 200px;
+  width: 136px;
+  height: 142.59px;
+  z-index: 10;
+}
+
+@media (max-width: 1253px) {
+  .logo {
+    left                :100px;
+  }
+
+}
+
+@media (max-width: 1055px) {
+
+  .header {
+    display: flex;
+    height: 300px;
+    flex-direction: column;
+
+  }
+  .logo{
+    position:static;
+  }
+
+}

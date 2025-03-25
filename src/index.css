@@ -1,9 +1,9 @@
 @import "tailwindcss";
 
-#root{
-    display: grid;
-    grid-template-rows: auto auto 1fr auto;
-    min-height: 100dvh;
-
-
+#root {
+    display              : grid;
+    justify-content: center;
+    grid-template-rows   : auto auto 1fr auto;
+    grid-template-columns: 1fr;
+    min-height           : 100dvh;
 }

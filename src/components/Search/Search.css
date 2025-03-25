@@ -1,0 +1,14 @@
+.search{
+  position:absolute;
+  top:15px;
+  right: 180px;
+}
+
+@media (max-width: 1055px) {
+
+  .search {
+    position: static;
+    justify-content: center;
+  }
+
+}

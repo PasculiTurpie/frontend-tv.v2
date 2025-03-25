@@ -17,8 +17,7 @@ const Card = () => {
                     <img
                         className="card-logo"
                         src="https://i.ibb.co/KX2gxHz/Dreamworks.jpg"
-                        alt=""
-                        srcset=""
+                        alt="name"
                     />
                 </div>
                 <div className="card-footer">
