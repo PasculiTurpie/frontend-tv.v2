@@ -5,9 +5,7 @@ const Card = () => {
         <>
             <div className="card ">
                 <div className="card-header">
-                    <div className="card-header__title">
-                        <h2>AZ Mundo Internacional</h2>
-                    </div>
+                    <h2 className="card-header__title">AZ Mundo Internacional</h2>
                 </div>
                 <div className="card-number">
                     Sur:<span className="text-sky-600"> 18</span>

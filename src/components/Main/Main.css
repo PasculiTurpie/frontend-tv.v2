@@ -31,7 +31,7 @@
 @media (max-width: 724px) {
     .main-container {
         grid-template-columns: repeat(1, 1fr);
-        width                : 50%;
+        width                : 70%;
     }
 
 }
