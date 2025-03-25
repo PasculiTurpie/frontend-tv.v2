@@ -9,7 +9,7 @@ const Header = () => {
       <div className="bg-yellow-500 h-1 w-full"></div>
       <div className="header text-4xl font-bold bg-sky-700 h-30 flex justify-center items-center">
         <img className="logo" src={Logo} />
-        <p className="text-white text-center">Sistema de gestión de señales</p>
+        <p className="text-white text-center p-8">Sistema de gestión de señales</p>
         <MenuHmburg />
       </div>
     </>
