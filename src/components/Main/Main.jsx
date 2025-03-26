@@ -9,6 +9,13 @@ const Main = () => {
         <>
             <div className="main-container">
                 <SignalFlow />
+               {/*  <Card />
+                <Card />
+                <Card />
+                <Card />
+                <Card />
+                <Card />
+                <Card /> */}
             </div>
         </>
     );
