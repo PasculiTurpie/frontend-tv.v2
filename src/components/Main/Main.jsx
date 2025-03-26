@@ -1,26 +1,14 @@
 import React from "react";
-import Card from "../Card/Card";
+/* import Card from "../Card/Card"; */
 import './Main.css'
+import SignalFlow from "../SignalFlow/SignalFlow.jsx";
 
 
 const Main = () => {
     return (
         <>
             <div className="main-container">
-                <Card />
-                <Card />
-                <Card />
-                <Card />
-                <Card />
-                <Card />
-                <Card />
-                <Card />
-                <Card />
-                <Card />
-                <Card />
-                <Card />
-                <Card />
-              
+                <SignalFlow />
             </div>
         </>
     );

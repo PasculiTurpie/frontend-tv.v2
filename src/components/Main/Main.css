@@ -1,4 +1,4 @@
-.main-container {
+/* .main-container {
     display: grid;
     align-items: center;
     justify-content: center;
@@ -10,7 +10,7 @@
     padding-bottom: 250px;
     margin: auto;
     place-items: center;
-}
+} */
 
 @media (max-width: 1056px) {
     .main-container {
