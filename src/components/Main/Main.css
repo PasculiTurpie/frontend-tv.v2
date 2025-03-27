@@ -11,6 +11,10 @@
     margin: auto;
     place-items: center;
 } */
+ .main-container{
+    display: flex;
+    justify-content: center;
+ }
 
 @media (max-width: 1056px) {
     .main-container {

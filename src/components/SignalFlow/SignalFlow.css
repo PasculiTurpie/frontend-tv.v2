@@ -10,3 +10,14 @@
 .react-flow__pane{
   width: 90%;
 }
+.label{
+  font-size: 14px;
+  font-weight: bold;
+}
+.react-flow__edge{
+  fill: blue;
+}
+.react-flow__edge-text{
+  font-size: 14px;
+  font-weight: bold;
+}

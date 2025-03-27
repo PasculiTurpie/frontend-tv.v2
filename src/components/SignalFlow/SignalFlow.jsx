@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from "react";
-import ReactFlow, { Background, Controls, Handle } from "reactflow";
+import ReactFlow, { Background, BackgroundVariant, Controls, Handle } from "reactflow";
 import "reactflow/dist/style.css";
 import CustomEdge from './CustomEdge';
 import './SignalFlow.css'
 
 const nodeImages = {
-  satelite: "/public/images/satelite.png",
+  satelite: "/public/images/parabolic.png",
   ird: "/public/images/ird_motorola.png",
   switch: "/public/images/switch.png",
   dcm: "/public/images/dcm.png",
@@ -16,21 +16,21 @@ const nodeImages = {
 
 const edgeOptions = {
   animated: true,
-  style: { stroke: "#ff0072", strokeWidth: 2 },
+  style: { stroke: "#8e44ad ", strokeWidth: 2},
   customEdge: CustomEdge
 };
 
 const getNodeType = (type) => {
 
   return ({ data }) => (
-    <div className={'container-flow'} style={{ display:"flex", flexDirection:"column", justifyContent:"center" }}>
-      <a href={data.url} target="_blank" style={{ textDecoration: 'none' }}>
-        <div style={{ padding: 10}}>{data.url}</div>
+    <div className={'container-flow'} style={{ textAlign: "center", display: "flex", flexDirection: "column", justifyContent: "center" }}>
+      <a href={data.url} target="_blank" style={{ textDecoration: 'none', color: "#21618c" }}>
+        <div>{data.url}</div>
       </a>
-      <img style={{margin:"0 auto"}} src={nodeImages[type]} alt={type} width={100} />
-      <div>{data.label}{data.id}</div>
-      <Handle type="target" position="left" style={{ background: '#fff' }} />
-      <Handle type="source" position="right" style={{ background: '#fff' }} />
+      <img style={{ margin: "0 auto" }} src={nodeImages[type]} alt={type} width={100} />
+      <div className='label' style={{ color: "#424949" }}>{data.label}</div>
+      <Handle type="target" position="left" style={{ background: '#145a32' }} />
+      <Handle type="source" position="right" style={{ background: '#4a235a' }} />
     </div>
   );
 };
@@ -50,12 +50,16 @@ const FlowDiagram = () => {
   const [edges, setEdges] = useState([]);
   const [selectedNodeId, setSelectedNodeId] = useState(null);
 
-  const onEdgeClick = (e, node) => {
-    const parentId = node.parentNode || node.id; 
+  const onNodeClick = (e, node) => {
+    const parentId = node.parentNode || node.id;
     setSelectedNodeId(parentId);
     console.log("ID del nodo seleccionado:", parentId);
-  
+
   };
+
+  const onEdgeClick = () => {
+    alert("onEdgeClick");
+  }
 
   useEffect(() => {
     fetch("/public/nodes.json")
@@ -67,9 +71,9 @@ const FlowDiagram = () => {
   }, []);
 
   return (
-    <div className="viewport-flow" style={{ width: '90%', height: "500px" }}>
-      <ReactFlow nodes={nodes} edges={edges} nodeTypes={nodeTypes} defaultEdgeOptions={edgeOptions} onNodeClick={onEdgeClick} >
-        <Background />
+    <div className="viewport-flow" style={{ width: '90%', height: "360px" }}>
+      <ReactFlow style={{ backgroundColor: "#fff" }} nodes={nodes} edges={edges} nodeTypes={nodeTypes} defaultEdgeOptions={edgeOptions} onNodeClick={onNodeClick} onEdgeClick={onEdgeClick} fitView={true}>
+        <Background color="#f1f" />
         <Controls />
       </ReactFlow>
       {selectedNodeId && <p>ID seleccionado: {selectedNodeId}</p>}
