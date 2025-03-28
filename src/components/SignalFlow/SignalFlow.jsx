@@ -29,11 +29,16 @@ const getNodeType = (type) => {
 
   return ({ data }) => (
     <div className={'container-flow'} style={{ textAlign: "center", display: "flex", flexDirection: "column", justifyContent: "center" }}>
-      <a href={data.url} target="_blank" style={{ textDecoration: 'none', color: "#21618c" }}>
-        <div>{data.url}</div>
+      <a className="link" href={data.url} target="_blank" style={{ textDecoration: 'none'}}>
+        {data.url}
       </a>
+<<<<<<< HEAD
       <img anchorSelect="my-anchor-element-class" style={{ margin: "0 auto" }} src={nodeImages[type]} alt={type} width={100} />
       <div className='label' style={{ color: "#424949" }}>{data.label}</div>
+=======
+      <img style={{ margin: "0 auto" }} src={nodeImages[type]} alt={type} width={100} />
+      <div className='label' style={{ color: "#424949"}}>{data.label}</div>
+>>>>>>> 59a25928a787a3f428f5dbd70eca2ce5224e268b
       <Handle type="target" position="left" style={{ background: '#145a32' }} />
       <Handle type="source" position="right" style={{ background: '#4a235a' }} />
     </div>
