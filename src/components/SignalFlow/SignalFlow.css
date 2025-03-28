@@ -15,9 +15,14 @@
   font-weight: bold;
 }
 .react-flow__edge{
-  fill: blue;
+  fill: #3e3a77;
 }
 .react-flow__edge-text{
+  font-size: 14px;
+  font-weight: bold;
+}
+.link{
+  color:#0069A8;
   font-size: 14px;
   font-weight: bold;
 }
