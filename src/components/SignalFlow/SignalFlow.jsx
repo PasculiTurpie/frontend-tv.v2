@@ -2,7 +2,12 @@ import React, { useState, useEffect } from "react";
 import ReactFlow, { Background, BackgroundVariant, Controls, Handle } from "reactflow";
 import "reactflow/dist/style.css";
 import CustomEdge from './CustomEdge';
-import './SignalFlow.css'
+import './SignalFlow.css';
+
+
+
+
+
 
 const nodeImages = {
   satelite: "/public/images/parabolic.png",
@@ -27,7 +32,7 @@ const getNodeType = (type) => {
       <a href={data.url} target="_blank" style={{ textDecoration: 'none', color: "#21618c" }}>
         <div>{data.url}</div>
       </a>
-      <img style={{ margin: "0 auto" }} src={nodeImages[type]} alt={type} width={100} />
+      <img anchorSelect="my-anchor-element-class" style={{ margin: "0 auto" }} src={nodeImages[type]} alt={type} width={100} />
       <div className='label' style={{ color: "#424949" }}>{data.label}</div>
       <Handle type="target" position="left" style={{ background: '#145a32' }} />
       <Handle type="source" position="right" style={{ background: '#4a235a' }} />
@@ -71,13 +76,18 @@ const FlowDiagram = () => {
   }, []);
 
   return (
-    <div className="viewport-flow" style={{ width: '90%', height: "360px" }}>
+    <>
+    <h1>Diagrama</h1>
+    <div className="viewport-flow" style={{ width: '90%', height: "230px" }}>
       <ReactFlow style={{ backgroundColor: "#fff" }} nodes={nodes} edges={edges} nodeTypes={nodeTypes} defaultEdgeOptions={edgeOptions} onNodeClick={onNodeClick} onEdgeClick={onEdgeClick} fitView={true}>
         <Background color="#f1f" />
         <Controls />
       </ReactFlow>
       {selectedNodeId && <p>ID seleccionado: {selectedNodeId}</p>}
     </div>
+
+
+    </>
   );
 };
 

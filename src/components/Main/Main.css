@@ -13,10 +13,13 @@
 } */
  .main-container{
     display: flex;
-    justify-content: center;
+    flex-direction: column;
+    align-items: center;  /* Centra el contenido verticalmente */
+    justify-content: center; /* Centra el contenido horizontalmente */
+    text-align: center; /* Opcional, para centrar texto */
  }
 
-@media (max-width: 1056px) {
+/* @media (max-width: 1056px) {
     .main-container {
         grid-template-columns: repeat(3, 1fr);
         width: 80%;
@@ -38,4 +41,4 @@
         width                : 70%;
     }
 
-}
+} */
