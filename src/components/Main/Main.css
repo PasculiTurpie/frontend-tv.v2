@@ -13,9 +13,10 @@
 } */
  .main-container{
     display: flex;
-    justify-content: center;
-    text-align: center;
-    height: calc(100vh - 300px);
+    flex-direction: column;
+    align-items: center;  /* Centra el contenido verticalmente */
+    justify-content: center; /* Centra el contenido horizontalmente */
+    text-align: center; /* Opcional, para centrar texto */
  }
 
 /* @media (max-width: 1056px) {
