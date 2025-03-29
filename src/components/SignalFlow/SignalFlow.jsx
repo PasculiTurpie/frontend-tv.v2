@@ -4,11 +4,6 @@ import "reactflow/dist/style.css";
 import CustomEdge from './CustomEdge';
 import './SignalFlow.css';
 
-
-
-
-
-
 const nodeImages = {
   satelite: "/public/images/parabolic.png",
   ird: "/public/images/ird_motorola.png",
@@ -32,13 +27,8 @@ const getNodeType = (type) => {
       <a className="link" href={data.url} target="_blank" style={{ textDecoration: 'none'}}>
         {data.url}
       </a>
-<<<<<<< HEAD
-      <img anchorSelect="my-anchor-element-class" style={{ margin: "0 auto" }} src={nodeImages[type]} alt={type} width={100} />
-      <div className='label' style={{ color: "#424949" }}>{data.label}</div>
-=======
       <img style={{ margin: "0 auto" }} src={nodeImages[type]} alt={type} width={100} />
-      <div className='label' style={{ color: "#424949"}}>{data.label}</div>
->>>>>>> 59a25928a787a3f428f5dbd70eca2ce5224e268b
+      <div className='label' style={{ color: "#424949" }}>{data.label}</div>
       <Handle type="target" position="left" style={{ background: '#145a32' }} />
       <Handle type="source" position="right" style={{ background: '#4a235a' }} />
     </div>
@@ -82,7 +72,6 @@ const FlowDiagram = () => {
 
   return (
     <>
-    <h1>Diagrama</h1>
     <div className="viewport-flow" style={{ width: '90%', height: "230px" }}>
       <ReactFlow style={{ backgroundColor: "#fff" }} nodes={nodes} edges={edges} nodeTypes={nodeTypes} defaultEdgeOptions={edgeOptions} onNodeClick={onNodeClick} onEdgeClick={onEdgeClick} fitView={true}>
         <Background color="#f1f" />

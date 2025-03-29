@@ -3,6 +3,7 @@ import React, { useEffect } from "react";
 import './Main.css'
 import SignalFlow from "../SignalFlow/SignalFlow.jsx";
 import api from '../../utils/api.js'
+import Managment from "../Managment/Managment.jsx";
 
 
 const Main = () => {
@@ -25,7 +26,8 @@ const Main = () => {
     return (
         <>
             <div className="main-container">
-                <SignalFlow />
+                {/* <Managment /> */}
+                <SignalFlow/>
                 {/*  <Card />
                 <Card />
                 <Card />

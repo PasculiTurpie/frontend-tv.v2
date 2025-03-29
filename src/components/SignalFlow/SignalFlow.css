@@ -1,11 +1,13 @@
-.viewport-flow{
 
+.viewport-flow{
   display: inline-block;
+  text-align: center;
   margin: 0 auto;
   top:180px;
   justify-content: center;
   background-color: rgb(234, 234, 240);
   margin:30px;
+  
 }
 .react-flow__pane{
   width: 90%;
