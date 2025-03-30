@@ -1,17 +1,13 @@
- .nav-container{
-  display: flex;
-  flex-direction: column;
-  height: fit-content;
- }
- .nav-line {
+.nav-container{
+  height: 10px;
+}
+.nav-line {
    background: #D0D6E3;
    width     : 100%;
    height    : 3px;
  }
 
  .nav {
-   display         : flex;
-   position        : relative;
    background-color: #5175B9;
    color           : #fff;
    width           : 100%;
