@@ -1,7 +1,5 @@
 .search{
-  position:absolute;
-  top:15px;
-  right: 180px;
+  align-self: flex-end;
 }
 
 @media (max-width: 1055px) {

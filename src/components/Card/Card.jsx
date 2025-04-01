@@ -4,14 +4,14 @@ const Card = ({dataCard}) => {
     console.log(dataCard)
     return (
 
-        <>
+        <div className="container-card">
         {
             !dataCard && <h2>Loading...</h2>
         }
         {
             dataCard.map((data) =>{
                 return(
-                    <div className="card ">
+                    <div key={data._id} className="card ">
                         <div className="card-header">
                             <h2 className="card-header__title">{data.nombreEquipment}</h2>
                         </div>
@@ -37,7 +37,7 @@ const Card = ({dataCard}) => {
            
         }
             
-        </>
+        </div>
     );
 };
 
