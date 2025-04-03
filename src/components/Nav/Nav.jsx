@@ -4,6 +4,7 @@ import './Nav.css'
 import { Link } from 'react-router-dom'
 
 const Nav = () => {
+  
   return (
     <div className='nav-container'>
       <div className='nav-line'></div>
@@ -15,6 +16,7 @@ const Nav = () => {
             <Link to='contacto'><li className="self-center">Contacto</li></Link>
             <Link to="diagram">Diagrama</Link>
             <Link to='admin'><li className="self-center">Admin</li></Link>
+            <Link to='formulario'><li className="self-center">Form</li></Link>
           </ul>
         </div>
         <div className='nav-rigth'>

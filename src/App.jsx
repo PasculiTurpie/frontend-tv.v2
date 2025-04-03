@@ -9,6 +9,8 @@ import Contact from "./components/Contact/Contact";
 import { useEffect, useState } from "react";
 import Login from "./components/Login/Login";
 import axios from "axios";
+import Main from "./components/Main/Main";
+import FormSatellite from "./components/FormSatellite/FormSatellite";
 
 const App = () => {
 
@@ -34,8 +36,9 @@ const App = () => {
                 <Route path="/" element={<Layout />}>
                 <Route index element={<Card dataCard={dataCard} />}/>
                     <Route path="admin" element={<Login />} />
-                    <Route path="contacto" element={<Contact />} />
+                    <Route path="contacto" element={<Main />} />
                     <Route path="diagram" element={<SignalFlow />} />
+                    <Route path="formulario" element={<FormSatellite />} />
                 </Route>
                     <Route path="*" element={<NotFound />} />
             </Routes>
