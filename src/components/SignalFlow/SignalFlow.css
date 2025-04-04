@@ -1,28 +1,38 @@
-.viewport-flow{
+.container-view{
+  display: flex;
+  flex-direction: column;
+  width: 80%;
+  height: 90%;
+  border:1px solid red;
+  margin: auto auto;
+}
 
-  display: inline-block;
-  margin: 0 auto;
-  top:180px;
-  justify-content: center;
-  background-color: rgb(234, 234, 240);
-  margin:30px;
+.viewport-flow {
+  height               : calc(100vh - 350px);
+  margin               : auto auto;
+  margin               : 30px;
 }
 .react-flow__pane{
-  width: 90%;
+  background-color: #f7faf8;
+
 }
-.label{
-  font-size: 14px;
+
+.label {
+  font-size  : 14px;
   font-weight: bold;
 }
-.react-flow__edge{
+
+.react-flow__edge {
   fill: #3e3a77;
 }
-.react-flow__edge-text{
-  font-size: 14px;
+
+.react-flow__edge-text {
+  font-size  : 14px;
   font-weight: bold;
 }
-.link{
-  color:#0069A8;
-  font-size: 14px;
+
+.link {
+  color      : #0069A8;
+  font-size  : 14px;
   font-weight: bold;
 }

@@ -66,11 +66,53 @@
   cursor       : pointer;
 }
 
+.success {
+  background: #008000;
+  color     : #fff;
+}
+
+.success:hover {
+  background: #03b403;
+}
+
 .primary {
-  background: green;
+  background: #004d80;
   color     : #fff;
 }
 
 .primary:hover {
-  background: rgb(3, 180, 3);
+  background: #0364b4;
+}
+
+.secondary {
+  background: #818181;
+  color     : #fff;
+}
+
+.secondary:hover {
+  background: #bebebe;
+}
+
+.warning {
+  background: #ffa500;
+  color     : #fff;
+}
+
+.warning:hover {
+  background: #b47501;
+}
+
+.danger {
+  background: #ff0000;
+  color     : #fff;
+}
+
+.danger:hover {
+  background: #940101;
+}
+
+.outlet {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
 }

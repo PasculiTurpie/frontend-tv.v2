@@ -15,32 +15,29 @@ import FormSatellite from "./components/FormSatellite/FormSatellite";
 const App = () => {
 
 
-  const [dataCard, setDataCard] = useState([])
+    const [dataCard, setDataCard] = useState([])
 
-  useEffect(() => {
-      axios.get('http://localhost:3000/api/v2/equipment')
-          .then(response => {
-              setDataCard(response.data)
-          })
-          .catch(error => {
-              console.error(error);
-              });
-  },[])
-
-
-
+    useEffect(() => {
+        axios.get('http://localhost:3000/api/v2/equipment')
+            .then(response => {
+                setDataCard(response.data)
+            })
+            .catch(error => {
+                console.error(error);
+            });
+    }, [])
 
     return (
         <>
             <Routes>
                 <Route path="/" element={<Layout />}>
-                <Route index element={<Card dataCard={dataCard} />}/>
+                    <Route index element={<Card dataCard={dataCard} />} />
                     <Route path="admin" element={<Login />} />
                     <Route path="contacto" element={<Main />} />
                     <Route path="diagram" element={<SignalFlow />} />
                     <Route path="formulario" element={<FormSatellite />} />
                 </Route>
-                    <Route path="*" element={<NotFound />} />
+                <Route path="*" element={<NotFound />} />
             </Routes>
         </>
     );

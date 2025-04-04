@@ -10,6 +10,9 @@
   height: 142.59px;
   z-index: 10;
 }
+.image-logo-header{
+  width: 10%;
+}
 
 @media (max-width: 1253px) {
   .logo {
