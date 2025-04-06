@@ -3,7 +3,7 @@
   flex-direction: column;
   width: 80%;
   height: 90%;
-  border:1px solid red;
+  border:2px solid rgba(165, 159, 159, 0.637);
   margin: auto auto;
 }
 
@@ -13,7 +13,7 @@
   margin               : 30px;
 }
 .react-flow__pane{
-  background-color: #f7faf8;
+
 
 }
 

@@ -1,0 +1,9 @@
+.container-main{
+  display: flex;
+  position:absolute;
+  top:180px;
+  border:2px solid green;
+  width: 100%;
+  height: fit-content;
+  margin-bottom: 20px;
+}

@@ -3,7 +3,7 @@ import './FormSatellite.css'
 
 const FormSatellite = () => {
   return (
-    <div className='outlet'>
+    <>
       <form className='container-form'>
         <h2 className='form-title'>Formulario</h2>
         <div className='group-input'>
@@ -30,9 +30,10 @@ const FormSatellite = () => {
           </select>
           <span className='group-input-error'>Campo obligatorio</span>
         </div>
+        
         <button className='btn success'  type='submit'>Enviar</button>
       </form>
-    </div>
+    </>
   )
 }
 

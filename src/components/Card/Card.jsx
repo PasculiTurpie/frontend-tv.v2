@@ -27,7 +27,7 @@ const Card = ({dataCard}) => {
                             />
                         </div>
                         <div className="card-footer">
-                            <p className="card-severidad">Sev. {data.description}</p>
+                            <p className="card-severidad">Sev. {`3`}</p>
                         </div>
                     </div>
                 )

@@ -36,6 +36,7 @@ const App = () => {
                     <Route path="contacto" element={<Main />} />
                     <Route path="diagram" element={<SignalFlow />} />
                     <Route path="formulario" element={<FormSatellite />} />
+                    <Route path="satelite" element={<Admin />} />
                 </Route>
                 <Route path="*" element={<NotFound />} />
             </Routes>

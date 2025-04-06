@@ -2,8 +2,6 @@
 
 #root {
     display: grid;
-    justify-content: center;
     grid-template-rows: auto auto 1fr auto;
-    grid-template-columns: 1fr;
-    min-height: 100dvh;
+    min-height: 100vh;
 }

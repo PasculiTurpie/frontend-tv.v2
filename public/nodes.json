@@ -4,13 +4,19 @@
             "id": "1",
             "type": "satelite",
             "position": { "x": 20, "y": 10 },
-            "data": { "label": "IS21", "tooltip": "Cisco ISR4331 - IP: 192.168.1.1"}
+            "data": {
+                "label": "IS21",
+                "tooltip": "Cisco ISR4331 - IP: 192.168.1.1"
+            }
         },
         {
             "id": "2",
             "type": "ird",
             "position": { "x": 180, "y": 180 },
-            "data": { "label": "IRD", "tooltip": "Cisco ISR4331 - IP: 192.168.1.1" }
+            "data": {
+                "label": "IRD",
+                "tooltip": "Cisco ISR4331 - IP: 192.168.1.1"
+            }
         },
         {
             "id": "3",
@@ -56,20 +62,7 @@
             "id": "e1-2",
             "source": "1",
             "target": "2",
-            "label": "SDI / P_1",
-            "markerStart": {
-    "type": "arrowclosed",
-    "width": 10,
-    "height": 10,
-    "color": "#ff0072"
-  },
-  "markerEnd": {
-    "type": "arrow",
-    "width": 10,
-    "height": 10,
-    "color": "#00aaff"
-  }
-            
+            "label": "SDI / P_1"
         },
         {
             "id": "e2-3",
