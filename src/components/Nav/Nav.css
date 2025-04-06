@@ -1,6 +1,6 @@
 .nav-container {
   height: 10px;
-  height: fit-content;
+  z-index: 10;
 }
 
 .nav-line {

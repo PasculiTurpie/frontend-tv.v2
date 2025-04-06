@@ -16,9 +16,6 @@ const SideBarLeft = () => {
           <li><Link to='encriptador'>Encriptador</Link></li>
           <li><Link to='router'>Router</Link></li>
           <li><Link to='signal'>Señal</Link></li>
-
-          
-          
         </ul>
       </div>
     </>

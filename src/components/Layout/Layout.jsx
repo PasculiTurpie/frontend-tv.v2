@@ -8,16 +8,19 @@ import SideBarLeft from "../SideBarLeft/SideBarLeft";
 
 const Layout = () => {
     return (
-        <>
+        <div className="layout-wrapper">
             <Header />
             <Nav />
-            <div className='container-main'>
-
-            <SideBarLeft />
-            <Outlet />
-            </div>
+            <div className="layout-content">
+                <div className='container-main'>
+                    <SideBarLeft />
+                    <div className="outlet-container">
+                        <Outlet />
+                    </div>
+                </div>
             <Footer />
-        </>
+            </div>
+        </div>
     );
 };
 
