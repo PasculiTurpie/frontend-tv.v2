@@ -11,6 +11,14 @@ import Login from "./components/Login/Login";
 import axios from "axios";
 import Main from "./components/Main/Main";
 import FormSatellite from "./components/FormSatellite/FormSatellite";
+import Ird from "./components/Ird/Ird";
+import Encoder from "./components/Encoder/Encoder";
+import Satellite from "./components/Satellite/Satellite";
+import Dcm from "./components/Dcm/Dcm";
+import Switch from "./components/Switch/Switch";
+import Encriptador from "./components/Encriptador/Encriptador";
+import Asr from "./components/Asr/Asr";
+import Signal from "./components/Sitgnal/Signal";
 
 const App = () => {
 
@@ -36,7 +44,14 @@ const App = () => {
                     <Route path="contacto" element={<Main />} />
                     <Route path="diagram" element={<SignalFlow />} />
                     <Route path="formulario" element={<FormSatellite />} />
-                    <Route path="satelite" element={<Admin />} />
+                    <Route path="ird" element={<Ird />} />
+                    <Route path="encoder" element={<Encoder />} />
+                    <Route path="satelite" element={<Satellite />} />
+                    <Route path="dcm" element={<Dcm />} />
+                    <Route path="switch" element={<Switch />} />
+                    <Route path="encriptador" element={<Encriptador />} />
+                    <Route path="router" element={<Asr />} />
+                    <Route path="signal" element={<Signal />} />
                 </Route>
                 <Route path="*" element={<NotFound />} />
             </Routes>
