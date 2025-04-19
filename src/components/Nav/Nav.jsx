@@ -6,8 +6,8 @@ const Nav = () => {
   return (
     <div className="nav">
         <ul className='nav__menu-list'>
-          <li className='nav__links'><Link to="">Inicio</Link></li>
-          <li className='nav__links'><Link to="admin">Admin</Link></li>
+        <li className='nav__links'><Link className="nav__links-text" to="/">Inicio</Link></li>
+        <li className='nav__links'><Link className="nav__links-text" to="/login">Admin</Link></li>
         </ul>
     </div>
   )
