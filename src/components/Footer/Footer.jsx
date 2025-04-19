@@ -1,8 +1,14 @@
 import React from 'react'
 import './Footer.css'
 const Footer = () => {
+  const to_day = new Date();
+  const year = to_day.getFullYear();
   return (
-    <div className="footer">Footer</div>
+    <div className="footer">
+      <p className='footer__paragraph'>
+        &copy; {year} Desarrollado por Jorge R. Sepúlveda Turpie - Para el área de Operaciones Televisión.
+      </p>
+    </div>
   )
 }
 

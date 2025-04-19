@@ -1,5 +1,11 @@
 .footer{
-  width: 100px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
   height: 64px;
   background-color: #000000;
+}
+.footer__paragraph{
+  color:#fff;
 }

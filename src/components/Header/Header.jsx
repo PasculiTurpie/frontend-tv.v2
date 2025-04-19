@@ -1,6 +1,6 @@
 import React from "react";
 import "./Header.css";
-import Logo from "../../public/images/layout_set_logo.png";
+import Logo from "../../../public/images/layout_set_logo.png";
 import Search from "../Search/Search";
 
 const Header = () => {
