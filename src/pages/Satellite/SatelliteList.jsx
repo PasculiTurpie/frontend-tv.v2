@@ -69,7 +69,6 @@ export const SatelliteList = () => {
                                         <Link
                                             to={satellite.satelliteUrl}
                                             target="_blank"
-                                            rel="noopener noreferrer"
                                         >
                                             View Details
                                         </Link>

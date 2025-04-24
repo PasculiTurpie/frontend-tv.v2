@@ -81,11 +81,11 @@ const SatelliteForm = () => {
                           nameInputRef.current?.focus();
                         });
                       } catch (error) {
-                        console.error("Error al guardar en la base de datos:", error);
+                        console.log( error);
                         Swal.fire({
                           title: "Error",
                           icon: "error",
-                          text: "No se pudo guardar el satélite. Intenta nuevamente.",
+                          text: `${error.response.config.data}`,
                         });
                       }
                     }}
