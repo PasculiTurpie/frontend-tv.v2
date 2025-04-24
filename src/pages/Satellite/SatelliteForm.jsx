@@ -85,7 +85,8 @@ const SatelliteForm = () => {
                         Swal.fire({
                           title: "Error",
                           icon: "error",
-                          text: `${error.response.config.data}`,
+                          text: `Duplicidad de datos`,
+                          footer: `${error.response.data.message}`,
                         });
                       }
                     }}
