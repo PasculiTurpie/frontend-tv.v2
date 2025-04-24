@@ -1,0 +1,32 @@
+.table {
+    border-top: 2px solid rgb(226, 226, 226);
+}
+
+.button-action {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+}
+.button {
+    padding: 5px 8px;
+    color: white;
+    border-radius: 5px;
+}
+.btn-primary {
+    background-color: #4DB89B;
+}
+.btn-danger {
+    background-color: #D6244D;
+}
+.total-list {
+    font-weight: bold;
+}
+.loader__spinner{
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    margin: 0 auto;
+}
+td{
+    height: 51.5px;
+}
