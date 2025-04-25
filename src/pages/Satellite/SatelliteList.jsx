@@ -31,8 +31,12 @@ export const SatelliteList = () => {
     };
 
     useEffect(() => {
-        getAllSatellites();
+        refreshList();
     }, []);
+
+    const refreshList = () => {
+        getAllSatellites();
+    }
 
     const deleteSatellite = async (id) => {
         const result = await Swal.fire({
@@ -165,7 +169,8 @@ export const SatelliteList = () => {
                 )}
             </div>
             {isModalOpen && (
-                <ModalForm isModalOpen={isModalOpen} itemId={itemId} handleOk={handleOk} handleCancel={handleCancel}  />
+                <ModalForm isModalOpen={isModalOpen} itemId={itemId} handleOk={handleOk} handleCancel={handleCancel} refreshList={refreshList}
+                />
             )}
         </>
     );
