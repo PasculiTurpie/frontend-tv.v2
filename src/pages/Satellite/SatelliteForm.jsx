@@ -9,6 +9,15 @@ import Swal from "sweetalert2";
 
 const SignupSchema = Yup.object().shape({
     satelliteName: Yup.string().required("Campo obligatorio"),
+    satelliteUrl: Yup.string()
+        .test(
+            'starts-with-http',
+            'La URL debe comenzar con http:// o https://',
+            (value) => value?.startsWith('http://') || value?.startsWith('https://')
+        )
+        .url('Debe ser una URL válida')
+        .required('La URL es obligatoria')
+,
     satelliteType: Yup.string()
         .notOneOf(["0", "default"], "Debes seleccionar una opción válida.")
         .required("Campo obligatorio"),
@@ -50,6 +59,7 @@ const SatelliteForm = () => {
                 <Formik
                     initialValues={{
                         satelliteName: "",
+                        satelliteUrl:"",
                         satelliteType: "",
                     }}
                     validationSchema={SignupSchema}
@@ -114,6 +124,27 @@ const SatelliteForm = () => {
                                 touched.satelliteName ? (
                                     <div className="form__group-error">
                                         {errors.satelliteName}
+                                    </div>
+                                ) : null}
+                            </div>
+                            <div className="form__group">
+                                <label
+                                    htmlFor="satelliteName"
+                                    className="form__group-label"
+                                >
+                                    Url web
+                                    <br />
+                                    <Field
+                                        type="text"
+                                        className="form__group-input"
+                                        placeholder="Url web"
+                                        name="satelliteUrl"
+                                    />
+                                </label>
+                                {errors.satelliteUrl &&
+                                    touched.satelliteUrl ? (
+                                    <div className="form__group-error">
+                                        {errors.satelliteUrl}
                                     </div>
                                 ) : null}
                             </div>

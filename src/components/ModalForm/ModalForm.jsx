@@ -45,6 +45,8 @@ const ModalForm = ({ isModalOpen, handleOk, handleCancel, itemId }) => {
                         <h1 className="form__titulo">Editar satélite</h1>
                         <div className="form__group">
                             <label htmlFor="">
+                                Nombre Satelite
+                                <br />
                                 <Field
                                     type="text"
                                     className="form__group-input"
@@ -55,21 +57,24 @@ const ModalForm = ({ isModalOpen, handleOk, handleCancel, itemId }) => {
                         </div>
                         <div className="form__group">
                             <label htmlFor="">
+                                Url web
+                                <br />
                                 <Field
                                     type="text"
                                     className="form__group-input"
                                     placeholder="Url web"
-                                    value={satellite.urlImagen}
+                                    value={satellite.satelliteUrl}
                                 />
                             </label>
                         </div>
                         <div className="form__group">
                             <label htmlFor="">
+                                Polarización
+                                <br />
                                 <Field
                                     as="select"
                                     className="form__group-input"
                                     placeholder="Nombre"
-                                    
                                 >
                                     <option value="0">--Seleccionar--</option>
                                     {polarizations.map((polarization) => {
