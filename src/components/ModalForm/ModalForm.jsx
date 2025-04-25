@@ -41,7 +41,8 @@ const ModalForm = ({
 
             axios
                 .get(`http://localhost:3000/api/v2/polarization`)
-                .then((res) => {
+                /* polarizations.find((item) => ) */
+                    .then((res) => {
                     setPolarizations(res.data);
                 });
         }
