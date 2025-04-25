@@ -1,15 +1,21 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import "./Satellite.css";
+import "../../index.css";
 import axios from "axios";
 import Loader from "../../components/Loader/Loader";
 import Swal from "sweetalert2";
+import ModalForm from "../../components/ModalForm/ModalForm";
+
+
+
 
 export const SatelliteList = () => {
     const [satellites, setSatellites] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [itemId, setItemId] = useState('')
 
-    const parentElement = useRef(null)
+
 
     const getAllSatellites = () => {
         axios
@@ -22,15 +28,13 @@ export const SatelliteList = () => {
                 console.error("Error al obtener los satélites:", error);
                 setIsLoading(false); // también en caso de error
             });
-    }
+    };
 
     useEffect(() => {
-        getAllSatellites()
+        getAllSatellites();
     }, []);
 
-    const deleteSatellite = async () => {
-        const id = parentElement.current.id;
-
+    const deleteSatellite = async (id) => {
         const result = await Swal.fire({
             title: "¿Estás seguro de eliminar el registro?",
             text: "¡No podrás revertir esto!",
@@ -38,16 +42,18 @@ export const SatelliteList = () => {
             showCancelButton: true,
             confirmButtonColor: "#3085d6",
             cancelButtonColor: "#d33",
-            confirmButtonText: "Sí, eliminar"
+            confirmButtonText: "Sí, eliminar",
         });
 
         if (result.isConfirmed) {
             try {
-                await axios.delete(`http://localhost:3000/api/v2/satellite/${id}`);
+                await axios.delete(
+                    `http://localhost:3000/api/v2/satellite/${id}`
+                );
                 await Swal.fire({
                     title: "¡Eliminado!",
                     text: "El registro ha sido eliminado",
-                    icon: "success"
+                    icon: "success",
                 });
                 getAllSatellites(); // Refresca la lista después de confirmar
             } catch (error) {
@@ -55,11 +61,34 @@ export const SatelliteList = () => {
                 Swal.fire({
                     title: "Error",
                     text: "Hubo un problema al eliminar el registro",
-                    icon: "error"
+                    icon: "error",
                 });
             }
         }
     };
+
+    const showModal = (id) => {
+        console.log(id)
+        setItemId(id)
+        setIsModalOpen(true);
+    };
+    
+    const handleOk = () => {
+        setIsModalOpen(false);
+        Swal.fire({
+            position: "center",
+            icon: "success",
+            title: "Registro actualizado",
+            showConfirmButton: false,
+            timer: 1500
+        });
+    };
+
+    const handleCancel = () => {
+        setIsModalOpen(false);
+    };
+
+
 
     return (
         <>
@@ -92,12 +121,12 @@ export const SatelliteList = () => {
                                 <th>Nombre satelite</th>
                                 <th>Tipo de polarización</th>
                                 <th>Url Web</th>
-                                <th>Acciones</th>
+                                <th className="action">Acciones</th>
                             </tr>
                         </thead>
                         <tbody>
                             {satellites.map((satellite) => (
-                                <tr key={satellite._id} id={satellite._id} ref={parentElement }>
+                                <tr key={satellite._id} id={satellite._id}>
                                     <td>{satellite.satelliteName}</td>
                                     <td>
                                         {
@@ -114,20 +143,30 @@ export const SatelliteList = () => {
                                         </Link>
                                     </td>
                                     <td className="button-action">
-                                        <button className="button btn-primary">
+                                        <button
+                                            className="button btn-primary"
+                                            onClick={() => { showModal(satellite._id)}}
+                                        >
                                             Editar
                                         </button>
-                                        <button className="button  btn-danger" onClick={deleteSatellite}>
+                                        <button
+                                            className="button btn-danger"
+                                            onClick={() =>
+                                                deleteSatellite(satellite._id)
+                                            }
+                                        >
                                             Eliminar
                                         </button>
                                     </td>
                                 </tr>
-                            ))
-                            }
+                            ))}
                         </tbody>
                     </table>
                 )}
             </div>
+            {isModalOpen && (
+                <ModalForm isModalOpen={isModalOpen} itemId={itemId} handleOk={handleOk} handleCancel={handleCancel}  />
+            )}
         </>
-    )
-}
+    );
+};

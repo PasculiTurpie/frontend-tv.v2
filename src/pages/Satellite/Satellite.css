@@ -7,26 +7,48 @@
     flex-direction: row;
     justify-content: space-around;
 }
-.button {
+.button,
+.ant-btn {
     padding: 5px 8px;
     color: white;
     border-radius: 5px;
 }
+.ant-btn-variant-outlined {
+    color: rgb(126, 124, 124);
+}
 .btn-primary {
-    background-color: #4DB89B;
+    background-color: #4db89b;
 }
 .btn-danger {
-    background-color: #D6244D;
+    background-color: #d6244d;
 }
 .total-list {
     font-weight: bold;
 }
-.loader__spinner{
+.loader__spinner {
     display: flex;
     justify-content: center;
     width: 100%;
     margin: 0 auto;
 }
-td{
+td {
     height: 51.5px;
+}
+.action {
+    text-align: center;
+}
+
+.ant-modal-content {
+    width: fit-content;
+    align-self: center;
+}
+.ant-modal {
+    display: flex;
+    justify-content: center;
+}
+.form__modal {
+    box-shadow: none;
+}
+select {
+    width: 170px;
 }
