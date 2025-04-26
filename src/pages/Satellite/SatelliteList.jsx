@@ -60,12 +60,12 @@ export const SatelliteList = () => {
                 await axios.delete(
                     `http://localhost:3000/api/v2/satellite/${id}`
                 );
+                getAllSatellites(); // Refresca la lista después de confirmar
                 await Swal.fire({
                     title: "¡Eliminado!",
                     text: "El registro ha sido eliminado",
                     icon: "success",
                 });
-                getAllSatellites(); // Refresca la lista después de confirmar
             } catch (error) {
                 console.error("Error al eliminar:", error);
                 Swal.fire({

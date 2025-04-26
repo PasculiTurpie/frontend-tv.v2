@@ -7,6 +7,8 @@ import NotFound from "./pages/NotFound/NotFound";
 import { useState } from "react";
 import SatelliteForm from "./pages/Satellite/SatelliteForm";
 import { SatelliteList } from "./pages/Satellite/SatelliteList";
+import IrdForm from "./pages/Ird/IrdForm";
+import IrdListar from "./pages/Ird/IrdListar";
 
 const App = () => {
 
@@ -26,6 +28,8 @@ const App = () => {
                     <Route path="/login" element={<Admin />} />
                     <Route path="/satelite" element={<SatelliteForm />} />
                     <Route path="/listar-satelite" element={<SatelliteList />} />
+                    <Route path="/ird" element={<IrdForm />} />
+                    <Route path="/listar-ird" element={<IrdListar />} />
                 </Route>
                 <Route path="*" element={<NotFound/>} />
             </Routes>

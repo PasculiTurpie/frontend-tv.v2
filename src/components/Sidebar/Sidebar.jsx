@@ -16,6 +16,9 @@ const Sidebar = ({ user }) => {
         <li>
           <Link to="/satelite">Satelite</Link>
         </li>
+        <li>
+          <Link to="/ird">Ird</Link>
+        </li>
         </ul>
     </div>
   )
