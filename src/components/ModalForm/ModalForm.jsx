@@ -36,7 +36,7 @@ const ModalForm = ({
                     setInitialValues({
                         satelliteName: data.satelliteName,
                         satelliteUrl: data.satelliteUrl,
-                        satelliteType: data.satelliteType._id, // Asegura que sea el ID
+                        satelliteType: data.satelliteType, // Asegura que sea el ID
                     });
                 });
 
