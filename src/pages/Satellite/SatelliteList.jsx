@@ -25,7 +25,13 @@ export const SatelliteList = () => {
                 setIsLoading(false); // <- mover aquí
             })
             .catch((error) => {
-                console.error("Error al obtener los satélites:", error);
+                console.log(`Error: ${error.response.data.message}`);
+                Swal.fire({
+                    icon: "error",
+                    title: "Oops...",
+                    text: `${error.response.data.message}`,
+                    footer: '<a href="#">Contactar a administrador</a>'
+                  });
                 setIsLoading(false); // también en caso de error
             });
     };
