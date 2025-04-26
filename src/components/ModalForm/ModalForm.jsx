@@ -32,6 +32,7 @@ const ModalForm = ({
                 .get(`http://localhost:3000/api/v2/satellite/${itemId}`)
                 .then((res) => {
                     const data = res.data;
+                    console.log(data.satelliteType)
                     setInitialValues({
                         satelliteName: data.satelliteName,
                         satelliteUrl: data.satelliteUrl,
@@ -43,6 +44,7 @@ const ModalForm = ({
                 .get(`http://localhost:3000/api/v2/polarization`)
                 /* polarizations.find((item) => ) */
                     .then((res) => {
+                        console.log(res.data)
                     setPolarizations(res.data);
                 });
         }
