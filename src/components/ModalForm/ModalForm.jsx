@@ -25,6 +25,8 @@ const ModalForm = ({
 }) => {
     const [polarizations, setPolarizations] = useState([]);
     const [initialValues, setInitialValues] = useState(null);
+    const [selectedPolarization, setSelectedPolarization] = useState("");
+
 
     useEffect(() => {
         if (itemId) {
@@ -32,11 +34,11 @@ const ModalForm = ({
                 .get(`http://localhost:3000/api/v2/satellite/${itemId}`)
                 .then((res) => {
                     const data = res.data;
-                    console.log(data.satelliteType)
+                    setSelectedPolarization(data.satelliteType._id)
                     setInitialValues({
                         satelliteName: data.satelliteName,
                         satelliteUrl: data.satelliteUrl,
-                        satelliteType: data.satelliteType, // Asegura que sea el ID
+                        satelliteType: data.satelliteType._id, // Asegura que sea el ID
                     });
                 });
 
@@ -68,6 +70,7 @@ const ModalForm = ({
             Swal.fire("Error", "No se pudo actualizar el satélite", "error");
         }
     };
+
 
     return (
         <Modal
@@ -133,6 +136,7 @@ const ModalForm = ({
                                         name="satelliteType"
                                         as="select"
                                         className="form__group-input"
+                                        defaulValues={selectedPolarization}
                                     >
                                         <option value="">
                                             --Seleccionar--
