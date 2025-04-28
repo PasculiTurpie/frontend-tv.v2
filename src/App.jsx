@@ -13,7 +13,7 @@ import IrdListar from "./pages/Ird/IrdListar";
 const App = () => {
 
     const user = {
-        name: "Jorge Sepúlveda Turpie", profilePicture:"https://media.licdn.com/dms/image/v2/D4E03AQHNis1IfH_fsw/profile-displayphoto-shrink_800_800/profile-displayphoto-shrink_800_800/0/1725648714099?e=1750896000&v=beta&t=uLT2rKQ9zh74Tr08P5QhPEWgfqcUM9AMH0rqwoYyjao", email: "jorge.sepulveda@grupogtd.com", role: "admin"
+        name: "Jorge Sepúlveda Turpie", profilePicture:"https://media.licdn.com/dms/image/v2/D4E03AQHNis1IfH_fsw/profile-displayphoto-shrink_800_800/profile-displayphoto-shrink_800_800/0/1725648714099?e=1750896000&v=beta&t=uLT2rKQ9zh74Tr08P5QhPEWgfqcUM9AMH0rqwoYyjao", email: "jorge.sepulveda@grupogtd.com", role: "user"
     }
     
 

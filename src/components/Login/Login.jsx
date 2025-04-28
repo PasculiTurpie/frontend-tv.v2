@@ -1,14 +1,29 @@
-import React from 'react'
+import React, { useContext, useEffect } from 'react'
 import './Login.css'
+import { UserContext } from '../context/UserContext'
+import { Navigate } from "react-router-dom";
+
 
 const Login = () => {
+
+  const { user } = useContext(UserContext);
+
 
   const handleSubmit = (e) => {
     e.preventDefault()
     console.log('Form submitted')
   }
 
+  
+  useEffect(() => {
+    if (!user) {
+      return <Navigate to="/login" />;
+    }
 
+    return children;
+
+      
+  },[])
 
   return (
     <>
