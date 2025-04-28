@@ -19,6 +19,10 @@ const Sidebar = ({ user }) => {
         <li>
           <Link to="/ird">Ird</Link>
         </li>
+        <hr />
+        <li>
+          <Link to="/registrar-user">Usuarios</Link>
+        </li>
         </ul>
     </div>
   )

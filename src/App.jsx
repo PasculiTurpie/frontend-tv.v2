@@ -10,6 +10,8 @@ import IrdForm from "./pages/Ird/IrdForm";
 import IrdListar from "./pages/Ird/IrdListar";
 import { useContext } from "react";
 import { UserContext } from "./components/context/UserContext";
+import RegisterUser from "./components/User/RegisterUser";
+import ListarUsers from "./components/User/ListarUsers";
 
 const App = () => {
 
@@ -30,6 +32,8 @@ console.log(user.role)
                     <Route path="/listar-satelite" element={<SatelliteList />} />
                     <Route path="/ird" element={<IrdForm />} />
                     <Route path="/listar-ird" element={<IrdListar />} />
+                    <Route path="/registrar-user" element={<RegisterUser />} />
+                    <Route path="/listar-user" element={<ListarUsers />} />
                 </Route>
                 <Route path="*" element={<NotFound/>} />
             </Routes>

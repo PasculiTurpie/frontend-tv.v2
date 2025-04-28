@@ -6,7 +6,9 @@ import { Navigate } from "react-router-dom";
 
 const Login = () => {
 
-  const { user } = useContext(UserContext);
+  const { user, setUser } = useContext(UserContext);
+
+  console.log(user)
 
 
   const handleSubmit = (e) => {
