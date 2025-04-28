@@ -4,26 +4,26 @@ import Home from "./pages/Home/Home";
 import Layout from "./Layout/Layout";
 import Admin from "./pages/Admin/Admin";
 import NotFound from "./pages/NotFound/NotFound";
-import { useState } from "react";
 import SatelliteForm from "./pages/Satellite/SatelliteForm";
 import { SatelliteList } from "./pages/Satellite/SatelliteList";
 import IrdForm from "./pages/Ird/IrdForm";
 import IrdListar from "./pages/Ird/IrdListar";
+import { useContext } from "react";
+import { UserContext } from "./components/context/UserContext";
 
 const App = () => {
 
-    const user = {
-        name: "Jorge Sepúlveda Turpie", profilePicture:"https://media.licdn.com/dms/image/v2/D4E03AQHNis1IfH_fsw/profile-displayphoto-shrink_800_800/profile-displayphoto-shrink_800_800/0/1725648714099?e=1750896000&v=beta&t=uLT2rKQ9zh74Tr08P5QhPEWgfqcUM9AMH0rqwoYyjao", email: "jorge.sepulveda@grupogtd.com", role: "user"
-    }
     
+const {user} = useContext(UserContext)
 
-    const [role, setRole] = useState(`${user.role}`)
+console.log(user.role)
+   
 
     return (
         <>
             
             <Routes>
-                <Route path="/" element={<Layout role={role} user={user} />}>
+                <Route path="/" element={<Layout />}>
                     <Route index element={<Home />} />
                     <Route path="/login" element={<Admin />} />
                     <Route path="/satelite" element={<SatelliteForm />} />

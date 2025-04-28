@@ -3,7 +3,7 @@ import './Sidebar.css'
 import { Link } from 'react-router-dom'
 
 const Sidebar = ({ user }) => {
-  console.log(user)
+  
   return (
     <div className="sidebar">
       <img src={user.profilePicture} alt="Profile" className="sidebar__profile-pic" />
