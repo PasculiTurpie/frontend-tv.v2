@@ -1,5 +1,4 @@
 import React, { useContext, useEffect } from 'react'
-import './Login.css'
 import { UserContext } from '../context/UserContext'
 import { Navigate } from "react-router-dom";
 
@@ -17,7 +16,7 @@ const Login = () => {
   }
 
   
-  useEffect(() => {
+/*   useEffect(() => {
     if (!user) {
       return <Navigate to="/login" />;
     }
@@ -25,10 +24,12 @@ const Login = () => {
     return children;
 
       
-  },[])
+  },[]) */
 
   return (
     <>
+      <div className="outlet-main">
+
       <form className="form" onSubmit={handleSubmit}>
         <h1 className="form__titulo">Login</h1>
         <div className="form__group">
@@ -41,8 +42,10 @@ const Login = () => {
           <input className='form__group-input' type="text" name="password" id='password' />
           <span className="form__group-error">Campo obligatorio</span>
         </div>
-        <button className='btn btn-success' type="submit">Enviar</button>
+        <button className='button btn-success' type="submit">Enviar</button>
       </form>
+
+      </div>
     </>
   )
 }

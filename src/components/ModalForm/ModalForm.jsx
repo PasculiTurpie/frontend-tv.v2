@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
-import "./ModalForm.css";
-import "../../pages/Satellite/Satellite.css";
+/* import "./ModalForm.css";
+ */
+/* import "../../pages/Satellite/Satellite.css"; */
 import { Modal } from "antd";
 import { Formik, Form, Field } from "formik";
 import * as Yup from "yup";

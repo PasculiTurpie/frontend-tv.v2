@@ -11,7 +11,6 @@ const Layout = () => {
 
     const {user} = useContext(UserContext)
     
-    console.log(user.role)
     return (
         <>
             <Header />

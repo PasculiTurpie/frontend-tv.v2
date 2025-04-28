@@ -1,0 +1,171 @@
+.table {
+  border-top: 2px solid rgb(226, 226, 226);
+}
+
+.button-action {
+  display        : flex;
+  flex-direction : row;
+  justify-content: space-around;
+}
+
+.button,
+.ant-btn {
+  padding      : 5px 8px;
+  color        : white;
+  border-radius: 5px;
+}
+
+.ant-btn-variant-outlined {
+  color: rgb(126, 124, 124);
+}
+
+.btn-primary {
+  background-color: #4db89b;
+}
+
+.btn-danger {
+  background-color: #d6244d;
+}
+
+.total-list {
+  font-weight: bold;
+}
+
+.loader__spinner {
+  display        : flex;
+  justify-content: center;
+  width          : 100%;
+  margin         : 0 auto;
+}
+
+td {
+  height: 51.5px;
+}
+
+.action {
+  text-align: center;
+}
+
+.ant-modal-content {
+  width     : fit-content;
+  align-self: center;
+}
+
+.ant-modal {
+  display        : flex;
+  justify-content: center;
+}
+
+.form__modal {
+  box-shadow: none;
+}
+
+select {
+  width: 170px;
+}
+
+.form {
+  display       : flex;
+  flex-direction: column;
+  width         : fit-content;
+  box-shadow    : 0 14px 28px rgba(0, 0, 0, 0.25),
+    0 10px 10px rgba(0, 0, 0, 0.22);
+  padding: 30px;
+  row-gap: 15px;
+}
+
+.form__titulo {
+  font-size  : 20px;
+  font-weight: bold;
+}
+
+.form__group {
+  display       : flex;
+  flex-direction: column;
+}
+
+.form__group-label {
+  font-size: 15px;
+}
+
+.form__group-input {
+  background-color: #fff;
+  outline         : none;
+  border          : 1px solid rgb(5, 53, 156);
+  padding         : 3px 5px;
+  width           : 180px;
+}
+
+.form__group-input:focus {
+  outline: 2px solid #05359c9d;
+}
+
+.form__group-error {
+  color    : red;
+  font-size: 12px;
+}
+
+.btn {
+  padding       : 8px 0;
+  font-size     : 18px;
+  border-radius : 0.5em;
+  font-weight   : 600;
+  letter-spacing: .07em;
+  cursor        : pointer;
+}
+
+.btn-success {
+  background-color: #01447a;
+  color           : #fff;
+}
+
+.icon__password{
+  width: 24px;
+}
+
+
+
+.loader {
+  position         : relative;
+  width            : 85px;
+  height           : 50px;
+  background-repeat: no-repeat;
+  background-image : linear-gradient(#e7880b 50px, transparent 0),
+    linear-gradient(#e7880b 50px, transparent 0),
+    linear-gradient(#e7880b 50px, transparent 0),
+    linear-gradient(#e7880b 50px, transparent 0),
+    linear-gradient(#e7880b 50px, transparent 0),
+    linear-gradient(#e7880b 50px, transparent 0);
+  background-position: 0px center, 15px center, 30px center, 45px center, 60px center, 75px center, 90px center;
+  animation          : rikSpikeRoll 0.65s linear infinite alternate;
+}
+
+@keyframes rikSpikeRoll {
+  0% {
+    background-size: 10px 3px;
+  }
+
+  16% {
+    background-size: 10px 50px, 10px 3px, 10px 3px, 10px 3px, 10px 3px, 10px 3px
+  }
+
+  33% {
+    background-size: 10px 30px, 10px 50px, 10px 3px, 10px 3px, 10px 3px, 10px 3px
+  }
+
+  50% {
+    background-size: 10px 10px, 10px 30px, 10px 50px, 10px 3px, 10px 3px, 10px 3px
+  }
+
+  66% {
+    background-size: 10px 3px, 10px 10px, 10px 30px, 10px 50px, 10px 3px, 10px 3px
+  }
+
+  83% {
+    background-size: 10px 3px, 10px 3px, 10px 10px, 10px 30px, 10px 50px, 10px 3px
+  }
+
+  100% {
+    background-size: 10px 3px, 10px 3px, 10px 3px, 10px 10px, 10px 30px, 10px 50px
+  }
+}

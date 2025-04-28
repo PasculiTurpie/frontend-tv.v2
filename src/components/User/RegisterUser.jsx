@@ -1,9 +1,35 @@
-import React from "react";
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import "../../components/Login/Login.css";
+import { Formik, Field, Form } from "formik";
+import * as Yup from "yup";
+import hidden__Password from '../../../public/images/hide-password.png'
+import show__Password from '../../../public/images/show-password.png'
+import Swal from "sweetalert2";
 
+const RegisterSchema = Yup.object().shape({
+    username: Yup.string().required("Campo obligatorio"),
+    email: Yup.string().required("Campo obligatorio"),
+    password: Yup.string()
+        .required("La contraseña es obligatoria")
+        .min(8, "Debe tener al menos 8 caracteres")
+        .matches(/[A-Z]/, "Debe tener al menos una letra mayúscula")
+        .matches(/[a-z]/, "Debe tener al menos una letra minúscula")
+        .matches(/[0-9]/, "Debe tener al menos un número")
+        .matches(
+            /[@$!%*?&]/,
+            "Debe tener al menos un símbolo especial (@$!%*?&)"
+        ),
+    confirmPassword: Yup.string()
+        .oneOf([Yup.ref("password")], "Las contraseñas deben coincidir")
+        .required("Confirma tu contraseña"),
+});
 
 const RegisterUser = () => {
+    const [showPassword, setShowPassword] = useState(false);
+
+    const toggleShowPassword = () => {
+        setShowPassword(!showPassword);
+    };
     return (
         <>
             <div className="outlet-main">
@@ -20,6 +46,134 @@ const RegisterUser = () => {
                         </li>
                     </ol>
                 </nav>
+                <Formik
+                    initialValues={{
+                        username: "",
+                        email: "",
+                        password: "",
+                        confirmPassword: "",
+                    }}
+                    validationSchema={RegisterSchema}
+                    onSubmit={(values, { resetForm }) => {
+                        console.log(values);
+                        resetForm();
+                    }}
+                >
+                    {({ errors, touched }) => (
+                        <Form className="form">
+                            <h1 className="form__titulo">Registrar</h1>
+                            <div className="form__group">
+                                <label
+                                    htmlFor="username"
+                                    className="form__group-label"
+                                >
+                                    Nombre:
+                                </label>
+                                <Field
+                                    className="form__group-input"
+                                    type="text"
+                                    name="username"
+                                    id="username"
+                                />
+                                {errors.username && touched.username ? (
+                                    <div className="form__group-error">
+                                        {errors.username}
+                                    </div>
+                                ) : null}
+                            </div>
+                            <div className="form__group">
+                                <label
+                                    htmlFor="email"
+                                    className="form__group-label"
+                                >
+                                    Email:
+                                </label>
+                                <Field
+                                    className="form__group-input"
+                                    type="text"
+                                    name="email"
+                                    id="email"
+                                />
+                                {errors.email && touched.email ? (
+                                    <div className="form__group-error">
+                                        {errors.email}
+                                    </div>
+                                ) : null}
+                            </div>
+                <div className="form__group" style={{ position: "relative" }}>
+                                <label
+                                    htmlFor="password"
+                                    className="form__group-label"
+                                >
+                                    Password:
+                                </label>
+                                <Field
+                                    className="form__group-input"
+                    type={showPassword ? "text" : "password"}
+                                    name="password"
+                                    id="password"
+                                    autoComplete="off"
+                                />
+                                <button
+                    type="button"
+                    classNamw="icon__password-toggle"
+                                    onClick={toggleShowPassword}
+                                    style={{
+                                        position: "absolute",
+                                        right: 5,
+                                        top: 28,
+                                    }}
+                                >
+                    {showPassword ? <img className="icon__password" src={hidden__Password} alt='ocultar' /> : <img className="icon__password" src={show__Password} alt='mostrar' />}
+                                </button>
+                                {errors.password && touched.password ? (
+                                    <div className="form__group-error">
+                                        {errors.password}
+                                    </div>
+                                ) : null}
+                            </div>
+                            <div className="form__group" style={{ position: "relative" }}>
+                                <label
+                                    htmlFor="confirmPassword"
+                                    className="form__group-label"
+                                >
+                                    Confirmar Password:
+                                </label>
+                                <Field
+                                    className="form__group-input"
+                    type={showPassword ? "text" : "password"}
+                                    name="confirmPassword"
+                                    id="confirmPassword"
+                                    autoComplete="off"
+                                />
+                                <button
+                                    type="button"
+                    onClick={toggleShowPassword}
+                    classNamw="icon__password-toggle"
+                                    style={{
+                                        position: "absolute",
+                                        right: 5,
+                                      top: 28,
+                                    }}
+                                >
+                    {showPassword ? <img className="icon__password" src={hidden__Password} alt='ocultar' /> : <img className="icon__password" src={show__Password} alt='mostrar'/>}
+                                </button>
+                                {errors.confirmPassword &&
+                                touched.confirmPassword ? (
+                                    <div className="form__group-error">
+                                        {errors.confirmPassword}
+                                    </div>
+                                ) : null}
+                            </div>
+                            <button
+                                className="button btn-success"
+                                type="submit"
+                            >
+                                Enviar
+                            </button>
+                        </Form>
+                    )}
+                </Formik>
             </div>
         </>
     );

@@ -12,13 +12,13 @@ import { useContext } from "react";
 import { UserContext } from "./components/context/UserContext";
 import RegisterUser from "./components/User/RegisterUser";
 import ListarUsers from "./components/User/ListarUsers";
+import Login from "./components/Login/Login";
 
 const App = () => {
 
     
 const {user} = useContext(UserContext)
 
-console.log(user.role)
    
 
     return (
@@ -27,7 +27,7 @@ console.log(user.role)
             <Routes>
                 <Route path="/" element={<Layout />}>
                     <Route index element={<Home />} />
-                    <Route path="/login" element={<Admin />} />
+                    <Route path="/login" element={<Login />} />
                     <Route path="/satelite" element={<SatelliteForm />} />
                     <Route path="/listar-satelite" element={<SatelliteList />} />
                     <Route path="/ird" element={<IrdForm />} />

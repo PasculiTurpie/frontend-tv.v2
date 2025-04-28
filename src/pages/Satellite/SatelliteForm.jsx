@@ -1,13 +1,11 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import "./Satellite.css";
-import "../../components/Login/Login.css";
 import axios from "axios";
 import { Formik, Form, Field } from "formik";
 import * as Yup from "yup";
 import Swal from "sweetalert2";
 
-const SignupSchema = Yup.object().shape({
+const SatelliteSchema = Yup.object().shape({
     satelliteName: Yup.string().required("Campo obligatorio"),
     satelliteUrl: Yup.string()
         .test(
@@ -62,7 +60,7 @@ const SatelliteForm = () => {
                         satelliteUrl:"",
                         satelliteType: "",
                     }}
-                    validationSchema={SignupSchema}
+                    validationSchema={SatelliteSchema}
                     onSubmit={async (values, { resetForm }) => {
                       try {
                         // Enviar los datos a la API
