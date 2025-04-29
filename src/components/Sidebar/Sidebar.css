@@ -29,3 +29,8 @@ a{
   align-self: center;
   width: 100px; height: 100px; border-radius: 50%;
 }
+.session{
+  text-align: center;
+  color: blue;
+  cursor: pointer;
+}

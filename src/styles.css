@@ -123,6 +123,11 @@ select {
   width: 24px;
 }
 
+.container-form-brother{
+  display:flex;
+  column-gap: 40px;
+}
+
 
 
 .loader {

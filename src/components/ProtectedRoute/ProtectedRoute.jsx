@@ -1,8 +1,15 @@
 import React from 'react'
+import { Navigate, Route } from 'react-router-dom'
 
-const ProtectedRoute = () => {
+const ProtectedRoute = ({ children, isAuth, ...props }) => {
+
+  
   return (
-    <div>ProtectedRoute</div>
+    <>
+      <Route {...props}>
+        {isAuth ? children : <Navigate to={'/login'} />}
+      </Route>
+    </>
   )
 }
 
