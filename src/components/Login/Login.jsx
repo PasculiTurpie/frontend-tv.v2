@@ -1,6 +1,6 @@
 import React, { useContext, useState } from "react";
 import { UserContext } from "../context/UserContext";
-import { Navigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import * as Yup from "yup";
 import { Field, Form, Formik } from "formik";
@@ -14,6 +14,7 @@ const LoginSchema = Yup.object().shape({
 });
 
 const Login = () => {
+  const navigate = useNavigate();
     const { user, setUser } = useContext(UserContext);
     const [showPassword, setShowPassword] = useState(false);
 
@@ -37,8 +38,10 @@ const Login = () => {
                                     "http://localhost:3000/api/v2/login",
                                     values
                                 )
-                                .then((response) => {
-                                    console.log(response);
+                              .then((response) => {
+                                setUser(response.data.user)
+                                console.log(response.data.user);
+                                navigate('/')
                                     Swal.fire({
                                         position: "top-end",
                                         icon: "success",
