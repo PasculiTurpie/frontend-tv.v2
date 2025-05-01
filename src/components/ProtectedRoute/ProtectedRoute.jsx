@@ -1,16 +1,10 @@
-import React from 'react'
-import { Navigate, Route } from 'react-router-dom'
+import { Navigate } from "react-router-dom";
 
-const ProtectedRoute = ({ children, isAuth, ...props }) => {
+const ProtectedRoute = ({ isAuth, children }) => {
+    if (!isAuth) {
+        return <Navigate to="/login" replace />;
+    }
+    return children;
+};
 
-  
-  return (
-    <>
-      <Route {...props}>
-        {isAuth ? children : <Navigate to={'/login'} />}
-      </Route>
-    </>
-  )
-}
-
-export default ProtectedRoute
+export default ProtectedRoute;

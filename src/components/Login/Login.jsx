@@ -14,10 +14,11 @@ const LoginSchema = Yup.object().shape({
 });
 
 const Login = () => {
-    const { user, setUser } = useContext(UserContext);
+    const { setUser, isAuth, setIsAuth } = useContext(UserContext);
     const [showPassword, setShowPassword] = useState(false);
 
-    console.log(user);
+
+    
 
     const toggleShowPassword = () => setShowPassword(!showPassword);
 
@@ -39,13 +40,17 @@ const Login = () => {
                                 )
                                 .then((response) => {
                                     console.log(response);
+                                    
                                     Swal.fire({
                                         position: "top-end",
                                         icon: "success",
-                                        title: "Your work has been saved",
+                                        title: "Usuario logueado correctamente",
                                         showConfirmButton: false,
                                         timer: 1500,
                                     });
+                                    setUser(response.data.user)
+setIsAuth(true)
+                                    console.log(`Autenticación: ${isAuth}`);
                                 });
                         } catch (error) {
                             console.log(error);
@@ -57,6 +62,7 @@ const Login = () => {
                             });
                         }
                         resetForm();
+                        {isAuth ? <Navigate to='/' /> : <Navigate to='/user'/>}
                     }}
                 >
                     {({ errors, touched }) => (
@@ -74,7 +80,7 @@ const Login = () => {
                                         type="emaul"
                                         name="email"
                                         id="email"
-                                        autoComplete="off"
+                                        autoComplete="on"
                                     />
                                 </label>
                                 {errors.email && touched.email ? (
@@ -100,7 +106,7 @@ const Login = () => {
                                         }
                                         name="password"
                                         id="password"
-                                        autoComplete="off"
+                                        autoComplete="on"
                                     />
                                     <button
                                         type="button"

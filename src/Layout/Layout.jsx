@@ -10,6 +10,7 @@ import { UserContext } from "../components/context/UserContext";
 const Layout = () => {
 
     const {user} = useContext(UserContext)
+
     
     return (
         <>
