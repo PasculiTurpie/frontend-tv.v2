@@ -1,12 +1,12 @@
 import React, { useContext, useState } from "react";
 import { UserContext } from "../context/UserContext";
-import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import * as Yup from "yup";
 import { Field, Form, Formik } from "formik";
 import hidden__Password from "../../../public/images/hide-password.png";
 import show__Password from "../../../public/images/show-password.png";
 import Swal from "sweetalert2";
+import { useNavigate } from "react-router-dom";
 
 const LoginSchema = Yup.object().shape({
     email: Yup.string().email("Email inválido").required("Campo obligatorio"),
@@ -14,11 +14,12 @@ const LoginSchema = Yup.object().shape({
 });
 
 const Login = () => {
-  const navigate = useNavigate();
     const { user, setUser } = useContext(UserContext);
     const [showPassword, setShowPassword] = useState(false);
 
-    console.log(user);
+    const navigate = useNavigate();
+
+    console.log(localStorage.getItem('ísLogin'))
 
     const toggleShowPassword = () => setShowPassword(!showPassword);
 
@@ -38,17 +39,17 @@ const Login = () => {
                                     "http://localhost:3000/api/v2/login",
                                     values
                                 )
-                              .then((response) => {
-                                setUser(response.data.user)
-                                console.log(response.data.user);
-                                navigate('/')
+                                .then((response) => {
+                                    console.log(response);
                                     Swal.fire({
                                         position: "top-end",
                                         icon: "success",
-                                        title: "Your work has been saved",
+                                        title: "Usuario logueado correctamente",
                                         showConfirmButton: false,
                                         timer: 1500,
                                     });
+                                    setUser(response.data.user);
+                                    
                                 });
                         } catch (error) {
                             console.log(error);
@@ -60,6 +61,7 @@ const Login = () => {
                             });
                         }
                         resetForm();
+                        navigate("/");
                     }}
                 >
                     {({ errors, touched }) => (
@@ -77,7 +79,7 @@ const Login = () => {
                                         type="emaul"
                                         name="email"
                                         id="email"
-                                        autoComplete="off"
+                                        autoComplete="on"
                                     />
                                 </label>
                                 {errors.email && touched.email ? (
@@ -103,7 +105,7 @@ const Login = () => {
                                         }
                                         name="password"
                                         id="password"
-                                        autoComplete="off"
+                                        autoComplete="on"
                                     />
                                     <button
                                         type="button"
@@ -112,7 +114,7 @@ const Login = () => {
                                         style={{
                                             position: "absolute",
                                             right: 5,
-                                            top: 28,
+                                            top: 26,
                                         }}
                                     >
                                         {showPassword ? (
