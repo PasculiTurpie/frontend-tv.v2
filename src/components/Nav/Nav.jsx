@@ -1,13 +1,16 @@
-import React, { useContext } from 'react'
+import React from 'react'
 import './Nav.css'
 import { Link } from 'react-router-dom'
-import { UserContext } from '../context/UserContext'
-
-
 
 const Nav = () => {
 
-  const {user} = useContext(UserContext)
+  const userRole = (localStorage.getItem('isLogin'))
+  console.log(userRole)
+
+  const handleCloseSession = () =>{
+    localStorage.removeItem('isLogin')
+
+  }
 
 
   return (
@@ -15,11 +18,7 @@ const Nav = () => {
         <ul className='nav__menu-list'>
         <li className='nav__links'><Link className="nav__links-text" to="/">Inicio</Link></li>
         {
-          user.role === 'admin' ? '' : <li className='nav__links'><Link className="nav__links-text" to="/login">Admin</Link></li>
-        }
-        
-        {
-          user.role === 'admin' && <li className='nav__links'><Link className="nav__links-text" to="/">Cerrar sesión</Link></li>
+          userRole === 'true' ? <li className='nav__links'><Link className="nav__links-text" to="/" onClick={handleCloseSession}>Cerrar sesión</Link></li> : <li className='nav__links'><Link className="nav__links-text" to="/login">Admin</Link></li>
         }
         </ul>
     </div>

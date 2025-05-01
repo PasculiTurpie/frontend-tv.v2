@@ -17,9 +17,9 @@ const Login = () => {
     const { setUser, isAuth, setIsAuth } = useContext(UserContext);
     const [showPassword, setShowPassword] = useState(false);
 
-    const navigate = useNavigate()
+    const navigate = useNavigate();
 
-    
+    console.log(localStorage.getItem('ísLogin'))
 
     const toggleShowPassword = () => setShowPassword(!showPassword);
 
@@ -40,8 +40,8 @@ const Login = () => {
                                     values
                                 )
                                 .then((response) => {
-                                    console.log(response);
-                                    
+                                    localStorage.setItem('isLogin',(true));
+
                                     Swal.fire({
                                         position: "top-end",
                                         icon: "success",
@@ -49,9 +49,8 @@ const Login = () => {
                                         showConfirmButton: false,
                                         timer: 1500,
                                     });
-                                    setUser(response.data.user)
-setIsAuth(true)
-                                    console.log(`Autenticación: ${isAuth}`);
+                                    setUser(response.data.user);
+                                    
                                 });
                         } catch (error) {
                             console.log(error);
@@ -63,7 +62,7 @@ setIsAuth(true)
                             });
                         }
                         resetForm();
-                        navigate('/')
+                        navigate("/");
                     }}
                 >
                     {({ errors, touched }) => (

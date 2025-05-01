@@ -1,16 +1,15 @@
-import React, { useContext } from 'react'
+import React from 'react'
+import { useContext } from "react";
+import { UserContext } from '../context/UserContext'
 import './Sidebar.css'
 import { Link } from 'react-router-dom'
 import Swal from 'sweetalert2'
-import { UserContext } from '../context/UserContext'
 
 const Sidebar = () => {
 
-  const { user } = useContext(UserContext);
+  const { user, setUser, isAuth, setIsAuth } = useContext(UserContext);
 
-
-  console.log({user})
-
+  console.log(user)
   const handleCloseSession = () => {
     Swal.fire({
       position: "top-end",
@@ -19,6 +18,7 @@ const Sidebar = () => {
       showConfirmButton: false,
       timer: 1500
     });
+    localStorage.remove('isLogin')
   }
   
   return (
