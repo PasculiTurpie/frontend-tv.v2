@@ -7,7 +7,7 @@ import Sidebar from "../components/Sidebar/Sidebar";
 import "./Layout.css";
 
 const Layout = () => {
-    const userRole = localStorage.getItem("isLogin");
+    const userRole = localStorage.getItem("userRole:state");
     console.log(userRole);
 
     return (

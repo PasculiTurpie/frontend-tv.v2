@@ -14,12 +14,13 @@ const LoginSchema = Yup.object().shape({
 });
 
 const Login = () => {
-    const { user, setUser } = useContext(UserContext);
+  const { user, setUser } = useContext(UserContext);
     const [showPassword, setShowPassword] = useState(false);
+
+    console.log(user)
 
     const navigate = useNavigate();
 
-    console.log(localStorage.getItem('ísLogin'))
 
     const toggleShowPassword = () => setShowPassword(!showPassword);
 
@@ -40,15 +41,18 @@ const Login = () => {
                                     values
                                 )
                                 .then((response) => {
-                                    console.log(response);
+                                  localStorage.setItem('userRole:role', JSON.stringify(response.data.user));
+                                  localStorage.setItem('userRole:state', true);
                                     Swal.fire({
                                         position: "top-end",
                                         icon: "success",
                                         title: "Usuario logueado correctamente",
                                         showConfirmButton: false,
                                         timer: 1500,
-                                    });
-                                    setUser(response.data.user);
+                                      });
+                                  setUser(response.data.user);
+                                  resetForm();
+                                  navigate("/");
                                     
                                 });
                         } catch (error) {
@@ -60,8 +64,7 @@ const Login = () => {
                                 footer: `${values.email}`,
                             });
                         }
-                        resetForm();
-                        navigate("/");
+                        
                     }}
                 >
                     {({ errors, touched }) => (
@@ -76,7 +79,7 @@ const Login = () => {
                                     <br />
                                     <Field
                                         className="form__group-input"
-                                        type="emaul"
+                                        type="email"
                                         name="email"
                                         id="email"
                                         autoComplete="on"
