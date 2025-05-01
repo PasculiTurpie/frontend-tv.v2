@@ -1,12 +1,12 @@
 import React, { useContext, useState } from "react";
 import { UserContext } from "../context/UserContext";
-import { Navigate } from "react-router-dom";
 import axios from "axios";
 import * as Yup from "yup";
 import { Field, Form, Formik } from "formik";
 import hidden__Password from "../../../public/images/hide-password.png";
 import show__Password from "../../../public/images/show-password.png";
 import Swal from "sweetalert2";
+import { useNavigate } from "react-router-dom";
 
 const LoginSchema = Yup.object().shape({
     email: Yup.string().email("Email inválido").required("Campo obligatorio"),
@@ -17,6 +17,7 @@ const Login = () => {
     const { setUser, isAuth, setIsAuth } = useContext(UserContext);
     const [showPassword, setShowPassword] = useState(false);
 
+    const navigate = useNavigate()
 
     
 
@@ -62,7 +63,7 @@ setIsAuth(true)
                             });
                         }
                         resetForm();
-                        {isAuth ? <Navigate to='/' /> : <Navigate to='/user'/>}
+                        navigate('/')
                     }}
                 >
                     {({ errors, touched }) => (
@@ -115,7 +116,7 @@ setIsAuth(true)
                                         style={{
                                             position: "absolute",
                                             right: 5,
-                                            top: 28,
+                                            top: 26,
                                         }}
                                     >
                                         {showPassword ? (

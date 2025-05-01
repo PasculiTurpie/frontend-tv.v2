@@ -9,7 +9,7 @@ const Sidebar = () => {
   const { user } = useContext(UserContext);
 
 
-  console.log(user)
+  console.log({user})
 
   const handleCloseSession = () => {
     Swal.fire({
