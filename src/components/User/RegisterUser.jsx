@@ -61,7 +61,8 @@ const RegisterUser = () => {
                     try {
                         await axios.post(
                             "http://localhost:3000/api/v2/user",
-                            values
+                            values,
+                            { withCredentials: true }
                         );
                         Swal.fire({
                             icon: "success",
