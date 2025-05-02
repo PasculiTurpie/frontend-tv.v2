@@ -8,14 +8,12 @@ import SatelliteForm from "./pages/Satellite/SatelliteForm";
 import { SatelliteList } from "./pages/Satellite/SatelliteList";
 import IrdForm from "./pages/Ird/IrdForm";
 import IrdListar from "./pages/Ird/IrdListar";
-import { useContext } from "react";
-import { UserContext } from "./components/context/UserContext";
 import RegisterUser from "./components/User/RegisterUser";
 import ListarUsers from "./components/User/ListarUsers";
 import Login from "./components/Login/Login";
 
 const App = () => {
-    const { isAuth } = useContext(UserContext);
+
 
     return (
         <>
@@ -27,7 +25,7 @@ const App = () => {
                     <Route
                         path="/satelite"
                         element={
-                            <ProtectedRoute isAuth={isAuth}>
+                            <ProtectedRoute >
                                 <SatelliteForm />
                             </ProtectedRoute>
                         }
@@ -35,7 +33,7 @@ const App = () => {
                     <Route
                         path="/listar-satelite"
                         element={
-                            <ProtectedRoute isAuth={isAuth}>
+                            <ProtectedRoute >
                                 <SatelliteList />
                             </ProtectedRoute>
                         }
@@ -43,7 +41,7 @@ const App = () => {
                     <Route
                         path="/ird"
                         element={
-                            <ProtectedRoute isAuth={isAuth}>
+                            <ProtectedRoute >
                                 <IrdForm />
                             </ProtectedRoute>
                         }
@@ -52,7 +50,7 @@ const App = () => {
                     <Route
                         path="/listar-ird"
                         element={
-                            <ProtectedRoute isAuth={isAuth}>
+                            <ProtectedRoute >
                                 <IrdListar />
                             </ProtectedRoute>
                         }
@@ -61,7 +59,7 @@ const App = () => {
                     <Route
                         path="/registrar-user"
                         element={
-                            <ProtectedRoute isAuth={isAuth}>
+                            <ProtectedRoute >
                                 <RegisterUser />
                             </ProtectedRoute>
                         }
@@ -69,7 +67,7 @@ const App = () => {
                     <Route
                         path="/listar-user"
                         element={
-                            <ProtectedRoute isAuth={isAuth}>
+                            <ProtectedRoute >
                                 <ListarUsers />
                             </ProtectedRoute>
                         }

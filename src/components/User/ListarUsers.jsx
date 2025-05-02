@@ -13,7 +13,7 @@ const ListarUsers = () => {
 
     const getAllUsers = () => {
         axios
-            .get(`http://localhost:3000/api/v2/user`)
+            .get(`http://localhost:3000/api/v2/user`, { withCredentials: true })
             .then((response) => {
                 console.log(response.data);
                 setUsers(response.data);

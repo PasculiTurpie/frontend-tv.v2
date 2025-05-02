@@ -1,28 +1,17 @@
-import React from 'react'
+import React, { useContext } from 'react'
 import './Sidebar.css'
 import { Link } from 'react-router-dom'
-import Swal from 'sweetalert2'
+import { UserContext } from '../context/UserContext'
+import LogoutButton from '../LogoutButton/LogoutButton'
 
 const Sidebar = () => {
 
-  const userLog = JSON.parse(localStorage.getItem('userRole:role'))
-
-  const handleCloseSession = () => {
-    Swal.fire({
-      position: "top-end",
-      icon: "success",
-      title: "Cerrando sesión",
-      showConfirmButton: false,
-      timer: 1500
-    });
-    localStorage.removeItem('useRole:role')
-  }
-  console.log(userLog)
+  const { user } = useContext(UserContext);
+ 
   return (
     <div className="sidebar">
-      <img src={userLog.profilePicture} alt="Profile" className="sidebar__profile-pic" />
-      <p className='profile'>Bienvenido<br /> {userLog.username}</p>
-      <p className='session' onClick={handleCloseSession}>Cerrar sessión</p>
+      <img src={user.profilePicture} alt="Profile" className="sidebar__profile-pic" />
+      <p className='profile'>Bienvenido<br /> {user.username}</p>
       <hr className='sidebar__line'/>
       <ul className='sidebar__list'>
         <li>

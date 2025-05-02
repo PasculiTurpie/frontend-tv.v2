@@ -14,13 +14,12 @@ const LoginSchema = Yup.object().shape({
 });
 
 const Login = () => {
-  const { user, setUser } = useContext(UserContext);
+    const { user, setUser, setIsAuth } = useContext(UserContext);
     const [showPassword, setShowPassword] = useState(false);
 
-    console.log(user)
+    console.log(user);
 
     const navigate = useNavigate();
-
 
     const toggleShowPassword = () => setShowPassword(!showPassword);
 
@@ -38,22 +37,23 @@ const Login = () => {
                             await axios
                                 .post(
                                     "http://localhost:3000/api/v2/login",
-                                    values
+                                    values,
+                                    { withCredentials: true }
                                 )
                                 .then((response) => {
-                                  localStorage.setItem('userRole:role', JSON.stringify(response.data.user));
-                                  localStorage.setItem('userRole:state', true);
+                                    console.log(response.data);
+                                    /* setUser(response.data.) */
                                     Swal.fire({
                                         position: "top-end",
                                         icon: "success",
                                         title: "Usuario logueado correctamente",
                                         showConfirmButton: false,
                                         timer: 1500,
-                                      });
-                                  setUser(response.data.user);
-                                  resetForm();
-                                  navigate("/");
-                                    
+                                    });
+                                    setUser(response.data.user);
+                                    resetForm();
+                                    setIsAuth(true);
+                                    navigate("/");
                                 });
                         } catch (error) {
                             console.log(error);
@@ -64,7 +64,6 @@ const Login = () => {
                                 footer: `${values.email}`,
                             });
                         }
-                        
                     }}
                 >
                     {({ errors, touched }) => (
