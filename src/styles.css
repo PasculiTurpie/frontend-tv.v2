@@ -49,6 +49,7 @@ td {
 .ant-modal-content {
   width     : fit-content;
   align-self: center;
+
 }
 
 .ant-modal {
@@ -64,14 +65,15 @@ select {
   width: 170px;
 }
 
-.form {
+.form__add {
   display       : flex;
   flex-direction: column;
   width         : fit-content;
-  box-shadow    : 0 14px 28px rgba(0, 0, 0, 0.25),
-    0 10px 10px rgba(0, 0, 0, 0.22);
+    box-shadow : 0 14px 28px rgba(0, 0, 0, 0.25),
+  0 10px 10px rgba(0, 0, 0, 0.22);
   padding: 30px;
   row-gap: 15px;
+  border-radius: 8px;
 }
 
 .form__titulo {
@@ -127,7 +129,6 @@ select {
   display:flex;
   column-gap: 40px;
 }
-
 
 
 .loader {

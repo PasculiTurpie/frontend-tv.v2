@@ -32,7 +32,7 @@ const ModalForm = ({
     useEffect(() => {
         if (itemId) {
             axios
-                .get(`http://localhost:3000/api/v2/satellite/${itemId}`)
+                .get(`http://localhost:3000/api/v2/satellite/${itemId}`, { withCredentials: true })
                 .then((res) => {
                     const data = res.data;
                     setSelectedPolarization(data.satelliteType._id)
@@ -44,7 +44,7 @@ const ModalForm = ({
                 });
 
             axios
-                .get(`http://localhost:3000/api/v2/polarization`)
+                .get(`http://localhost:3000/api/v2/polarization`, { withCredentials: true })
                 /* polarizations.find((item) => ) */
                     .then((res) => {
                         console.log(res.data)
@@ -56,7 +56,7 @@ const ModalForm = ({
     const handleSubmit = async (values) => {
         try {
             await axios.put(
-                `http://localhost:3000/api/v2/satellite/${itemId}`,
+                `http://localhost:3000/api/v2/satellite/${itemId}`, { withCredentials: true },
                 values
             );
             Swal.fire(

@@ -1,35 +1,46 @@
-import React, { useContext } from 'react'
-import './Sidebar.css'
-import { Link } from 'react-router-dom'
-import { UserContext } from '../context/UserContext'
-import LogoutButton from '../LogoutButton/LogoutButton'
+import React, { useContext } from 'react';
+import './Sidebar.css';
+import { Link } from 'react-router-dom';
+import { UserContext } from '../context/UserContext';
+
 
 const Sidebar = () => {
-
   const { user } = useContext(UserContext);
- 
+
   return (
     <div className="sidebar">
-      <img src={user.profilePicture} alt="Profile" className="sidebar__profile-pic" />
-      <p className='profile'>Bienvenido<br /> {user.username}</p>
-      <hr className='sidebar__line'/>
-      <ul className='sidebar__list'>
+      {user?.profilePicture && (
+        <img
+          src={user.profilePicture}
+          alt="Profile"
+          className="sidebar__profile-pic"
+        />
+      )}
+      <p className="profile">
+        Bienvenido<br />
+        <strong>{user?.username || "Usuario"}</strong>
+      </p>
+
+      <hr className="sidebar__line" />
+
+      <ul className="sidebar__list">
         <li>
           <Link to="/">Inicio</Link>
         </li>
         <li>
-          <Link to="/satelite">Satelite</Link>
+          <Link to="/satelite">Satélite</Link>
         </li>
         <li>
-          <Link to="/ird">Ird</Link>
+          <Link to="/ird">IRD</Link>
         </li>
         <hr />
         <li>
           <Link to="/registrar-user">Usuarios</Link>
         </li>
-        </ul>
+      </ul>
     </div>
-  )
-}
+  );
+};
 
 export default Sidebar;
+

@@ -67,7 +67,7 @@ const Login = () => {
                     }}
                 >
                     {({ errors, touched }) => (
-                        <Form className="form">
+                        <Form className="form__add">
                             <h1 className="form__titulo">Login</h1>
                             <div className="form__group">
                                 <label

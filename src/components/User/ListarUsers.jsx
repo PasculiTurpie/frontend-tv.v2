@@ -53,7 +53,7 @@ const ListarUsers = () => {
         if (result.isConfirmed) {
             try {
                 await axios.delete(
-                    `http://localhost:3000/api/v2/user/${id}`
+                    `http://localhost:3000/api/v2/user/${id}`, { withCredentials: true }
                 );
                 getAllUsers(); // Refresca la lista después de confirmar
                 await Swal.fire({

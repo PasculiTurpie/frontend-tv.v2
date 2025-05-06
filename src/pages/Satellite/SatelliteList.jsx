@@ -19,7 +19,7 @@ export const SatelliteList = () => {
 
     const getAllSatellites = () => {
         axios
-            .get(`http://localhost:3000/api/v2/satellite`)
+            .get(`http://localhost:3000/api/v2/satellite`, { withCredentials: true })
             .then((response) => {
                 setSatellites(response.data);
                 setIsLoading(false); // <- mover aquí
@@ -58,8 +58,7 @@ export const SatelliteList = () => {
         if (result.isConfirmed) {
             try {
                 await axios.delete(
-                    `http://localhost:3000/api/v2/satellite/${id}`
-                );
+                    `http://localhost:3000/api/v2/satellite/${id}`, { withCredentials: true });
                 getAllSatellites(); // Refresca la lista después de confirmar
                 await Swal.fire({
                     title: "¡Eliminado!",

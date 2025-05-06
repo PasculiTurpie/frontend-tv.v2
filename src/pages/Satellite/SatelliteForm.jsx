@@ -27,7 +27,7 @@ const SatelliteForm = () => {
 
     useEffect(() => {
         axios
-            .get(`http://localhost:3000/api/v2/polarization`)
+            .get(`http://localhost:3000/api/v2/polarization`, { withCredentials: true })
             .then((response) => {
                 setPolarizations(response.data);
             })
@@ -66,7 +66,7 @@ const SatelliteForm = () => {
                         // Enviar los datos a la API
                         const response = await axios.post(
                           "http://localhost:3000/api/v2/satellite",
-                          values
+                            values, { withCredentials: true }
                         );
 
                         // Obtener nombre de la polarización
@@ -100,7 +100,7 @@ const SatelliteForm = () => {
                     }}
                 >
                     {({ errors, touched }) => (
-                        <Form className="form">
+                        <Form className="form__add">
                             <h1 className="form__titulo">
                                 Ingresa un satélite
                             </h1>

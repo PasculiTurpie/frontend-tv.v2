@@ -93,7 +93,7 @@ const RegisterUser = () => {
 
                     return (
                         <div className="container-form-brother">
-                            <Form className="form">
+                            <Form className="form__add">
                                 <h1 className="form__titulo">Registrar</h1>
 
                                 <div className="form__group">
