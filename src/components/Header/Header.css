@@ -15,9 +15,6 @@
   background-color: #5A7EBE;
   margin:0 auto;
 }
-.logo{
-  width: 100%;
-}
 .titulo{
   display: flex;
   justify-content: center;
@@ -39,4 +36,28 @@ align-items    : center;
   font-size: 36px;
   font-weight: bold;
   color:#fff;
+}
+
+
+/* <= 1028px */
+@media screen and (max-width: 1028px) {
+  .header {
+   display: flex;
+   flex-direction: column;   
+   height: fit-content;
+   row-gap: 20px;
+  }
+  .header__logo{
+    position: relative;
+    top:0;
+    left:0;
+    height: fit-content;
+    margin-top:20px;
+  }
+  .titulo{
+    text-align: center;
+  }
+  .search{
+    margin-bottom: 20px;
+  }
 }
