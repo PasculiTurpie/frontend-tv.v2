@@ -1,7 +1,7 @@
 .card__container {
     display: flex;
     flex-direction: column;
-    justify-content: center;
+    justify-content: space-between ;
     align-items: center;
     width: 250px;
     height: 320px;
@@ -9,12 +9,17 @@
     border: 1px solid #4d4a4a69;
     border-radius: 8px;
     cursor: pointer;
+    overflow: hidden;
 }
 .card__container:hover{
     box-shadow: rgba(0, 0, 0, 0.12) 0px 1px 3px, rgba(0, 0, 0, 0.24) 0px 1px 2px;
 }
+.card_title{
+    text-align: center;
+    padding-top: 5px;
+}
 .card__logo {
-    width: 180px;
+    width: 150px;
 }
 .card__number{
     display:flex;
@@ -22,5 +27,19 @@
     flex-direction: row;
     justify-content: space-around;
     
+    
+}
+.card__severidad{
+    width: 100%;
+    padding: 20px 0;
+    background: #d6012f;
+    text-align: center;
+    font-weight: bold;
+    color: #fff;
+}
+.card__group-item{
+    width: 100%;
+    background: #01bdd6;
+    color: #fff;
     
 }
