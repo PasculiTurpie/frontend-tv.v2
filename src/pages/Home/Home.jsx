@@ -1,40 +1,29 @@
-import React from 'react'
-import './Home.css'
-
+import React from "react";
+import "./Home.css";
+import signal from "../../utils/contants";
 const Home = () => {
-  return (
-    <div className='outlet-main'>
-      <p>Lorem ipsum dolor sit amet consectetur adipiscing elit, aenean consequat porttitor est leo primis malesuada, donec ligula dignissim lacus cubilia semper. Iaculis accumsan lectus donec eros ornare feugiat faucibus integer dictumst, natoque sagittis parturient enim augue id sollicitudin eget, quisque fames duis suspendisse eleifend facilisis tincidunt tempor. At convallis vitae neque magnis diam faucibus ut enim, est pulvinar eleifend cum natoque auctor eget, proin aliquam dui imperdiet ligula elementum dapibus.
+    console.log(signal);
 
-        Per eget primis malesuada lacinia vulputate pulvinar cursus litora eleifend sodales diam, taciti mauris fames eros ridiculus purus neque dis massa mattis. Est eleifend torquent egestas justo mattis lacus vulputate diam, etiam dictumst habitasse vivamus quis semper cras. Nisl curabitur purus fames arcu libero magnis, lacus egestas hendrerit aptent laoreet euismod, accumsan potenti dui ut at.
-        Lorem ipsum dolor sit amet consectetur adipiscing elit, aenean consequat porttitor est leo primis malesuada, donec ligula dignissim lacus cubilia semper. Iaculis accumsan lectus donec eros ornare feugiat faucibus integer dictumst, natoque sagittis parturient enim augue id sollicitudin eget, quisque fames duis suspendisse eleifend facilisis tincidunt tempor. At convallis vitae neque magnis diam faucibus ut enim, est pulvinar eleifend cum natoque auctor eget, proin aliquam dui imperdiet ligula elementum dapibus.
+    return (
+        <div className="outlet-main">
+            {signal.map((signalItem) => {
+                return (
+                    <>
+                        <div className="card__container" key={signalItem.id}>
+                            <h3>{signalItem.nameChannel}</h3>
+                            <h4>{signalItem.numberChannel}</h4>
+                            <img
+                                className="card__logo"
+                                src={signalItem.logoChannel}
+                            />
+                            <p>{`Severidad: ${signalItem.severidadChannel}`}</p>
+                            <p>{signalItem.satelite.nameSatelite}</p>
+                        </div>
+                    </>
+                );
+            })}
+        </div>
+    );
+};
 
-        Per eget primis malesuada lacinia vulputate pulvinar cursus litora eleifend sodales diam, taciti mauris fames eros ridiculus purus neque dis massa mattis. Est eleifend torquent egestas justo mattis lacus vulputate diam, etiam dictumst habitasse vivamus quis semper cras. Nisl curabitur purus fames arcu libero magnis, lacus egestas hendrerit aptent laoreet euismod, accumsan potenti dui ut at.
-        Lorem ipsum dolor sit amet consectetur adipiscing elit, aenean consequat porttitor est leo primis malesuada, donec ligula dignissim lacus cubilia semper. Iaculis accumsan lectus donec eros ornare feugiat faucibus integer dictumst, natoque sagittis parturient enim augue id sollicitudin eget, quisque fames duis suspendisse eleifend facilisis tincidunt tempor. At convallis vitae neque magnis diam faucibus ut enim, est pulvinar eleifend cum natoque auctor eget, proin aliquam dui imperdiet ligula elementum dapibus.
-
-        Per eget primis malesuada lacinia vulputate pulvinar cursus litora eleifend sodales diam, taciti mauris fames eros ridiculus purus neque dis massa mattis. Est eleifend torquent egestas justo mattis lacus vulputate diam, etiam dictumst habitasse vivamus quis semper cras. Nisl curabitur purus fames arcu libero magnis, lacus egestas hendrerit aptent laoreet euismod, accumsan potenti dui ut at.
-        Lorem ipsum dolor sit amet consectetur adipiscing elit, aenean consequat porttitor est leo primis malesuada, donec ligula dignissim lacus cubilia semper. Iaculis accumsan lectus donec eros ornare feugiat faucibus integer dictumst, natoque sagittis parturient enim augue id sollicitudin eget, quisque fames duis suspendisse eleifend facilisis tincidunt tempor. At convallis vitae neque magnis diam faucibus ut enim, est pulvinar eleifend cum natoque auctor eget, proin aliquam dui imperdiet ligula elementum dapibus.
-
-        Per eget primis malesuada lacinia vulputate pulvinar cursus litora eleifend sodales diam, taciti mauris fames eros ridiculus purus neque dis massa mattis. Est eleifend torquent egestas justo mattis lacus vulputate diam, etiam dictumst habitasse vivamus quis semper cras. Nisl curabitur purus fames arcu libero magnis, lacus egestas hendrerit aptent laoreet euismod, accumsan potenti dui ut at.
-        Lorem ipsum dolor sit amet consectetur adipiscing elit, aenean consequat porttitor est leo primis malesuada, donec ligula dignissim lacus cubilia semper. Iaculis accumsan lectus donec eros ornare feugiat faucibus integer dictumst, natoque sagittis parturient enim augue id sollicitudin eget, quisque fames duis suspendisse eleifend facilisis tincidunt tempor. At convallis vitae neque magnis diam faucibus ut enim, est pulvinar eleifend cum natoque auctor eget, proin aliquam dui imperdiet ligula elementum dapibus.
-
-        Per eget primis malesuada lacinia vulputate pulvinar cursus litora eleifend sodales diam, taciti mauris fames eros ridiculus purus neque dis massa mattis. Est eleifend torquent egestas justo mattis lacus vulputate diam, etiam dictumst habitasse vivamus quis semper cras. Nisl curabitur purus fames arcu libero magnis, lacus egestas hendrerit aptent laoreet euismod, accumsan potenti dui ut at.
-        Lorem ipsum dolor sit amet consectetur adipiscing elit, aenean consequat porttitor est leo primis malesuada, donec ligula dignissim lacus cubilia semper. Iaculis accumsan lectus donec eros ornare feugiat faucibus integer dictumst, natoque sagittis parturient enim augue id sollicitudin eget, quisque fames duis suspendisse eleifend facilisis tincidunt tempor. At convallis vitae neque magnis diam faucibus ut enim, est pulvinar eleifend cum natoque auctor eget, proin aliquam dui imperdiet ligula elementum dapibus.
-
-        Per eget primis malesuada lacinia vulputate pulvinar cursus litora eleifend sodales diam, taciti mauris fames eros ridiculus purus neque dis massa mattis. Est eleifend torquent egestas justo mattis lacus vulputate diam, etiam dictumst habitasse vivamus quis semper cras. Nisl curabitur purus fames arcu libero magnis, lacus egestas hendrerit aptent laoreet euismod, accumsan potenti dui ut at.Lorem ipsum dolor sit amet consectetur adipiscing elit, aenean consequat porttitor est leo primis malesuada, donec ligula dignissim lacus cubilia semper. Iaculis accumsan lectus donec eros ornare feugiat faucibus integer dictumst, natoque sagittis parturient enim augue id sollicitudin eget, quisque fames duis suspendisse eleifend facilisis tincidunt tempor. At convallis vitae neque magnis diam faucibus ut enim, est pulvinar eleifend cum natoque auctor eget, proin aliquam dui imperdiet ligula elementum dapibus.
-
-        Per eget primis malesuada lacinia vulputate pulvinar cursus litora eleifend sodales diam, taciti mauris fames eros ridiculus purus neque dis massa mattis. Est eleifend torquent egestas justo mattis lacus vulputate diam, etiam dictumst habitasse vivamus quis semper cras. Nisl curabitur purus fames arcu libero magnis, lacus egestas hendrerit aptent laoreet euismod, accumsan potenti dui ut at.
-        Lorem ipsum dolor sit amet consectetur adipiscing elit, aenean consequat porttitor est leo primis malesuada, donec ligula dignissim lacus cubilia semper. Iaculis accumsan lectus donec eros ornare feugiat faucibus integer dictumst, natoque sagittis parturient enim augue id sollicitudin eget, quisque fames duis suspendisse eleifend facilisis tincidunt tempor. At convallis vitae neque magnis diam faucibus ut enim, est pulvinar eleifend cum natoque auctor eget, proin aliquam dui imperdiet ligula elementum dapibus.
-
-        Per eget primis malesuada lacinia vulputate pulvinar cursus litora eleifend sodales diam, taciti mauris fames eros ridiculus purus neque dis massa mattis. Est eleifend torquent egestas justo mattis lacus vulputate diam, etiam dictumst habitasse vivamus quis semper cras. Nisl curabitur purus fames arcu libero magnis, lacus egestas hendrerit aptent laoreet euismod, accumsan potenti dui ut at.Lorem ipsum dolor sit amet consectetur adipiscing elit, aenean consequat porttitor est leo primis malesuada, donec ligula dignissim lacus cubilia semper. Iaculis accumsan lectus donec eros ornare feugiat faucibus integer dictumst, natoque sagittis parturient enim augue id sollicitudin eget, quisque fames duis suspendisse eleifend facilisis tincidunt tempor. At convallis vitae neque magnis diam faucibus ut enim, est pulvinar eleifend cum natoque auctor eget, proin aliquam dui imperdiet ligula elementum dapibus.
-
-        Per eget primis malesuada lacinia vulputate pulvinar cursus litora eleifend sodales diam, taciti mauris fames eros ridiculus purus neque dis massa mattis. Est eleifend torquent egestas justo mattis lacus vulputate diam, etiam dictumst habitasse vivamus quis semper cras. Nisl curabitur purus fames arcu libero magnis, lacus egestas hendrerit aptent laoreet euismod, accumsan potenti dui ut at.Lorem ipsum dolor sit amet consectetur adipiscing elit, aenean consequat porttitor est leo primis malesuada, donec ligula dignissim lacus cubilia semper. Iaculis accumsan lectus donec eros ornare feugiat faucibus integer dictumst, natoque sagittis parturient enim augue id sollicitudin eget, quisque fames duis suspendisse eleifend facilisis tincidunt tempor. At convallis vitae neque magnis diam faucibus ut enim, est pulvinar eleifend cum natoque auctor eget, proin aliquam dui imperdiet ligula elementum dapibus.
-
-        Per eget primis malesuada lacinia vulputate pulvinar cursus litora eleifend sodales diam, taciti mauris fames eros ridiculus purus neque dis massa mattis. Est eleifend torquent egestas justo mattis lacus vulputate diam, etiam dictumst habitasse vivamus quis semper cras. Nisl curabitur purus fames arcu libero magnis, lacus egestas hendrerit aptent laoreet euismod, accumsan potenti dui ut at.Lorem ipsum dolor sit amet consectetur adipiscing elit, aenean consequat porttitor est leo primis malesuada, donec ligula dignissim lacus cubilia semper. Iaculis accumsan lectus donec eros ornare feugiat faucibus integer dictumst, natoque sagittis parturient enim augue id sollicitudin eget, quisque fames duis suspendisse eleifend facilisis tincidunt tempor. At convallis vitae neque magnis diam faucibus ut enim, est pulvinar eleifend cum natoque auctor eget, proin aliquam dui imperdiet ligula elementum dapibus.
-
-        Per eget primis malesuada lacinia vulputate pulvinar cursus litora eleifend sodales diam, taciti mauris fames eros ridiculus purus neque dis massa mattis. Est eleifend torquent egestas justo mattis lacus vulputate diam, etiam dictumst habitasse vivamus quis semper cras. Nisl curabitur purus fames arcu libero magnis, lacus egestas hendrerit aptent laoreet euismod, accumsan potenti dui ut at.</p>
-    </div>
-  )
-}
-
-export default Home
+export default Home;
