@@ -24,6 +24,9 @@ const signal = [
                 phoneContact: "922334455",
             },
         ],
+        proveedor:{
+          nombreProveedor:"DreamWorks Pictures"
+        },
         decoderIrd: {
             imageUrldecoderIrd: "https://i.ibb.co/pvW06r6K/ird-motorola.png",
             ipGestion: "172.19.1.207",
