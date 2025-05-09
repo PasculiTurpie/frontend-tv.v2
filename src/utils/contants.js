@@ -2,7 +2,8 @@ const signal = [
     {
         id: 3,
         nameChannel: "DREAMWORKS",
-        numberChannel: "3",
+        numberChannelSur: "3",
+        numberChannelCn:"3",
         logoChannel: "https://i.ibb.co/KX2gxHz/Dreamworks.jpg",
         severidadChannel: "4",
         tipoTecnologia: "MPEG4",

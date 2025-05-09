@@ -1,17 +1,8 @@
-.home{
-  background-color: #f0eef1;
-}
-
-.card__container{
+.container__cards{
   display: flex;
-  flex-direction: column;
   justify-content: center;
-  align-items: center;
-  width: 250px;
-  height: 320px;
-  border:1px solid red;
-  border-radius:8px
-}
-.card__logo{
-  width: 180px;
+  flex-wrap: wrap;
+  gap:30px;
+  padding:50px 0;
+
 }
