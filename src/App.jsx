@@ -11,6 +11,7 @@ import IrdListar from "./pages/Ird/IrdListar";
 import RegisterUser from "./components/User/RegisterUser";
 import ListarUsers from "./components/User/ListarUsers";
 import Login from "./components/Login/Login";
+import AddSignal from "./pages/AddSignal/AddSignal";
 
 const App = () => {
 
@@ -71,6 +72,14 @@ const App = () => {
                             <ProtectedRoute >
                                 <ListarUsers />
                             </ProtectedRoute>
+                        }
+                    />
+                    <Route
+                        path="/signal"
+                        element={
+                            
+                                <AddSignal />
+                            
                         }
                     />
                 </Route>

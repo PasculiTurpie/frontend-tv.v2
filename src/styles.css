@@ -80,6 +80,15 @@ select {
   row-gap: 15px;
   border-radius: 8px;
 }
+.form__add-more{
+  display: flex;
+  flex-direction: row;
+  column-gap: 20px;
+}
+/* .form__add-group{
+  display:block;
+  border: 1px solid green;
+} */
 
 .form__titulo {
   font-size  : 20px;
@@ -112,6 +121,11 @@ select {
   font-size: 12px;
 }
 
+.button-self{
+ align-self:flex-end;
+
+}
+
 .btn {
   padding       : 8px 0;
   font-size     : 18px;
@@ -133,6 +147,10 @@ select {
 .container-form-brother{
   display:flex;
   column-gap: 40px;
+}
+
+.nodo1{
+  border:1px solid #d6244d;
 }
 
 
