@@ -2,9 +2,10 @@ import React, { useEffect, useState } from "react";
 import "./Card.css";
 /* import signal from "../../utils/contants"; */
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 const Card = () => {
-    /* console.log(signal); */
+    const navigate = useNavigate();
 
     const [signalTv, setSignalTv] = useState([]);
 
@@ -12,13 +13,16 @@ const Card = () => {
         axios.get("http://localhost:3000/api/v2/signal").then((response) => {
             console.log(response.data);
             setSignalTv(response.data);
-        });
+        })
     }, []);
 
     const handleclick = (e) => {
         const card = e.target.closest(".card__container"); // busca el contenedor más cercano
         const id = card?.dataset.id;
         console.log("ID:", id);
+        if (id) {
+            navigate(`/signal/${id}`); // redirige a otra vista
+        }
     };
 
     return (

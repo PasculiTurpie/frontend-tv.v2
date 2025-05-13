@@ -12,6 +12,7 @@ import RegisterUser from "./components/User/RegisterUser";
 import ListarUsers from "./components/User/ListarUsers";
 import Login from "./components/Login/Login";
 import AddSignal from "./pages/AddSignal/AddSignal";
+import DetailCard from "./components/DatailCard/DetailCard";
 
 const App = () => {
 
@@ -80,6 +81,14 @@ const App = () => {
                             
                                 <AddSignal />
                             
+                        }
+                    />
+                    <Route
+                        path="/signal/:id"
+                        element={
+
+                            <DetailCard />
+
                         }
                     />
                 </Route>

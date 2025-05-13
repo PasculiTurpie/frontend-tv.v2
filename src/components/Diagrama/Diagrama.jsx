@@ -1,7 +1,10 @@
 import React from 'react'
+import { useParams } from 'react-router-dom'
 
 const Diagrama = ({ id }) => {
-  id='23423452345235'
+
+  const {params} = useParams()
+console.log(params)
 
   useEffect(() => {
     axios.get(`http://localhost:3000/api/v2/signal/${id}`)
