@@ -6,18 +6,20 @@ import axios from "axios";
 const Card = () => {
     /* console.log(signal); */
 
-    const [signalTv, setSignalTv] = useState([])
+    const [signalTv, setSignalTv] = useState([]);
 
-    useEffect(()=>{
-        axios.get('http://localhost:3000/api/v2/signal')
-    .then((response) =>{
-        console.log(response.data)
-        setSignalTv(response.data)
-    })
-    }, [])
+    useEffect(() => {
+        axios.get("http://localhost:3000/api/v2/signal").then((response) => {
+            console.log(response.data);
+            setSignalTv(response.data);
+        });
+    }, []);
 
-    
-
+    const handleclick = (e) => {
+        const card = e.target.closest(".card__container"); // busca el contenedor más cercano
+        const id = card?.dataset.id;
+        console.log("ID:", id);
+    };
 
     return (
         <>
@@ -26,18 +28,19 @@ const Card = () => {
                     <div
                         className="card__container"
                         key={index}
-                        value={signalItem.id}
+                        data-id={signalItem._id}
+                        onClick={handleclick}
                     >
-                    <div className="card__group-item">
-                        <h4 className="card_title">{signalItem.nameChannel}</h4>
-                        <div className="card__number">
-                            <h5 className="card__number-item">{`Norte: ${signalItem.numberChannelCn}`}</h5>
+                        <div className="card__group-item">
+                            <h4 className="card_title">
+                                {signalItem.nameChannel}
+                            </h4>
+                            <div className="card__number">
+                                <h5 className="card__number-item">{`Norte: ${signalItem.numberChannelCn}`}</h5>
 
-                            <h5 className="card__number-item">{`Sur: ${signalItem.numberChannelSur}`}</h5>
+                                <h5 className="card__number-item">{`Sur: ${signalItem.numberChannelSur}`}</h5>
+                            </div>
                         </div>
-
-
-                    </div>
                         <img
                             className="card__logo"
                             src={signalItem.logoChannel}

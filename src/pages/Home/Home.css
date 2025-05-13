@@ -4,5 +4,7 @@
   flex-wrap: wrap;
   gap:30px;
   padding:50px 0;
+  margin: auto;
+  height:calc(100vh - 301px) ;
 
 }

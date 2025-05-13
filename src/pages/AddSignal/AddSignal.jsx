@@ -130,14 +130,17 @@ const AddSignal = () => {
                             htmlFor="satelliteName"
                             className="form__group-label"
                         >
-                            Nombre señal
+                            Nodo 1
                             <br />
-                            <input
-                                type="text"
+                            <select type="text"
                                 className="form__group-input"
                                 placeholder="Url web"
-                                name="satelliteUrl"
-                            />
+                                name="satelliteUrl">
+                                <option value="0">Seleccionar</option>
+                                <option value="satelite">Satelital</option>
+                                <option value="srt">SRT</option>
+                                <option value="fibra">Fibra</option>
+                            </select>
                         </label>
                     </div>
                     <div className="form__group">
