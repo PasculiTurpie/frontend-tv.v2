@@ -8,17 +8,7 @@ const Home = () => {
     return (
         <div className="container__cards">
            <Card />
-           <Card />
-           <Card />
-           <Card />
-           <Card />
-           <Card />
-           <Card />
-           <Card />
-           <Card />
-           <Card />
-           <Card />
-           <Card />
+          
         </div>
     );
 };

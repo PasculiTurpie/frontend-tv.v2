@@ -1,13 +1,27 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import "./Card.css";
-import signal from "../../utils/contants";
+/* import signal from "../../utils/contants"; */
+import axios from "axios";
 
 const Card = () => {
-    console.log(signal);
+    /* console.log(signal); */
+
+    const [signalTv, setSignalTv] = useState([])
+
+    useEffect(()=>{
+        axios.get('http://localhost:3000/api/v2/signal')
+    .then((response) =>{
+        console.log(response.data)
+        setSignalTv(response.data)
+    })
+    }, [])
+
+    
+
 
     return (
         <>
-            {signal.map((signalItem, index) => {
+            {signalTv.map((signalItem, index) => {
                 return (
                     <div
                         className="card__container"
