@@ -36,7 +36,7 @@ const Card = () => {
                         onClick={handleclick}
                     >
                         <div className="card__group-item">
-                            <h4 className="card_title">
+                            <h4 className="card__title">
                                 {signalItem.nameChannel}
                             </h4>
                             <div className="card__number">
