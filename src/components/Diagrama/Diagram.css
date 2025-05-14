@@ -1,0 +1,7 @@
+.container__diagram{
+    margin: auto;
+    text-align: center;
+    width: 100%;
+    height: 67vh;
+    border: 1px solid red;
+}

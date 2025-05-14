@@ -1,20 +1,25 @@
 import axios from "axios";
 import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import "./DetailCard.css";
 
 const DetailCard = () => {
     const { id } = useParams();
     const [DetailCard, setDetailCard] = useState({});
+    const navigate = useNavigate()
 
     useEffect(() => {
         axios
             .get(`http://localhost:3000/api/v2/signal/${id}`)
             .then((response) => {
-                console.log(response.data);
+                console.log(response.data.equipos);
                 setDetailCard(response.data);
             });
     }, []);
+
+    const handleClickDiagram = ()=>{
+       navigate(`/diagrama/${id}`)
+    }
 
     return (
         <>
@@ -37,7 +42,7 @@ const DetailCard = () => {
                     <p>Severidad: {DetailCard.severidadChannel}</p>
                     <div className="card__detail-button">
                         <button className="button btn-success">Contacto</button>
-                        <button className="button btn-primary">Ver mapa</button>
+                        <button onClick={handleClickDiagram} className="button btn-primary">Ver mapa</button>
                     </div>
                 </div>
             </div>

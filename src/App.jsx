@@ -13,10 +13,9 @@ import ListarUsers from "./components/User/ListarUsers";
 import Login from "./components/Login/Login";
 import AddSignal from "./pages/AddSignal/AddSignal";
 import DetailCard from "./components/DatailCard/DetailCard";
+import Diagrama from "./components/Diagrama/Diagrama";
 
 const App = () => {
-
-
     return (
         <>
             <Routes>
@@ -28,7 +27,7 @@ const App = () => {
                     <Route
                         path="/satelite"
                         element={
-                            <ProtectedRoute >
+                            <ProtectedRoute>
                                 <SatelliteForm />
                             </ProtectedRoute>
                         }
@@ -36,7 +35,7 @@ const App = () => {
                     <Route
                         path="/listar-satelite"
                         element={
-                            <ProtectedRoute >
+                            <ProtectedRoute>
                                 <SatelliteList />
                             </ProtectedRoute>
                         }
@@ -44,7 +43,7 @@ const App = () => {
                     <Route
                         path="/ird"
                         element={
-                            <ProtectedRoute >
+                            <ProtectedRoute>
                                 <IrdForm />
                             </ProtectedRoute>
                         }
@@ -53,7 +52,7 @@ const App = () => {
                     <Route
                         path="/listar-ird"
                         element={
-                            <ProtectedRoute >
+                            <ProtectedRoute>
                                 <IrdListar />
                             </ProtectedRoute>
                         }
@@ -62,7 +61,7 @@ const App = () => {
                     <Route
                         path="/registrar-user"
                         element={
-                            <ProtectedRoute >
+                            <ProtectedRoute>
                                 <RegisterUser />
                             </ProtectedRoute>
                         }
@@ -70,27 +69,14 @@ const App = () => {
                     <Route
                         path="/listar-user"
                         element={
-                            <ProtectedRoute >
+                            <ProtectedRoute>
                                 <ListarUsers />
                             </ProtectedRoute>
                         }
                     />
-                    <Route
-                        path="/signal"
-                        element={
-                            
-                                <AddSignal />
-                            
-                        }
-                    />
-                    <Route
-                        path="/signal/:id"
-                        element={
-
-                            <DetailCard />
-
-                        }
-                    />
+                    <Route path="/signal" element={<AddSignal />} />
+                    <Route path="/signal/:id" element={<DetailCard />} />
+                    <Route path="/diagrama/:id" element={<Diagrama />} />
                 </Route>
                 <Route path="*" element={<NotFound />} />
             </Routes>
