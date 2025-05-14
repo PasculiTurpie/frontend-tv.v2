@@ -139,6 +139,11 @@ select {
   background-color: #01447a;
   color           : #fff;
 }
+.btn-warning{
+  background-color: #FFCA2C;
+  color           : #000000;
+  font-weight: bold;
+}
 
 .icon__password{
   width: 24px;

@@ -4,6 +4,7 @@
 }
 .card-detail-container {
     display: flex;
+    position:relative;
     flex-direction: column;
     justify-content: center;
     align-items: center;
@@ -38,4 +39,9 @@
     display: flex;
     width: 100%;
     justify-content: space-between;
+}
+.button-back{
+    position:absolute;
+    top: 20px;
+    right: 30px;
 }

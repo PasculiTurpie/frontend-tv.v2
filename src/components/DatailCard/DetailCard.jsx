@@ -25,6 +25,7 @@ const DetailCard = () => {
         <>
             <div className="container__card-detail">
                 <div className="card-detail-container">
+                <button className="button-back button btn-warning">Volver</button>
                     <div className="card-detail-header">
                         <img
                             className="card__detail-logo"
