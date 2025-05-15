@@ -2,10 +2,14 @@ import React, { useEffect, useState } from "react";
 import "./Card.css";
 /* import signal from "../../utils/contants"; */
 import axios from "axios";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 
 const Card = () => {
     const navigate = useNavigate();
+    const location = useLocation()
+
+
+    console.log(location)
 
     const [signalTv, setSignalTv] = useState([]);
 

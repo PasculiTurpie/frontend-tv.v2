@@ -1,18 +1,21 @@
 import axios from "axios";
 import React, { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import "./DetailCard.css";
 
 const DetailCard = () => {
     const { id } = useParams();
     const [DetailCard, setDetailCard] = useState({});
     const navigate = useNavigate()
+     const location = useLocation()
+    
+        console.log(location)
 
     useEffect(() => {
         axios
             .get(`http://localhost:3000/api/v2/signal/${id}`)
             .then((response) => {
-                console.log(response.data.equipos);
+
                 setDetailCard(response.data);
             });
     }, []);
@@ -20,12 +23,14 @@ const DetailCard = () => {
     const handleClickDiagram = ()=>{
        navigate(`/diagrama/${id}`)
     }
-
+    const handleBackSubmit = () => {
+        navigate(`/`);
+    }
     return (
         <>
             <div className="container__card-detail">
                 <div className="card-detail-container">
-                <button className="button-back button btn-warning">Volver</button>
+                    <button className="button-back button btn-warning" onClick={handleBackSubmit}>Volver</button>
                     <div className="card-detail-header">
                         <img
                             className="card__detail-logo"
