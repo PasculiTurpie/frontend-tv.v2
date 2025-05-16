@@ -8,8 +8,7 @@ const DetailCard = () => {
     const [DetailCard, setDetailCard] = useState({});
     const navigate = useNavigate()
      const location = useLocation()
-    
-        console.log(location)
+
 
     useEffect(() => {
         axios

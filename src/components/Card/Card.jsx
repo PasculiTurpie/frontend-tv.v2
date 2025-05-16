@@ -9,13 +9,10 @@ const Card = () => {
     const location = useLocation()
 
 
-    console.log(location)
-
     const [signalTv, setSignalTv] = useState([]);
 
     useEffect(() => {
         axios.get("http://localhost:3000/api/v2/signal").then((response) => {
-            console.log(response.data);
             setSignalTv(response.data);
         })
     }, []);
@@ -23,7 +20,6 @@ const Card = () => {
     const handleclick = (e) => {
         const card = e.target.closest(".card__container"); // busca el contenedor más cercano
         const id = card?.dataset.id;
-        console.log("ID:", id);
         if (id) {
             navigate(`/signal/${id}`); // redirige a otra vista
         }
