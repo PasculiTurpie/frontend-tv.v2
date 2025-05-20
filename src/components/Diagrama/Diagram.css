@@ -2,6 +2,5 @@
     margin: auto;
     text-align: center;
     width: 100%;
-    min-height: calc(100vh - 467px);
-    border:1px solid red;
+    min-height: calc(100vh - 301px);
 }
