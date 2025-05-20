@@ -1,0 +1,48 @@
+import axios from "axios";
+
+class Api {
+    constructor(url) {
+        this._url = url;
+
+        this._axios = axios.create({
+            baseURL: this._url,
+            withCredentials: true,
+        });
+    }
+
+    /* Rutas para gestión de ususrios */
+
+    createUser(values) {
+        return this._axios.post("/user", values).then((res) => res.data);
+    }
+    updateUser(values, id) {
+        return this._axios.put(`/user/${id}`, values).then((res) => res.data);
+    }
+
+    getUserInfo() {
+        return this._axios.get("/user").then((res) => res.data);
+    }
+    getUserId(id) {
+        return this._axios.get(`/user/${id}`).then((res) => res.data);
+    }
+    deleteUserId(id) {
+        return this._axios.delete(`/user/${id}`).then((res) => res.data);
+    }
+
+    /* Rutas para gestión de satelites */
+
+    createSatelite(values) {
+        return this._axios.post("/satelite", values).then((res) => res.data);
+    }
+
+    getSatellites() {
+        return this._axios.get("/satelite").then((res) => res.data);
+    }
+    deleteSatelliteId(id) {
+        return this._axios.delete(`/satelite/${id}`).then((res) => res.data);
+    }
+}
+
+const api = new Api("http://localhost:3000/api/v2");
+
+export default api;

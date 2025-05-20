@@ -5,6 +5,7 @@ import axios from "axios";
 import Loader from "../../components/Loader/Loader";
 import Swal from "sweetalert2";
 import ModalForm from "../../components/ModalForm/ModalForm";
+import api from '../../utils/api'
 
 
 
@@ -18,13 +19,14 @@ export const SatelliteList = () => {
 
 
     const getAllSatellites = () => {
-        axios
-            .get(`http://localhost:3000/api/v2/satellite`, { withCredentials: true })
+        api.getSatellites()
             .then((response) => {
-                setSatellites(response.data);
+                console.log(response.data)
+                setSatellites(response);
                 setIsLoading(false); // <- mover aquí
             })
             .catch((error) => {
+                console.log(error)
                 console.log(`Error: ${error.response.data.message}`);
                 Swal.fire({
                     icon: "error",
@@ -57,8 +59,7 @@ export const SatelliteList = () => {
 
         if (result.isConfirmed) {
             try {
-                await axios.delete(
-                    `http://localhost:3000/api/v2/satellite/${id}`, { withCredentials: true });
+                await api.deleteSatelliteId(id)
                 getAllSatellites(); // Refresca la lista después de confirmar
                 await Swal.fire({
                     title: "¡Eliminado!",

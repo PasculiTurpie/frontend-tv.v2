@@ -5,7 +5,7 @@ import * as Yup from "yup";
 import hidden__Password from "../../../public/images/hide-password.png";
 import show__Password from "../../../public/images/show-password.png";
 import Swal from "sweetalert2";
-import axios from "axios";
+import api from '../../utils/api'
 
 const RegisterSchema = Yup.object().shape({
     username: Yup.string().required("Campo obligatorio"),
@@ -59,11 +59,7 @@ const RegisterUser = () => {
                 onSubmit={async (values, { resetForm }) => {
                     console.log(values);
                     try {
-                        await axios.post(
-                            "http://localhost:3000/api/v2/user",
-                            values,
-                            { withCredentials: true }
-                        );
+                        await api.createUser(values)
                         Swal.fire({
                             icon: "success",
                             title: "Usuario registrado",

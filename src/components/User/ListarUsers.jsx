@@ -4,6 +4,7 @@ import Loader from "../../components/Loader/Loader";
 import { Link } from "react-router-dom";
 import Swal from "sweetalert2";
 import ModalForm from "../../components/ModalForm/ModalForm";
+import api from '../../utils/api'
 
 const ListarUsers = () => {
     const [users, setUsers] = useState([]);
@@ -12,11 +13,10 @@ const ListarUsers = () => {
     const [itemId, setItemId] = useState('')
 
     const getAllUsers = () => {
-        axios
-            .get(`http://localhost:3000/api/v2/user`, { withCredentials: true })
+        api.getUserInfo()
             .then((response) => {
-                console.log(response.data);
-                setUsers(response.data);
+                console.log(response);
+                setUsers(response);
                 setIsLoading(false);
             })
             .catch((error) => {
@@ -35,6 +35,8 @@ const ListarUsers = () => {
         refreshList();
     }, []);
 
+    
+
     const refreshList = () => {
         getAllUsers();
     };
@@ -52,9 +54,7 @@ const ListarUsers = () => {
 
         if (result.isConfirmed) {
             try {
-                await axios.delete(
-                    `http://localhost:3000/api/v2/user/${id}`, { withCredentials: true }
-                );
+                await api.deleteUserId(id)
                 getAllUsers(); // Refresca la lista después de confirmar
                 await Swal.fire({
                     title: "¡Eliminado!",
@@ -113,7 +113,7 @@ const ListarUsers = () => {
                 </nav>
                 <p className="">
                     <span className="total-list">Total items: </span>
-                    {users.length}
+                    {users?.length}
                 </p>
                 {isLoading ? (
                     <div className="loader__spinner">

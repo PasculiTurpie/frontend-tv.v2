@@ -4,6 +4,7 @@ import axios from "axios";
 import { Formik, Form, Field } from "formik";
 import * as Yup from "yup";
 import Swal from "sweetalert2";
+import api from '../../utils/api'
 
 const SatelliteSchema = Yup.object().shape({
     satelliteName: Yup.string().required("Campo obligatorio"),
@@ -29,6 +30,7 @@ const SatelliteForm = () => {
         axios
             .get(`http://localhost:3000/api/v2/polarization`, { withCredentials: true })
             .then((response) => {
+                console.log(response)
                 setPolarizations(response.data);
             })
             .catch((error) => {
@@ -64,11 +66,8 @@ const SatelliteForm = () => {
                     onSubmit={async (values, { resetForm }) => {
                       try {
                         // Enviar los datos a la API
-                        const response = await axios.post(
-                          "http://localhost:3000/api/v2/satellite",
-                            values, { withCredentials: true }
-                        );
-
+                          const response = await api.createSatelite(values)
+                          console.log(response)
                         // Obtener nombre de la polarización
                         const selectedPolarization = polarizations.find(
                           (p) => p._id === values.satelliteType

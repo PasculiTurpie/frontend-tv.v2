@@ -11,6 +11,7 @@ const nodes = [
         data: {
             label: "IS-21",
             image: "https://i.ibb.co/m5dxbBRh/parabolic.png",
+            _id:"987538453hj45o3i4u9834"
         },
     },
     {
@@ -130,13 +131,20 @@ const edges = [
     },
 ];
 
+
+const handleTargetInfo = (e) => {
+    console.log(e.target)
+}
 const ImageNode = ({ data }) => {
+    console.log(data)
     return (
         <div style={{ textAlign: "center" }}>
             <img
                 src={data.image}
                 alt={data.label}
-                style={{ width: 100, height: 160 , objectFit:'contain'}}
+                style={{ width: 100, height: 160, objectFit: 'contain' }}
+                data-id={data._id}
+                onClick={handleTargetInfo}
             />
             <div style={{ fontSize: 16, marginTop: 5 }}>{data.label}</div>
             {/* Entrada */}

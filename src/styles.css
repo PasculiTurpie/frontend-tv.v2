@@ -18,6 +18,7 @@
   padding      : 5px 8px;
   color        : white;
   border-radius: 5px;
+
 }
 
 .ant-btn-variant-outlined {
@@ -26,6 +27,9 @@
 
 .btn-primary {
   background-color: #4db89b;
+}
+.separate{
+  margin-top:15px
 }
 
 .btn-danger {
@@ -110,6 +114,7 @@ select {
   border          : 1px solid rgb(5, 53, 156);
   padding         : 3px 5px;
   width           : 180px;
+
 }
 
 .form__group-input:focus {
@@ -133,6 +138,7 @@ select {
   font-weight   : 600;
   letter-spacing: .07em;
   cursor        : pointer;
+
 }
 
 .btn-success {
