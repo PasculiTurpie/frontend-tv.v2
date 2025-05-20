@@ -27,11 +27,10 @@ const SatelliteForm = () => {
     const nameInputRef = useRef(null);
 
     useEffect(() => {
-        axios
-            .get(`http://localhost:3000/api/v2/polarization`, { withCredentials: true })
+        api.getPolarizations()
             .then((response) => {
                 console.log(response)
-                setPolarizations(response.data);
+                setPolarizations(response);
             })
             .catch((error) => {
                 console.error("Error fetching satellite data:", error);

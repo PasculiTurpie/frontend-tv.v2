@@ -41,6 +41,12 @@ class Api {
     deleteSatelliteId(id) {
         return this._axios.delete(`/satelite/${id}`).then((res) => res.data);
     }
+
+    /* Rutas para gestión de polarizaciones */
+
+    getPolarizations() {
+        return this._axios.get("/polarization").then((res) => res.data);
+    }
 }
 
 const api = new Api("http://localhost:3000/api/v2");
