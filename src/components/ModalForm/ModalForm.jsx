@@ -1,12 +1,11 @@
 import React, { useEffect, useState } from "react";
-/* import "./ModalForm.css";
- */
-/* import "../../pages/Satellite/Satellite.css"; */
 import { Modal } from "antd";
 import { Formik, Form, Field } from "formik";
 import * as Yup from "yup";
 import axios from "axios";
 import Swal from "sweetalert2";
+import api from '../../utils/api'
+
 
 // Esquema de validación
 const EditSchema = Yup.object().shape({
@@ -31,34 +30,29 @@ const ModalForm = ({
 
     useEffect(() => {
         if (itemId) {
-            axios
-                .get(`http://localhost:3000/api/v2/satelite/${itemId}`, { withCredentials: true })
+            api.getSatelliteId(itemId)
                 .then((res) => {
-                    const data = res.data;
-                    setSelectedPolarization(data.satelliteType._id)
+                    /* const data = res.data; */
+                    setSelectedPolarization(res.satelliteType._id)
                     setInitialValues({
-                        satelliteName: data.satelliteName,
-                        satelliteUrl: data.satelliteUrl,
-                        satelliteType: data.satelliteType._id, // Asegura que sea el ID
+                        satelliteName: res.satelliteName,
+                        satelliteUrl: res.satelliteUrl,
+                        satelliteType: res.satelliteType._id, // Asegura que sea el ID
                     });
                 });
 
-            axios
-                .get(`http://localhost:3000/api/v2/polarization`, { withCredentials: true })
+            api.getPolarizations()
                 /* polarizations.find((item) => ) */
                     .then((res) => {
-                        console.log(res.data)
-                    setPolarizations(res.data);
+                        console.log(res)
+                    setPolarizations(res);
                 });
         }
     }, [itemId]);
 
     const handleSubmit = async (values) => {
         try {
-            await axios.put(
-                `http://localhost:3000/api/v2/satelite/${itemId}`, { withCredentials: true },
-                values
-            );
+            await api.updateSatelite(values, itemId)
             Swal.fire(
                 "Actualizado",
                 "El satélite fue actualizado correctamente",

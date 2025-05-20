@@ -38,8 +38,16 @@ class Api {
     getSatellites() {
         return this._axios.get("/satelite").then((res) => res.data);
     }
+    getSatelliteId(id) {
+      return this._axios.get( `/satelite/${id}`).then((res) => res.data);
+    }
     deleteSatelliteId(id) {
         return this._axios.delete(`/satelite/${id}`).then((res) => res.data);
+    }
+    updateSatelite(values, id) {
+        return this._axios
+            .put(`/satelite/${id}`, values)
+            .then((res) => res.data);
     }
 
     /* Rutas para gestión de polarizaciones */
