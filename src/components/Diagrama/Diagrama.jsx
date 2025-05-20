@@ -1,5 +1,6 @@
 import React, { useEffect } from "react";
 import ReactFlow, { Background, Controls, Handle, Position } from "reactflow";
+import './Diagram.css'
 import "reactflow/dist/style.css";
 
 const nodes = [
@@ -137,7 +138,7 @@ const ImageNode = ({ data }) => {
                 alt={data.label}
                 style={{ width: 100, height: 160 , objectFit:'contain'}}
             />
-            <div style={{ fontSize: 12, marginTop: 5 }}>{data.label}</div>
+            <div style={{ fontSize: 16, marginTop: 5 }}>{data.label}</div>
             {/* Entrada */}
             <Handle type="target" position={Position.Left} style={{ background: '#555' }} />
             {/* Salida */}

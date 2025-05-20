@@ -2,8 +2,6 @@
     margin: auto;
     text-align: center;
     width: 100%;
-    height: 67vh;
-}
-.container__diagram{
-    margin: auto;
+    min-height: calc(100vh - 467px);
+    border:1px solid red;
 }
