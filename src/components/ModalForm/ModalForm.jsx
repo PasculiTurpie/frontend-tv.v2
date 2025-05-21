@@ -21,6 +21,7 @@ const ModalForm = ({
     handleCancel,
     itemId,
     refreshList,
+    metodo,
 }) => {
     const [polarizations, setPolarizations] = useState([]);
     const [initialValues, setInitialValues] = useState(null);
@@ -29,7 +30,7 @@ const ModalForm = ({
 
     useEffect(() => {
         if (itemId) {
-            api.getSatelliteId(itemId)
+            metodo
                 .then((res) => {
                     setSelectedPolarization(res.satelliteType._id)
                     setInitialValues({

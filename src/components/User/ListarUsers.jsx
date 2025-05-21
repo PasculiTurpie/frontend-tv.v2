@@ -11,6 +11,7 @@ const ListarUsers = () => {
     const [isLoading, setIsLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [itemId, setItemId] = useState('')
+    const [metodo, setMetodo] = useState()
 
     const getAllUsers = () => {
         api.getUserInfo()
@@ -95,6 +96,8 @@ const ListarUsers = () => {
         setIsModalOpen(false);
     };
 
+
+
     return (
         <>
             <div className="outlet-main">
@@ -164,6 +167,7 @@ const ListarUsers = () => {
                     handleOk={handleOk}
                     handleCancel={handleCancel}
                     refreshList={refreshList}
+                    metodo = {() => setMetodo(api.getUserId(itemId))}
                 />
             )}
         </>

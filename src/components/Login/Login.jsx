@@ -7,6 +7,7 @@ import hidden__Password from "../../../public/images/hide-password.png";
 import show__Password from "../../../public/images/show-password.png";
 import Swal from "sweetalert2";
 import { useNavigate } from "react-router-dom";
+import api from "../../utils/api.js";
 
 const LoginSchema = Yup.object().shape({
     email: Yup.string().email("Email inválido").required("Campo obligatorio"),
@@ -22,6 +23,13 @@ const Login = () => {
     const navigate = useNavigate();
 
     const toggleShowPassword = () => setShowPassword(!showPassword);
+
+
+        api.getSignal().then((res) => {
+            const dataSignal = res[0];
+            console.log(dataSignal.equipos.satelite._id)
+        })
+
 
     return (
         <>

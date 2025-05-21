@@ -6,7 +6,7 @@ class Api {
 
         this._axios = axios.create({
             baseURL: this._url,
-            withCredentials: true,
+            /* withCredentials: true, */
         });
     }
 
@@ -54,6 +54,12 @@ class Api {
 
     getPolarizations() {
         return this._axios.get("/polarization").then((res) => res.data);
+    }
+
+     /* Rutas para gestión de Señal */
+
+    getSignal() {
+        return this._axios.get("/signal").then((res) => res.data);
     }
 }
 

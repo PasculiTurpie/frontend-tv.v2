@@ -16,7 +16,8 @@ const Layout = () => {
             <Header />
             <Nav />
             <div className="outlet__main">
-                {isAuth  && <Sidebar />}
+                {/* {isAuth  && <Sidebar />} */}
+                <Sidebar />
 
                 <Outlet />
             </div>
