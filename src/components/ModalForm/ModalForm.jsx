@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 import { Modal } from "antd";
 import { Formik, Form, Field } from "formik";
 import * as Yup from "yup";
-import axios from "axios";
 import Swal from "sweetalert2";
 import api from '../../utils/api'
 
@@ -32,7 +31,6 @@ const ModalForm = ({
         if (itemId) {
             api.getSatelliteId(itemId)
                 .then((res) => {
-                    /* const data = res.data; */
                     setSelectedPolarization(res.satelliteType._id)
                     setInitialValues({
                         satelliteName: res.satelliteName,
@@ -42,7 +40,6 @@ const ModalForm = ({
                 });
 
             api.getPolarizations()
-                /* polarizations.find((item) => ) */
                     .then((res) => {
                         console.log(res)
                     setPolarizations(res);

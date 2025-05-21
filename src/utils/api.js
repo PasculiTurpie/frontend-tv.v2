@@ -10,7 +10,7 @@ class Api {
         });
     }
 
-    /* Rutas para gestión de ususrios */
+    /* Rutas para gestión de usuarios */
 
     createUser(values) {
         return this._axios.post("/user", values).then((res) => res.data);

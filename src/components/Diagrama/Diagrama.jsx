@@ -1,4 +1,3 @@
-import React, { useEffect } from "react";
 import ReactFlow, { Background, Controls, Handle, Position } from "reactflow";
 import './Diagram.css'
 import "reactflow/dist/style.css";
