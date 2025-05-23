@@ -59,14 +59,31 @@ const nodes = [
         },
     },
     {
-        id: "7",
-        type: "image",
+        id: "57",
+        type: "image", // Nodo personalizado (debes definirlo con React)
         position: { x: 1500, y: 0 },
         data: {
             label: "RTES2",
             image: "https://i.ibb.co/sSnvD0G/vmx-encryptor.png",
+            description: "Codificador VMX para RTES2",
+            status: "activo", // puedes usar esto para cambiar color o estilos
+            ports: [
+                { id: "in1", label: "Entrada ASI", direction: "input" },
+                { id: "out1", label: "Salida IP", direction: "output" },
+            ],
+            metadata: {
+                fabricante: "VMX Corp",
+                modelo: "Encryptor 5000",
+                ubicacion: "Rack 7 - Canal RTES2",
+            }
         },
-    },
+        className: "custom-node-class",
+        draggable: true,
+        selectable: true,
+        connectable: true,
+        sourcePosition: "right",
+        targetPosition: "left"
+      },
     {
         id: "8",
         type: "image",
@@ -84,6 +101,7 @@ const edges = [
         source: "1",
         target: "2",
         animated: true,
+        position: { x: 600, y: 100 },
         style: { stroke: "#ff0072", strokeWidth: 2 },
     },
     {
@@ -117,13 +135,13 @@ const edges = [
     {
         id: "e6-7",
         source: "6",
-        target: "7",
+        target: "57",
         animated: true,
         style: { stroke: "#ff0072", strokeWidth: 2 },
     },
     {
         id: "e7-8",
-        source: "7",
+        source: "57",
         target: "8",
         animated: true,
         style: { stroke: "#ff0072", strokeWidth: 2 },

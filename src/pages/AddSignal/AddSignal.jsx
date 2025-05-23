@@ -1,12 +1,21 @@
-import { Field } from "formik";
-import React from "react";
+import { useEffect } from "react";
+import api from "../../utils/api";
 
 const AddSignal = () => {
+    const satelites = () => {
+        api.getSatellites().then((res) => {
+            console.log(res);
+        });
+    };
+
+    useEffect(() => {
+        satelites();
+    });
+
     return (
         <div className="outlet-main">
-                <h1 className="form__titulo">Ingresa una señal</h1>
+            <h1 className="form__titulo">Ingresa una señal</h1>
             <form action="" className="form__add form__add-more">
-
                 <div className="form__add-group">
                     <div className="form__group">
                         <label
@@ -77,10 +86,12 @@ const AddSignal = () => {
                         >
                             Severidad
                             <br />
-                             <select type="text"
+                            <select
+                                type="text"
                                 className="form__group-input"
                                 placeholder="Url web"
-                                name="satelliteUrl">
+                                name="satelliteUrl"
+                            >
                                 <option value="">Seleccionar</option>
                                 <option value="">1</option>
                                 <option value="">2</option>
@@ -96,16 +107,17 @@ const AddSignal = () => {
                         >
                             Tecnología
                             <br />
-                            <select type="text"
+                            <select
+                                type="text"
                                 className="form__group-input"
                                 placeholder="Url web"
-                                name="satelliteUrl">
+                                name="satelliteUrl"
+                            >
                                 <option value="">Seleccionar</option>
                                 <option value="">FCA</option>
                                 <option value="">Cobre</option>
                                 <option value="">MPEG4</option>
                             </select>
-                        
                         </label>
                     </div>
                     <div className="form__group">
@@ -124,6 +136,7 @@ const AddSignal = () => {
                         </label>
                     </div>
                 </div>
+                {/* ############################Satelite############################# */}
                 <div className="form__add-group nodo1">
                     <div className="form__group">
                         <label
@@ -132,10 +145,12 @@ const AddSignal = () => {
                         >
                             Nodo 1
                             <br />
-                            <select type="text"
+                            <select
+                                type="text"
                                 className="form__group-input"
                                 placeholder="Url web"
-                                name="satelliteUrl">
+                                name="satelliteUrl"
+                            >
                                 <option value="0">Seleccionar</option>
                                 <option value="satelite">Satelital</option>
                                 <option value="srt">SRT</option>
@@ -174,13 +189,14 @@ const AddSignal = () => {
                         </label>
                     </div>
                 </div>
-                <div className="form__add-group">
+                {/* ################################################################# */}
+                <div className="form__add-group nodo1">
                     <div className="form__group">
                         <label
                             htmlFor="satelliteName"
                             className="form__group-label"
                         >
-                            Nombre señal
+                            Nodo 2
                             <br />
                             <input
                                 type="text"
@@ -221,23 +237,25 @@ const AddSignal = () => {
                         </label>
                     </div>
                 </div>
-                <div className="form__add-group">
+                {/* ################################################################# */}
+                <div className="form__add-group nodo1">
                     <div className="form__group">
                         <label
                             htmlFor="satelliteName"
                             className="form__group-label"
                         >
-                            Nombre señal
+                            Nodo 3
                             <br />
-                            <select  type="text"
+                            <select
+                                type="text"
                                 className="form__group-input"
                                 placeholder="Url web"
-                                name="satelliteUrl">
+                                name="satelliteUrl"
+                            >
                                 <option value="">Seleccionar</option>
                                 <option value="">1</option>
                                 <option value="">2</option>
                                 <option value="">3</option>
-                               
                             </select>
                         </label>
                     </div>
@@ -271,8 +289,11 @@ const AddSignal = () => {
                             />
                         </label>
                     </div>
+                    {/* ################################################################# */}
                 </div>
-                <button className="button button-self btn-success">Enviar</button>
+                <button className="button button-self btn-success">
+                    Enviar
+                </button>
             </form>
         </div>
     );

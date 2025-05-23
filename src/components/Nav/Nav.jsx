@@ -18,6 +18,7 @@ const Nav = () => {
           isAuth ? <LogoutButton /> : <li className='nav__links'><Link className="nav__links-text" to="/login">Admin</Link></li>
         }
         <li className='nav__links'><Link className="nav__links-text" to="/signal">Señal</Link> </li>
+        
       </ul>
     </div>
   )
