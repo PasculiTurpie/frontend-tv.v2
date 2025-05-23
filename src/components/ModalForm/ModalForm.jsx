@@ -30,7 +30,7 @@ const ModalForm = ({
 
     useEffect(() => {
         if (itemId) {
-            metodo
+            api.getSatelliteId(itemId)
                 .then((res) => {
                     setSelectedPolarization(res.satelliteType._id)
                     setInitialValues({

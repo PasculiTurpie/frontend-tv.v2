@@ -27,51 +27,51 @@ const App = () => {
                     <Route
                         path="/satelite"
                         element={
-                            <ProtectedRoute>
+                           /*  <ProtectedRoute> */
                                 <SatelliteForm />
-                            </ProtectedRoute>
+                            /* </ProtectedRoute> */
                         }
                     />
                     <Route
                         path="/listar-satelite"
                         element={
-                            <ProtectedRoute>
+                           /*  <ProtectedRoute> */
                                 <SatelliteList />
-                            </ProtectedRoute>
+                           /*  </ProtectedRoute> */
                         }
                     />
                     <Route
                         path="/ird"
                         element={
-                            <ProtectedRoute>
+                            /* <ProtectedRoute> */
                                 <IrdForm />
-                            </ProtectedRoute>
+                            /* </ProtectedRoute> */
                         }
                     />
 
                     <Route
                         path="/listar-ird"
                         element={
-                            <ProtectedRoute>
+                            /* <ProtectedRoute> */
                                 <IrdListar />
-                            </ProtectedRoute>
+                            /* </ProtectedRoute> */
                         }
                     />
 
                     <Route
                         path="/registrar-user"
                         element={
-                            <ProtectedRoute>
+                          /*   <ProtectedRoute> */
                                 <RegisterUser />
-                            </ProtectedRoute>
+                          /*   </ProtectedRoute> */
                         }
                     />
                     <Route
                         path="/listar-user"
                         element={
-                            <ProtectedRoute>
+                         /*    <ProtectedRoute> */
                                 <ListarUsers />
-                            </ProtectedRoute>
+                        /*     </ProtectedRoute> */
                         }
                     />
                     <Route path="/signal" element={<AddSignal />} />

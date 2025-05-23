@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import "../../index.css";
-import axios from "axios";
 import Loader from "../../components/Loader/Loader";
 import Swal from "sweetalert2";
 import ModalForm from "../../components/ModalForm/ModalForm";
