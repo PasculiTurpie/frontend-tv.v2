@@ -1,13 +1,16 @@
-import React from "react";
+import React, { useState } from "react";
 import "./Header.css";
 import Logo from "../../../public/images/layout_set_logo.png";
 import Search from "../Search/Search";
 
+
 const Header = () => {
+    
     return (
         <>
             <div className="line-orange"></div>
             <div className="header">
+            
                 <div className="logo">
                     <img
                         className="header__logo"
@@ -23,6 +26,7 @@ const Header = () => {
                 <div className="search">
                     <Search />
                 </div>
+               
             </div>
         </>
     );

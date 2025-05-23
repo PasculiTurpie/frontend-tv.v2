@@ -1,0 +1,45 @@
+.container__modal-component{
+    display:flex;
+    justify-content: center;
+    padding-top: 130px;
+    width: 100%;
+    min-height: calc(100% + 123px);
+    position:absolute;
+    top:0;
+    left:0;
+    background-color: #000000b6;
+    opacity:1;
+    transition: opacity .3s ease;
+    
+}
+.container__modal-component-close{
+    display:none;
+     opacity:0;
+    transition: opacity .3s ease;
+
+}
+
+.form__modal-component{
+    display:flex;
+    position:relative;
+    flex-direction: column;
+    width: fit-content;
+    height: fit-content;
+    border-radius: 8px;
+    padding:35px;
+    row-gap: 20px;
+    background-color: #ffffff;
+}
+
+
+.modal__close{
+    width: 25px;
+    position:absolute;
+    top:10px;
+    right: 10px;
+    cursor:pointer;
+}
+.modal__close:hover{
+    filter: brightness(0) saturate(100%) invert(62%) sepia(4%) saturate(23%) hue-rotate(66deg) brightness(88%) contrast(96%);
+    transition: filter .3s ease;
+}
