@@ -1,7 +1,7 @@
 import "./ModalComponent.css";
 import Close from '../../../public/images/close.svg'
 
-const ModalComponent = ({ isModalOpen,title, setIsModalOpen, handleCancel, children }) => {
+const ModalComponent = ({ isModalOpen, title, setIsModalOpen, handleOk, handleCancel, children }) => {
 
     const handleCloseModal = () => {
         setIsModalOpen(false)

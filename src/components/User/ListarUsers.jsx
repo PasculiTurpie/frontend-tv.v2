@@ -158,6 +158,7 @@ const ListarUsers = () => {
                     isModalOpen={isModalOpen}
                     setIsModalOpen={setIsModalOpen}
                     handleCancel={handleCancel}
+                    handleOk={handleOk}
                     title='Actualizar Usuario'
                 >
                     
