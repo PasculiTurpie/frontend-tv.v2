@@ -89,10 +89,9 @@ select {
   flex-direction: row;
   column-gap: 20px;
 }
-/* .form__add-group{
-  display:block;
-  border: 1px solid green;
-} */
+.form__add-group{
+  margin-top: 30px;
+}
 
 .form__titulo {
   font-size  : 20px;

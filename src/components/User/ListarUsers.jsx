@@ -4,14 +4,15 @@ import Loader from "../../components/Loader/Loader";
 import { Link } from "react-router-dom";
 import Swal from "sweetalert2";
 import ModalForm from "../../components/ModalForm/ModalForm";
-import api from '../../utils/api'
+import api from "../../utils/api";
+import ModalUser from "./ModalUser";
+import ModalComponent from "../ModalComponent/ModalComponent";
 
 const ListarUsers = () => {
     const [users, setUsers] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [itemId, setItemId] = useState('')
-    const [metodo, setMetodo] = useState()
+    const [itemId, setItemId] = useState("");
 
     const getAllUsers = () => {
         api.getUserInfo()
@@ -36,8 +37,6 @@ const ListarUsers = () => {
         refreshList();
     }, []);
 
-    
-
     const refreshList = () => {
         getAllUsers();
     };
@@ -55,7 +54,7 @@ const ListarUsers = () => {
 
         if (result.isConfirmed) {
             try {
-                await api.deleteUserId(id)
+                await api.deleteUserId(id);
                 getAllUsers(); // Refresca la lista después de confirmar
                 await Swal.fire({
                     title: "¡Eliminado!",
@@ -72,8 +71,6 @@ const ListarUsers = () => {
             }
         }
     };
-
-
 
     const showModal = (id) => {
         console.log(id);
@@ -95,8 +92,6 @@ const ListarUsers = () => {
     const handleCancel = () => {
         setIsModalOpen(false);
     };
-
-
 
     return (
         <>
@@ -147,9 +142,7 @@ const ListarUsers = () => {
                                         </button>
                                         <button
                                             className="button btn-danger"
-                                            onClick={() =>
-                                                deleteUser(user._id)
-                                            }
+                                            onClick={() => deleteUser(user._id)}
                                         >
                                             Eliminar
                                         </button>
@@ -161,14 +154,117 @@ const ListarUsers = () => {
                 )}
             </div>
             {isModalOpen && (
-                <ModalForm
+                <ModalComponent
                     isModalOpen={isModalOpen}
-                    itemId={itemId}
-                    handleOk={handleOk}
+                    setIsModalOpen={setIsModalOpen}
                     handleCancel={handleCancel}
-                    refreshList={refreshList}
-                    metodo = {() => setMetodo(api.getUserId(itemId))}
-                />
+                    title='Actualizar Usuario'
+                >
+                    
+                    <div className="form__add-group">
+                        <div className="form__group">
+                            <label
+                                htmlFor="satelliteName"
+                                className="form__group-label"
+                            >
+                                Nombre usauario
+                                <br />
+                                <input
+                                    type="text"
+                                    className="form__group-input"
+                                    placeholder="Nombre"
+                                    name="satelliteName"
+                                />
+                            </label>
+                            <div className="form__group-error"></div>
+                        </div>
+                        <div className="form__group">
+                            <label
+                                htmlFor="satelliteName"
+                                className="form__group-label"
+                            >
+                                Email
+                                <br />
+                                <input
+                                    type="text"
+                                    className="form__group-input"
+                                    placeholder="Nombre"
+                                    name="satelliteName"
+                                />
+                            </label>
+                            <div className="form__group-error"></div>
+                        </div>
+                        <div className="form__group">
+                            <label
+                                htmlFor="satelliteName"
+                                className="form__group-label"
+                            >
+                                Avatar
+                                <br />
+                                <input
+                                    type="text"
+                                    className="form__group-input"
+                                    placeholder="Nombre"
+                                    name="satelliteName"
+                                />
+                            </label>
+                            <div className="form__group-error"></div>
+                        </div>
+                    </div>
+
+                    <div className="form__add-group">
+                        <div className="form__group">
+                            <label
+                                htmlFor="satelliteName"
+                                className="form__group-label"
+                            >
+                                Password
+                                <br />
+                                <input
+                                    type="text"
+                                    className="form__group-input"
+                                    placeholder="Nombre"
+                                    name="satelliteName"
+                                />
+                            </label>
+                            <div className="form__group-error"></div>
+                        </div>
+                        <div className="form__group">
+                            <label
+                                htmlFor="satelliteName"
+                                className="form__group-label"
+                            >
+                                Confirmar password
+                                <br />
+                                <input
+                                    type="text"
+                                    className="form__group-input"
+                                    placeholder="Nombre"
+                                    name="satelliteName"
+                                />
+                            </label>
+                            <div className="form__group-error"></div>
+                        </div>
+
+                        <div className="form__group">
+                            <label
+                                htmlFor="satelliteName"
+                                className="form__group-label"
+                            >
+                                Rol
+                                <br />
+                                <select
+                                    type="select"
+                                    className="form__group-input"
+                                >
+                                    <option value="admin">admin</option>
+                                    <option value="user">user</option>
+                                </select>
+                            </label>
+                            <div className="form__group-error"></div>
+                        </div>
+                    </div>
+                </ModalComponent>
             )}
         </>
     );
