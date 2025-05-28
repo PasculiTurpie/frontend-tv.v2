@@ -32,7 +32,7 @@ const Sidebar = () => {
           <Link to="/satelite">Satélite</Link>
         </li>
         <li>
-          <Link to="/ird">IRD</Link>
+          <Link to="/ird">Encoder Ird</Link>
         </li>
         <hr />
         <li>

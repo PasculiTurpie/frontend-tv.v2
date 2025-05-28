@@ -3,8 +3,7 @@ import { Modal } from "antd";
 import { Formik, Form, Field } from "formik";
 import * as Yup from "yup";
 import Swal from "sweetalert2";
-import api from '../../utils/api'
-
+import api from "../../utils/api";
 
 // Esquema de validación
 const EditSchema = Yup.object().shape({
@@ -27,30 +26,27 @@ const ModalForm = ({
     const [initialValues, setInitialValues] = useState(null);
     const [selectedPolarization, setSelectedPolarization] = useState("");
 
-
     useEffect(() => {
         if (itemId) {
-            api.getSatelliteId(itemId)
-                .then((res) => {
-                    setSelectedPolarization(res.satelliteType._id)
-                    setInitialValues({
-                        satelliteName: res.satelliteName,
-                        satelliteUrl: res.satelliteUrl,
-                        satelliteType: res.satelliteType._id, // Asegura que sea el ID
-                    });
+            api.getSatelliteId(itemId).then((res) => {
+                setSelectedPolarization(res.satelliteType._id);
+                setInitialValues({
+                    satelliteName: res.satelliteName,
+                    satelliteUrl: res.satelliteUrl,
+                    satelliteType: res.satelliteType._id, // Asegura que sea el ID
                 });
+            });
 
-            api.getPolarizations()
-                    .then((res) => {
-                        console.log(res)
-                    setPolarizations(res);
-                });
+            api.getPolarizations().then((res) => {
+                console.log(res);
+                setPolarizations(res);
+            });
         }
     }, [itemId]);
 
     const handleSubmit = async (values) => {
         try {
-            await api.updateSatelite(values, itemId)
+            await api.updateSatelite(values, itemId);
             Swal.fire(
                 "Actualizado",
                 "El satélite fue actualizado correctamente",
@@ -63,7 +59,6 @@ const ModalForm = ({
             Swal.fire("Error", "No se pudo actualizar el satélite", "error");
         }
     };
-
 
     return (
         <Modal

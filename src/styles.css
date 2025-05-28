@@ -1,210 +1,274 @@
-*{
-  margin:0;
-  padding:0;
-  box-sizing: border-box;
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
 }
 .table {
-  border-top: 2px solid rgb(226, 226, 226);
+    border-top: 2px solid rgb(226, 226, 226);
 }
 
 .button-action {
-  display        : flex;
-  flex-direction : row;
-  justify-content: space-around;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
 }
 
 .button,
 .ant-btn {
-  padding      : 5px 8px;
-  color        : white;
-  border-radius: 5px;
-
+    padding: 5px 8px;
+    color: white;
+    border-radius: 5px;
 }
 
 .ant-btn-variant-outlined {
-  color: rgb(126, 124, 124);
+    color: rgb(126, 124, 124);
 }
 
 .btn-primary {
-  background-color: #4db89b;
+    background-color: #4db89b;
 }
-.separate{
-  margin-top:15px
+.separate {
+    margin-top: 15px;
 }
 
 .btn-danger {
-  background-color: #d6244d;
+    background-color: #d6244d;
 }
 
 .total-list {
-  font-weight: bold;
+    font-weight: bold;
 }
 
 .loader__spinner {
-  display        : flex;
-  justify-content: center;
-  width          : 100%;
-  margin         : 0 auto;
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    margin: 0 auto;
 }
 
 td {
-  height: 51.5px;
+    height: 51.5px;
 }
 
 .action {
-  text-align: center;
+    text-align: center;
 }
 
 .ant-modal-content {
-  width     : fit-content;
-  align-self: center;
-
+    width: fit-content;
+    align-self: center;
 }
 
 .ant-modal {
-  display        : flex;
-  justify-content: center;
+    display: flex;
+    justify-content: center;
 }
 
 .form__modal {
-  box-shadow: none;
+    box-shadow: none;
 }
 
 select {
-  width: 170px;
+    width: 170px;
 }
 
 .form__add {
-  display       : flex;
-  flex-direction: column;
-  width         : fit-content;
-    box-shadow : 0 14px 28px rgba(0, 0, 0, 0.25),
-  0 10px 10px rgba(0, 0, 0, 0.22);
-  padding: 30px;
-  row-gap: 15px;
-  border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    width: fit-content;
+    box-shadow: 0 14px 28px rgba(0, 0, 0, 0.25), 0 10px 10px rgba(0, 0, 0, 0.22);
+    padding: 30px;
+    row-gap: 15px;
+    border-radius: 8px;
 }
-.form__add-more{
-  display: flex;
-  flex-direction: row;
-  column-gap: 20px;
+.form__add-more {
+    display: flex;
+    flex-direction: row;
+    column-gap: 20px;
 }
-.form__add-group{
-  margin-top: 30px;
+.form__add-group {
+    margin-top: 30px;
 }
 
 .form__titulo {
-  font-size  : 20px;
-  font-weight: bold;
+    font-size: 20px;
+    font-weight: bold;
 }
 
 .form__group {
-  display       : flex;
-  flex-direction: column;
+    display: flex;
+    flex-direction: column;
 }
 
 .form__group-label {
-  font-size: 15px;
+    font-size: 15px;
 }
 
 .form__group-input {
-  background-color: #fff;
-  outline         : none;
-  border          : 1px solid rgb(5, 53, 156);
-  padding         : 3px 5px;
-  width           : 180px;
-
+    background-color: #fff;
+    outline: none;
+    border: 1px solid rgb(5, 53, 156);
+    padding: 3px 5px;
+    width: 180px;
 }
 
 .form__group-input:focus {
-  outline: 2px solid #05359c9d;
+    outline: 2px solid #05359c9d;
 }
 
 .form__group-error {
-  color    : red;
-  font-size: 12px;
+    color: red;
+    font-size: 12px;
 }
 
-.button-self{
- align-self:flex-end;
-
+.button-self {
+    align-self: flex-end;
 }
 
 .btn {
-  padding       : 8px 0;
-  font-size     : 18px;
-  border-radius : 0.5em;
-  font-weight   : 600;
-  letter-spacing: .07em;
-  cursor        : pointer;
-
+    padding: 8px 0;
+    font-size: 18px;
+    border-radius: 0.5em;
+    font-weight: 600;
+    letter-spacing: 0.07em;
+    cursor: pointer;
 }
 
 .btn-success {
-  background-color: #01447a;
-  color           : #fff;
+    background-color: #01447a;
+    color: #fff;
 }
-.btn-warning{
-  background-color: #FFCA2C;
-  color           : #000000;
-  font-weight: bold;
-}
-
-.icon__password{
-  width: 24px;
+.btn-warning {
+    background-color: #ffca2c;
+    color: #000000;
+    font-weight: bold;
 }
 
-.container-form-brother{
-  display:flex;
-  column-gap: 40px;
+.icon__password {
+    width: 24px;
 }
 
-.nodo1{
-  border:1px solid #d6244d;
+.container-form-brother {
+    display: flex;
+    column-gap: 40px;
 }
 
+.nodo1 {
+    border: 1px solid #d6244d;
+}
+.container__modal-component {
+    display: flex;
+    justify-content: center;
+    padding-top: 130px;
+    width: 100%;
+    min-height: calc(100% + 20px);
+    position: absolute;
+    top: 0;
+    left: 0;
+    background-color: #000000b6;
+}
+
+.show__modal {
+    opacity: 1;
+    transform: scale(1);
+    transition: all 0.3s ease;
+    pointer-events: visible;
+}
+
+.close__modal {
+    opacity: 0;
+    transform: scale(0);
+    transition: all 0.3s ease;
+    pointer-events: none;
+}
+
+.form__modal-component {
+    position: relative;
+}
+.modal__title {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    height: 40px;
+}
+
+.modal__close {
+    width: 25px;
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    cursor: pointer;
+}
+
+.modal__close:hover {
+    filter: brightness(0) saturate(100%) invert(62%) sepia(4%) saturate(23%)
+        hue-rotate(66deg) brightness(88%) contrast(96%);
+    transition: filter 0.3s ease;
+}
+.grid-cols-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    width: fit-content;
+    height: fit-content;
+    border-radius: 8px;
+    padding: 65px 35px 35px;
+    row-gap: 20px;
+    column-gap: 30px;
+    background-color: #ffffff;
+}
+
+.btn-adjust {
+    height: 40px;
+}
 
 .loader {
-  position         : relative;
-  width            : 85px;
-  height           : 50px;
-  background-repeat: no-repeat;
-  background-image : linear-gradient(#e7880b 50px, transparent 0),
-    linear-gradient(#e7880b 50px, transparent 0),
-    linear-gradient(#e7880b 50px, transparent 0),
-    linear-gradient(#e7880b 50px, transparent 0),
-    linear-gradient(#e7880b 50px, transparent 0),
-    linear-gradient(#e7880b 50px, transparent 0);
-  background-position: 0px center, 15px center, 30px center, 45px center, 60px center, 75px center, 90px center;
-  animation          : rikSpikeRoll 0.65s linear infinite alternate;
+    position: relative;
+    width: 85px;
+    height: 50px;
+    background-repeat: no-repeat;
+    background-image: linear-gradient(#e7880b 50px, transparent 0),
+        linear-gradient(#e7880b 50px, transparent 0),
+        linear-gradient(#e7880b 50px, transparent 0),
+        linear-gradient(#e7880b 50px, transparent 0),
+        linear-gradient(#e7880b 50px, transparent 0),
+        linear-gradient(#e7880b 50px, transparent 0);
+    background-position: 0px center, 15px center, 30px center, 45px center,
+        60px center, 75px center, 90px center;
+    animation: rikSpikeRoll 0.65s linear infinite alternate;
 }
 
 @keyframes rikSpikeRoll {
-  0% {
-    background-size: 10px 3px;
-  }
+    0% {
+        background-size: 10px 3px;
+    }
 
-  16% {
-    background-size: 10px 50px, 10px 3px, 10px 3px, 10px 3px, 10px 3px, 10px 3px
-  }
+    16% {
+        background-size: 10px 50px, 10px 3px, 10px 3px, 10px 3px, 10px 3px,
+            10px 3px;
+    }
 
-  33% {
-    background-size: 10px 30px, 10px 50px, 10px 3px, 10px 3px, 10px 3px, 10px 3px
-  }
+    33% {
+        background-size: 10px 30px, 10px 50px, 10px 3px, 10px 3px, 10px 3px,
+            10px 3px;
+    }
 
-  50% {
-    background-size: 10px 10px, 10px 30px, 10px 50px, 10px 3px, 10px 3px, 10px 3px
-  }
+    50% {
+        background-size: 10px 10px, 10px 30px, 10px 50px, 10px 3px, 10px 3px,
+            10px 3px;
+    }
 
-  66% {
-    background-size: 10px 3px, 10px 10px, 10px 30px, 10px 50px, 10px 3px, 10px 3px
-  }
+    66% {
+        background-size: 10px 3px, 10px 10px, 10px 30px, 10px 50px, 10px 3px,
+            10px 3px;
+    }
 
-  83% {
-    background-size: 10px 3px, 10px 3px, 10px 10px, 10px 30px, 10px 50px, 10px 3px
-  }
+    83% {
+        background-size: 10px 3px, 10px 3px, 10px 10px, 10px 30px, 10px 50px,
+            10px 3px;
+    }
 
-  100% {
-    background-size: 10px 3px, 10px 3px, 10px 3px, 10px 10px, 10px 30px, 10px 50px
-  }
+    100% {
+        background-size: 10px 3px, 10px 3px, 10px 3px, 10px 10px, 10px 30px,
+            10px 50px;
+    }
 }

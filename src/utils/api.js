@@ -15,7 +15,7 @@ class Api {
     createUser(values) {
         return this._axios.post("/user", values).then((res) => res.data);
     }
-    updateUser(values, id) {
+    updateUserId(id, values) {
         return this._axios.put(`/user/${id}`, values).then((res) => res.data);
     }
 
@@ -39,7 +39,7 @@ class Api {
         return this._axios.get("/satelite").then((res) => res.data);
     }
     getSatelliteId(id) {
-      return this._axios.get( `/satelite/${id}`).then((res) => res.data);
+        return this._axios.get(`/satelite/${id}`).then((res) => res.data);
     }
     deleteSatelliteId(id) {
         return this._axios.delete(`/satelite/${id}`).then((res) => res.data);
@@ -56,10 +56,27 @@ class Api {
         return this._axios.get("/polarization").then((res) => res.data);
     }
 
-     /* Rutas para gestión de Señal */
+    /* Rutas para gestión de Señal */
 
     getSignal() {
         return this._axios.get("/signal").then((res) => res.data);
+    }
+
+    /*Rutas para gestión Ird's */
+    getIrd() {
+        return this._axios.get("/ird").then((res) => res);
+    }
+    createIrd() {
+        return this._axios.get("/ird").then((res) => res);
+    }
+    getIdIrd(id) {
+        return this._axios.get(`/ird/${id}`).then((res) => res);
+    }
+    deleteIrd(id) {
+        return this._axios.delete(`/ird/${id}`).then((res) => res);
+    }
+    updateIrd(id) {
+        return this._axios.put(`/ird/${id}`).then((res) => res);
     }
 }
 

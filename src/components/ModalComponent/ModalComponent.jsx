@@ -1,31 +1,44 @@
 import "./ModalComponent.css";
-import Close from '../../../public/images/close.svg'
+import Close from "../../../public/images/close.svg";
+import { Form } from "formik";
 
-const ModalComponent = ({ isModalOpen, title, setIsModalOpen, handleOk, handleCancel, children }) => {
-
+const ModalComponent = ({
+    modalOpen,
+    title,
+    setModalOpen,
+    handleOk,
+    handleCancel,
+    children,
+}) => {
     const handleCloseModal = () => {
-        setIsModalOpen(false)
-    }
-
+        setModalOpen(false);
+    };
 
     return (
         <>
-            <div className={isModalOpen ? 'container__modal-component' : 'container__modal-component-close'}>
-                <form className="form__modal-component">
-                    
-                    <div className="modal__title">
-                        <h4>{ title }</h4>
+            <div
+                className={
+                    modalOpen
+                        ? "container__modal-component show__modal"
+                        : "container__modal-component close__modal"
+                }
+            >
+                <div className="form__modal-component">
+
+                <div className="modal__title">
+                    <h4>{title}</h4>
                 </div>
-                    <img className="modal__close" src={Close} alt="close" onClick={handleCloseModal} />
-                    {children}
-                    <button
-                        type="submit"
-                        className="button btn-primary btn-adjust"
-                    >
-                        Enviar
-                    </button>
-                </form>
-            </div>
+                <img
+                    className="modal__close"
+                    src={Close}
+                    alt="close"
+                    onClick={handleCloseModal}
+                />
+                {children}
+
+                </div>
+
+                </div>
         </>
     );
 };

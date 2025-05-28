@@ -1,17 +1,15 @@
-import axios from "axios";
 import React, { useEffect, useState } from "react";
 import Loader from "../../components/Loader/Loader";
 import { Link } from "react-router-dom";
 import Swal from "sweetalert2";
-import ModalForm from "../../components/ModalForm/ModalForm";
 import api from "../../utils/api";
-import ModalUser from "./ModalUser";
-import ModalComponent from "../ModalComponent/ModalComponent";
+import ModalUser from './ModalUser'
+
 
 const ListarUsers = () => {
     const [users, setUsers] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
-    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [modalOpen, setModalOpen] = useState(false);
     const [itemId, setItemId] = useState("");
 
     const getAllUsers = () => {
@@ -75,11 +73,11 @@ const ListarUsers = () => {
     const showModal = (id) => {
         console.log(id);
         setItemId(id);
-        setIsModalOpen(true);
+        setModalOpen(true);
     };
 
     const handleOk = () => {
-        setIsModalOpen(false);
+        setModalOpen(false);
         Swal.fire({
             position: "center",
             icon: "success",
@@ -90,7 +88,7 @@ const ListarUsers = () => {
     };
 
     const handleCancel = () => {
-        setIsModalOpen(false);
+        setModalOpen(false);
     };
 
     return (
@@ -153,119 +151,17 @@ const ListarUsers = () => {
                     </table>
                 )}
             </div>
-            {isModalOpen && (
-                <ModalComponent
-                    isModalOpen={isModalOpen}
-                    setIsModalOpen={setIsModalOpen}
+            {modalOpen && (
+                <ModalUser
+                    modalOpen={modalOpen}
+                    setModalOpen={setModalOpen}
                     handleCancel={handleCancel}
                     handleOk={handleOk}
-                    title='Actualizar Usuario'
-                >
-                    
-                    <div className="form__add-group">
-                        <div className="form__group">
-                            <label
-                                htmlFor="satelliteName"
-                                className="form__group-label"
-                            >
-                                Nombre usauario
-                                <br />
-                                <input
-                                    type="text"
-                                    className="form__group-input"
-                                    placeholder="Nombre"
-                                    name="satelliteName"
-                                />
-                            </label>
-                            <div className="form__group-error"></div>
-                        </div>
-                        <div className="form__group">
-                            <label
-                                htmlFor="satelliteName"
-                                className="form__group-label"
-                            >
-                                Email
-                                <br />
-                                <input
-                                    type="text"
-                                    className="form__group-input"
-                                    placeholder="Nombre"
-                                    name="satelliteName"
-                                />
-                            </label>
-                            <div className="form__group-error"></div>
-                        </div>
-                        <div className="form__group">
-                            <label
-                                htmlFor="satelliteName"
-                                className="form__group-label"
-                            >
-                                Avatar
-                                <br />
-                                <input
-                                    type="text"
-                                    className="form__group-input"
-                                    placeholder="Nombre"
-                                    name="satelliteName"
-                                />
-                            </label>
-                            <div className="form__group-error"></div>
-                        </div>
-                    </div>
-
-                    <div className="form__add-group">
-                        <div className="form__group">
-                            <label
-                                htmlFor="satelliteName"
-                                className="form__group-label"
-                            >
-                                Password
-                                <br />
-                                <input
-                                    type="text"
-                                    className="form__group-input"
-                                    placeholder="Nombre"
-                                    name="satelliteName"
-                                />
-                            </label>
-                            <div className="form__group-error"></div>
-                        </div>
-                        <div className="form__group">
-                            <label
-                                htmlFor="satelliteName"
-                                className="form__group-label"
-                            >
-                                Confirmar password
-                                <br />
-                                <input
-                                    type="text"
-                                    className="form__group-input"
-                                    placeholder="Nombre"
-                                    name="satelliteName"
-                                />
-                            </label>
-                            <div className="form__group-error"></div>
-                        </div>
-
-                        <div className="form__group">
-                            <label
-                                htmlFor="satelliteName"
-                                className="form__group-label"
-                            >
-                                Rol
-                                <br />
-                                <select
-                                    type="select"
-                                    className="form__group-input"
-                                >
-                                    <option value="admin">admin</option>
-                                    <option value="user">user</option>
-                                </select>
-                            </label>
-                            <div className="form__group-error"></div>
-                        </div>
-                    </div>
-                </ModalComponent>
+                    showModal={showModal}
+                    refreshList={refreshList}
+                    itemId={itemId}
+                    title="Actualizar Usuario"
+                />
             )}
         </>
     );
