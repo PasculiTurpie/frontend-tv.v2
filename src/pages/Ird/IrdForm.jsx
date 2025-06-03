@@ -91,11 +91,10 @@ const IrdForm = () => {
                                             />
                                         </label>
                                         {errors.marcaIrd && touched.marcaIrd ? (
-                                            
                                             <div className="form__group-error">
                                                 {errors.marcaIrd}
                                             </div>
-                                        ):null}
+                                        ) : null}
                                     </div>
                                     <div className="form__group">
                                         <label
@@ -113,7 +112,6 @@ const IrdForm = () => {
                                         </label>
 
                                         {errors.modelIrd && touched.modelIrd ? (
-
                                             <div className="form__group-error">
                                                 {errors.modelIrd}
                                             </div>
@@ -134,8 +132,8 @@ const IrdForm = () => {
                                             />
                                         </label>
 
-                                        {errors.ipAdminIrd && touched.ipAdminIrd ? (
-
+                                        {errors.ipAdminIrd &&
+                                        touched.ipAdminIrd ? (
                                             <div className="form__group-error">
                                                 {errors.ipAdminIrd}
                                             </div>
@@ -156,8 +154,8 @@ const IrdForm = () => {
                                             />
                                         </label>
 
-                                       {errors.versionIrd && touched.versionIrd ? (
-
+                                        {errors.versionIrd &&
+                                        touched.versionIrd ? (
                                             <div className="form__group-error">
                                                 {errors.versionIrd}
                                             </div>
@@ -178,8 +176,7 @@ const IrdForm = () => {
                                             />
                                         </label>
 
-                                       {errors.uaIrd && touched.uaIrd ? (
-
+                                        {errors.uaIrd && touched.uaIrd ? (
                                             <div className="form__group-error">
                                                 {errors.uaIrd}
                                             </div>
@@ -203,8 +200,8 @@ const IrdForm = () => {
                                             />
                                         </label>
 
-                                       {errors.tidReceptor && touched.tidReceptor ? (
-
+                                        {errors.tidReceptor &&
+                                        touched.tidReceptor ? (
                                             <div className="form__group-error">
                                                 {errors.tidReceptor}
                                             </div>
@@ -226,8 +223,8 @@ const IrdForm = () => {
                                             />
                                         </label>
 
-                                       {errors.typeReceptor && touched.typeReceptor ? (
-
+                                        {errors.typeReceptor &&
+                                        touched.typeReceptor ? (
                                             <div className="form__group-error">
                                                 {errors.typeReceptor}
                                             </div>
@@ -249,8 +246,8 @@ const IrdForm = () => {
                                             />
                                         </label>
 
-                                       {errors.feqReceptor && touched.feqReceptor ? (
-
+                                        {errors.feqReceptor &&
+                                        touched.feqReceptor ? (
                                             <div className="form__group-error">
                                                 {errors.feqReceptor}
                                             </div>
@@ -272,8 +269,8 @@ const IrdForm = () => {
                                             />
                                         </label>
 
-                                       {errors.symbolRateIrd && touched.symbolRateIrd ? (
-
+                                        {errors.symbolRateIrd &&
+                                        touched.symbolRateIrd ? (
                                             <div className="form__group-error">
                                                 {errors.symbolRateIrd}
                                             </div>
@@ -295,8 +292,8 @@ const IrdForm = () => {
                                             />
                                         </label>
 
-                                       {errors.fecReceptorIrd && touched.fecReceptorIrd ? (
-
+                                        {errors.fecReceptorIrd &&
+                                        touched.fecReceptorIrd ? (
                                             <div className="form__group-error">
                                                 {errors.fecReceptorIrd}
                                             </div>
@@ -321,8 +318,8 @@ const IrdForm = () => {
                                             />
                                         </label>
 
-                                       {errors.modulationReceptorIrd && touched.modulationReceptorIrd ? (
-
+                                        {errors.modulationReceptorIrd &&
+                                        touched.modulationReceptorIrd ? (
                                             <div className="form__group-error">
                                                 {errors.modulationReceptorIrd}
                                             </div>
@@ -344,8 +341,8 @@ const IrdForm = () => {
                                             />
                                         </label>
 
-                                        {errors.rellOfReceptor && touched.rellOfReceptor ? (
-
+                                        {errors.rellOfReceptor &&
+                                        touched.rellOfReceptor ? (
                                             <div className="form__group-error">
                                                 {errors.rellOfReceptor}
                                             </div>
@@ -367,8 +364,8 @@ const IrdForm = () => {
                                             />
                                         </label>
 
-                                       {errors.nidReceptor && touched.nidReceptor ? (
-
+                                        {errors.nidReceptor &&
+                                        touched.nidReceptor ? (
                                             <div className="form__group-error">
                                                 {errors.nidReceptor}
                                             </div>
@@ -390,8 +387,8 @@ const IrdForm = () => {
                                             />
                                         </label>
 
-                                       {errors.cvirtualReceptor && touched.cvirtualReceptor ? (
-
+                                        {errors.cvirtualReceptor &&
+                                        touched.cvirtualReceptor ? (
                                             <div className="form__group-error">
                                                 {errors.cvirtualReceptor}
                                             </div>
@@ -413,8 +410,8 @@ const IrdForm = () => {
                                             />
                                         </label>
 
-                                       {errors.vctReceptor && touched.vctReceptor ? (
-
+                                        {errors.vctReceptor &&
+                                        touched.vctReceptor ? (
                                             <div className="form__group-error">
                                                 {errors.vctReceptor}
                                             </div>
@@ -439,8 +436,8 @@ const IrdForm = () => {
                                             />
                                         </label>
 
-                                       {errors.outputReceptor && touched.outputReceptor ? (
-
+                                        {errors.outputReceptor &&
+                                        touched.outputReceptor ? (
                                             <div className="form__group-error">
                                                 {errors.outputReceptor}
                                             </div>
@@ -462,8 +459,8 @@ const IrdForm = () => {
                                             />
                                         </label>
 
-                                       {errors.multicastReceptor && touched.multicastReceptor ? (
-
+                                        {errors.multicastReceptor &&
+                                        touched.multicastReceptor ? (
                                             <div className="form__group-error">
                                                 {errors.multicastReceptor}
                                             </div>
@@ -485,8 +482,8 @@ const IrdForm = () => {
                                             />
                                         </label>
 
-                                       {errors.ipVideoMulticast && touched.ipVideoMulticast ? (
-
+                                        {errors.ipVideoMulticast &&
+                                        touched.ipVideoMulticast ? (
                                             <div className="form__group-error">
                                                 {errors.ipVideoMulticast}
                                             </div>
@@ -508,8 +505,8 @@ const IrdForm = () => {
                                             />
                                         </label>
 
-                                       {errors.locationRow && touched.locationRow ? (
-
+                                        {errors.locationRow &&
+                                        touched.locationRow ? (
                                             <div className="form__group-error">
                                                 {errors.locationRow}
                                             </div>
@@ -531,8 +528,8 @@ const IrdForm = () => {
                                             />
                                         </label>
 
-                                       {errors.locationCol && touched.locationCol ? (
-
+                                        {errors.locationCol &&
+                                        touched.locationCol ? (
                                             <div className="form__group-error">
                                                 {errors.locationCol}
                                             </div>

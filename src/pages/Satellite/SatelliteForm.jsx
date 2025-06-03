@@ -61,6 +61,7 @@ const SatelliteForm = () => {
                         satelliteType: "",
                     }}
                     validationSchema={SatelliteSchema}
+                    enableReinitialize={true}
                     onSubmit={async (values, { resetForm }) => {
                         try {
                             // Enviar los datos a la API
