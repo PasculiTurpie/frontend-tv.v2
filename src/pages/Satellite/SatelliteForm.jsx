@@ -1,22 +1,21 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import axios from "axios";
 import { Formik, Form, Field } from "formik";
 import * as Yup from "yup";
 import Swal from "sweetalert2";
-import api from '../../utils/api'
+import api from "../../utils/api";
 
 const SatelliteSchema = Yup.object().shape({
     satelliteName: Yup.string().required("Campo obligatorio"),
     satelliteUrl: Yup.string()
         .test(
-            'starts-with-http',
-            'La URL debe comenzar con http:// o https://',
-            (value) => value?.startsWith('http://') || value?.startsWith('https://')
+            "starts-with-http",
+            "La URL debe comenzar con http:// o https://",
+            (value) =>
+                value?.startsWith("http://") || value?.startsWith("https://")
         )
-        .url('Debe ser una URL válida')
-        .required('La URL es obligatoria')
-,
+        .url("Debe ser una URL válida")
+        .required("La URL es obligatoria"),
     satelliteType: Yup.string()
         .notOneOf(["0", "default"], "Debes seleccionar una opción válida.")
         .required("Campo obligatorio"),
@@ -29,7 +28,7 @@ const SatelliteForm = () => {
     useEffect(() => {
         api.getPolarizations()
             .then((response) => {
-                console.log(response)
+                console.log(response);
                 setPolarizations(response);
             })
             .catch((error) => {
@@ -58,43 +57,44 @@ const SatelliteForm = () => {
                 <Formik
                     initialValues={{
                         satelliteName: "",
-                        satelliteUrl:"",
+                        satelliteUrl: "",
                         satelliteType: "",
                     }}
                     validationSchema={SatelliteSchema}
                     onSubmit={async (values, { resetForm }) => {
-                      try {
-                        // Enviar los datos a la API
-                          const response = await api.createSatelite(values)
-                          console.log(response)
-                        // Obtener nombre de la polarización
-                        const selectedPolarization = polarizations.find(
-                          (p) => p._id === values.satelliteType
-                        );
-                        const polarizationName =
-                          selectedPolarization?.typePolarization || "Desconocido";
+                        try {
+                            // Enviar los datos a la API
+                            const response = await api.createSatelite(values);
+                            console.log(response);
+                            // Obtener nombre de la polarización
+                            const selectedPolarization = polarizations.find(
+                                (p) => p._id === values.satelliteType
+                            );
+                            const polarizationName =
+                                selectedPolarization?.typePolarization ||
+                                "Desconocido";
 
-                        // Mostrar confirmación con SweetAlert2
-                        Swal.fire({
-                          title: "Satélite guardado exitosamente",
-                          icon: "success",
-                          html: `
+                            // Mostrar confirmación con SweetAlert2
+                            Swal.fire({
+                                title: "Satélite guardado exitosamente",
+                                icon: "success",
+                                html: `
                 <p><strong>Nombre Satélite:</strong> ${values.satelliteName}</p>
                 <p><strong>Polarización:</strong> ${polarizationName}</p>
               `,
-                        }).then(() => {
-                          resetForm();
-                          nameInputRef.current?.focus();
-                        });
-                      } catch (error) {
-                        console.log( error);
-                        Swal.fire({
-                          title: "Error",
-                          icon: "error",
-                          text: `Duplicidad de datos`,
-                          footer: `${error.response.data.message}`,
-                        });
-                      }
+                            }).then(() => {
+                                resetForm();
+                                nameInputRef.current?.focus();
+                            });
+                        } catch (error) {
+                            console.log(error);
+                            Swal.fire({
+                                title: "Error",
+                                icon: "error",
+                                text: `Duplicidad de datos`,
+                                footer: `${error.response.data.message}`,
+                            });
+                        }
                     }}
                 >
                     {({ errors, touched }) => (
@@ -137,8 +137,7 @@ const SatelliteForm = () => {
                                         name="satelliteUrl"
                                     />
                                 </label>
-                                {errors.satelliteUrl &&
-                                    touched.satelliteUrl ? (
+                                {errors.satelliteUrl && touched.satelliteUrl ? (
                                     <div className="form__group-error">
                                         {errors.satelliteUrl}
                                     </div>

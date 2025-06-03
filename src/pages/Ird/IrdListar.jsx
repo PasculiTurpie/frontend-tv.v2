@@ -18,13 +18,13 @@ const IrdListar = () => {
             .catch((error) => {
                 console.log(error);
                 console.log(`Error: ${error.message}`);
-                        Swal.fire({
-                            icon: "error",
-                            title: "Oops...",
-                            text: `${error.message}`,
-                            footer: '<a href="#">Contactar a administrador</a>'
-                          });
-                        setIsLoading(false); // también en caso de error
+                Swal.fire({
+                    icon: "error",
+                    title: "Oops...",
+                    text: `${error.message}`,
+                    footer: '<a href="#">Contactar a administrador</a>',
+                });
+                setIsLoading(false); // también en caso de error
             });
     };
 
@@ -45,7 +45,7 @@ const IrdListar = () => {
 
         if (result.isConfirmed) {
             try {
-                await api.deleteIrd(id)
+                await api.deleteIrd(id);
                 getAllIrds(); // Refresca la lista después de confirmar
                 await Swal.fire({
                     title: "¡Eliminado!",
@@ -99,7 +99,7 @@ const IrdListar = () => {
                         </thead>
                         <tbody>
                             {ird.map((ird) => (
-                                <tr key={ird._id} id={ird._id} >
+                                <tr key={ird._id} id={ird._id}>
                                     <td>{ird.marcaIrd}</td>
                                     <td>{ird.multicastReceptor}</td>
                                     <td>
@@ -121,7 +121,9 @@ const IrdListar = () => {
                                         </button>
                                         <button
                                             className="button btn-danger"
-                                            onClick={() => deleteEncoderIrd(ird._id)}
+                                            onClick={() =>
+                                                deleteEncoderIrd(ird._id)
+                                            }
                                         >
                                             Eliminar
                                         </button>
