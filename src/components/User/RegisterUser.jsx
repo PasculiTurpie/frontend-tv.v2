@@ -10,7 +10,9 @@ import api from '../../utils/api'
 const RegisterSchema = Yup.object().shape({
     username: Yup.string().required("Campo obligatorio"),
     email: Yup.string()
-        .email("Debe ser un correo válido")
+        .required("Campo obligatorio").matches(/grupogtd.com/, "Debe pertenecer al dominio grupogtd.com")
+        .email("Debe ser un correo válido"),
+    confirmPassword: Yup.string()
         .required("Campo obligatorio"),
     password: Yup.string()
         .required("La contraseña es obligatoria")
@@ -21,8 +23,8 @@ const RegisterSchema = Yup.object().shape({
         .matches(
             /[@$!%*?&]/,
             "Debe tener al menos un símbolo especial (@$!%*?&)"
-        ),
-    confirmPassword: Yup.string()
+    )
+    
         .oneOf([Yup.ref("password")], "Las contraseñas deben coincidir")
         .required("Confirma tu contraseña"),
 });
@@ -85,6 +87,7 @@ const RegisterUser = () => {
                         hasLowerCase: /[a-z]/.test(values.password),
                         hasNumber: /[0-9]/.test(values.password),
                         hasSpecialChar: /[@$!%*?&]/.test(values.password),
+                        domain: /@grupogtd.com/.test(values.email)
                     };
 
                     return (
@@ -246,65 +249,91 @@ const RegisterUser = () => {
                             </Form>
 
                             {/* Checklist dinámico */}
-                            <div style={{ marginTop: "10px" }}>
-                                <p>La contraseña debe contener:</p>
-                                <ul
-                                    style={{
-                                        listStyle: "none",
-                                        paddingLeft: 0,
-                                    }}
-                                >
+                            <div>
+                                <div style={{ marginTop: "10px" }}>
+
+                                    <p>El dominio del correo debe ser institucional:</p>
+                                    <ul
+                                        style={{
+                                            listStyle: "none",
+                                            paddingLeft: 0,
+                                        }}
+                                    >
                                     <li
                                         style={{
-                                            color: rules.minLength
+                                            color: rules.domain
                                                 ? "green"
                                                 : "red",
                                         }}
                                     >
-                                        {rules.minLength ? "✔" : "✖"} Mínimo 8
-                                        caracteres
+                                        {rules.domain ? "✔" : "✖"} Un
+                                        dominio (@grupogtd.com)
                                     </li>
-                                    <li
+
+                                    </ul>
+                                </div>
+                                <div style={{ marginTop: "10px" }}>
+                                    <p>La contraseña debe contener:</p>
+                                    <ul
                                         style={{
-                                            color: rules.hasUpperCase
-                                                ? "green"
-                                                : "red",
+                                            listStyle: "none",
+                                            paddingLeft: 0,
                                         }}
                                     >
-                                        {rules.hasUpperCase ? "✔" : "✖"} Una
-                                        letra mayúscula
-                                    </li>
-                                    <li
-                                        style={{
-                                            color: rules.hasLowerCase
-                                                ? "green"
-                                                : "red",
-                                        }}
-                                    >
-                                        {rules.hasLowerCase ? "✔" : "✖"} Una
-                                        letra minúscula
-                                    </li>
-                                    <li
-                                        style={{
-                                            color: rules.hasNumber
-                                                ? "green"
-                                                : "red",
-                                        }}
-                                    >
-                                        {rules.hasNumber ? "✔" : "✖"} Un número
-                                    </li>
-                                    <li
-                                        style={{
-                                            color: rules.hasSpecialChar
-                                                ? "green"
-                                                : "red",
-                                        }}
-                                    >
-                                        {rules.hasSpecialChar ? "✔" : "✖"} Un
-                                        símbolo especial (@$!%*?&)
-                                    </li>
-                                </ul>
+                                        <li
+                                            style={{
+                                                color: rules.minLength
+                                                    ? "green"
+                                                    : "red",
+                                            }}
+                                        >
+                                            {rules.minLength ? "✔" : "✖"} Mínimo 8
+                                            caracteres
+                                        </li>
+                                        <li
+                                            style={{
+                                                color: rules.hasUpperCase
+                                                    ? "green"
+                                                    : "red",
+                                            }}
+                                        >
+                                            {rules.hasUpperCase ? "✔" : "✖"} Una
+                                            letra mayúscula
+                                        </li>
+                                        <li
+                                            style={{
+                                                color: rules.hasLowerCase
+                                                    ? "green"
+                                                    : "red",
+                                            }}
+                                        >
+                                            {rules.hasLowerCase ? "✔" : "✖"} Una
+                                            letra minúscula
+                                        </li>
+                                        <li
+                                            style={{
+                                                color: rules.hasNumber
+                                                    ? "green"
+                                                    : "red",
+                                            }}
+                                        >
+                                            {rules.hasNumber ? "✔" : "✖"} Un número
+                                        </li>
+                                        <li
+                                            style={{
+                                                color: rules.hasSpecialChar
+                                                    ? "green"
+                                                    : "red",
+                                            }}
+                                        >
+                                            {rules.hasSpecialChar ? "✔" : "✖"} Un
+                                            símbolo especial (@$!%*?&)
+                                        </li>
+
+                                    </ul>
+                                </div>
                             </div>
+                            
                         </div>
                     );
                 }}

@@ -66,8 +66,8 @@ class Api {
     getIrd() {
         return this._axios.get("/ird").then((res) => res);
     }
-    createIrd() {
-        return this._axios.get("/ird").then((res) => res);
+    createIrd(values) {
+        return this._axios.post("/ird", values).then((res) => res.data);
     }
     getIdIrd(id) {
         return this._axios.get(`/ird/${id}`).then((res) => res);

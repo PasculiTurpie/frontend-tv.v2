@@ -5,8 +5,12 @@ import * as Yup from "yup";
 import Swal from "sweetalert2";
 import api from "../../utils/api";
 
+const ipMulticastRegex = /^(2(?:[0-4]\d|5[0-5])\.(?:[0-9]{1,2}|1\d\d|2[0-4]\d|25[0-5])\.(?:[0-9]{1,2}|1\d\d|2[0-4]\d|25[0-5])\.(?:[0-9]{1,2}|1\d\d|2[0-4]\d|25[0-5]))$/;
+
+const ipVideoMulticast = /^(192.168)?\.(\d{1,3}\.)\d{1,3}$/;
+
 const IrdSchema = Yup.object().shape({
-    ipAdminIrd: Yup.string().required("Campo obligatorio"),
+    ipAdminIrd: Yup.string().required("Campo obligatorio").matches(/^172\.19\.\d{1,3}\.\d{1,3}$/, "Ingresa una ip válida"),
     marcaIrd: Yup.string().required("Campo obligatorio"),
     modelIrd: Yup.string().required("Campo obligatorio"),
     versionIrd: Yup.string().required("Campo obligatorio"),
@@ -22,10 +26,12 @@ const IrdSchema = Yup.object().shape({
     cvirtualReceptor: Yup.string().required("Campo obligatorio"),
     vctReceptor: Yup.string().required("Campo obligatorio"),
     outputReceptor: Yup.string().required("Campo obligatorio"),
-    multicastReceptor: Yup.string().required("Campo obligatorio"),
-    ipVideoMulticast: Yup.string().required("Campo obligatorio"),
-    locationRow: Yup.string().required("Campo obligatorio"),
-    locationCol: Yup.string().required("Campo obligatorio"),
+    multicastReceptor: Yup.string()
+        .matches(ipMulticastRegex, 'Debe ser una multicast válida')
+        .required('Campo requerido'),
+    ipVideoMulticast: Yup.string().required("Campo obligatorio").matches(ipVideoMulticast, "Debe ser una ip válida"),
+    locationRow: Yup.string().required("Campo obligatorio").matches(/\d+/,"Ingrese un número"),
+    locationCol: Yup.string().required("Campo obligatorio").matches(/\d+/, "Ingrese un número"),
 });
 
 const IrdForm = () => {
@@ -69,6 +75,29 @@ const IrdForm = () => {
                         locationCol: "",
                     }}
                     validationSchema={IrdSchema}
+                    enableReinitialize={true}
+                    onSubmit={async (values, { resetForm }) => {
+                        try {
+                            const response = await api.createIrd(values);
+                            console.log(response);
+                            Swal.fire({
+                                title: "Ird guardado exitosamente",
+                                icon: "success",
+                                html: `
+                                            <p><strong>Nombre Ird:</strong> ${values.marcaIrd}</p>
+                                            <p><strong>Modelo:</strong> ${values.modelIrd}</p>
+                                          `,
+                            }).then(() => {});
+                        } catch (error) {
+                            console.log(error);
+                            Swal.fire({
+                                title: "Error",
+                                icon: "error",
+                                text: `Duplicidad de datos`,
+                                footer: `${error.response.data.message}`,
+                            });
+                        }
+                    }}
                 >
                     {({ errors, touched }) => (
                         <Form className={styles.form__add}>
@@ -400,7 +429,7 @@ const IrdForm = () => {
                                             htmlFor="vctReceptor"
                                             className="form__group-label"
                                         >
-                                            FEC
+                                            VCT
                                             <br />
                                             <Field
                                                 type="text"
@@ -426,7 +455,7 @@ const IrdForm = () => {
                                             htmlFor="outputReceptor"
                                             className="form__group-label"
                                         >
-                                            Salida
+                                            Salida receptor
                                             <br />
                                             <Field
                                                 type="text"
