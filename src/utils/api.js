@@ -44,7 +44,7 @@ class Api {
     deleteSatelliteId(id) {
         return this._axios.delete(`/satelite/${id}`).then((res) => res.data);
     }
-    updateSatelite(id, values) {
+    updateSatelite(values, id) {
         return this._axios
             .put(`/satelite/${id}`, values)
             .then((res) => res.data);
