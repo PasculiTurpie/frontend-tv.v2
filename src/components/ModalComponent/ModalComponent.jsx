@@ -24,21 +24,21 @@ const ModalComponent = ({
                 }
             >
                 <div className="form__modal-component">
-
-                <div className="modal__title">
-                    <h4>{title}</h4>
-                </div>
-                <img
-                    className="modal__close"
-                    src={Close}
-                    alt="close"
-                    onClick={handleCloseModal}
-                />
-                {children}
-
-                </div>
+                    <div className="modal__title">
+                        <h4>{title}</h4>
+                    </div>
+                    <img
+                        className="modal__close"
+                        src={Close}
+                        alt="close"
+                        onClick={handleCloseModal}
+                    />
+                <div className="form__modal-component-margen">
+                    {children}
 
                 </div>
+                </div>
+            </div>
         </>
     );
 };

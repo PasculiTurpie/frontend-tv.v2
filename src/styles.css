@@ -66,6 +66,7 @@ td {
 
 .form__modal {
     box-shadow: none;
+
 }
 
 select {
@@ -102,6 +103,11 @@ select {
 
 .form__group-label {
     font-size: 15px;
+    
+}
+.form__group:nth-child(1){
+    margin-top:20px;
+
 }
 
 .form__group-input {
@@ -184,12 +190,15 @@ select {
 
 .form__modal-component {
     position: relative;
+    
 }
+
 .modal__title {
     position: absolute;
     top: 20px;
     left: 20px;
     height: 40px;
+    margin-bottom: 20px;
 }
 
 .modal__close {

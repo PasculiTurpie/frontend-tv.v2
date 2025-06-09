@@ -5,12 +5,11 @@ import api from "../../utils/api";
 import Swal from "sweetalert2";
 import ModalIrd from "./ModalIrd";
 
-
 const IrdListar = () => {
     const [ird, setIrd] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [modalOpen, setModalOpen] = useState(false);
-        const [itemId, setItemId] = useState("");
+    const [itemId, setItemId] = useState("");
 
     const getAllIrds = () => {
         api.getIrd()
@@ -36,9 +35,9 @@ const IrdListar = () => {
         refreshList();
     }, []);
 
-    const refreshList = (() => {
+    const refreshList = () => {
         getAllIrds();
-    })
+    };
 
     const deleteEncoderIrd = async (id) => {
         const result = await Swal.fire({
@@ -71,25 +70,25 @@ const IrdListar = () => {
         }
     };
     const showModal = (id) => {
-            console.log(id);
-            setItemId(id);
-            setModalOpen(true);
-        };
-    
-        const handleOk = () => {
-            setModalOpen(false);
-            Swal.fire({
-                position: "center",
-                icon: "success",
-                title: "Registro actualizado",
-                showConfirmButton: false,
-                timer: 1500,
-            });
-        };
-    
-        const handleCancel = () => {
-            setModalOpen(false);
-        };
+        console.log(id);
+        setItemId(id);
+        setModalOpen(true);
+    };
+
+    const handleOk = () => {
+        setModalOpen(false);
+        Swal.fire({
+            position: "center",
+            icon: "success",
+            title: "Registro actualizado",
+            showConfirmButton: false,
+            timer: 1500,
+        });
+    };
+
+    const handleCancel = () => {
+        setModalOpen(false);
+    };
 
     return (
         <>
@@ -162,6 +161,7 @@ const IrdListar = () => {
                     </table>
                 )}
             </div>
+
             {modalOpen && (
                 <ModalIrd
                     modalOpen={modalOpen}
