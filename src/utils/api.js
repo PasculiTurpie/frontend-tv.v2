@@ -82,6 +82,19 @@ class Api {
     getDcm() {
         return this._axios.get("/dcm").then((res) => res);
     }
+    deleteDcm(id) {
+        return this._axios.delete(`/dcm/${id}`).then((res) => res);
+    }
+    createDcm(values) {
+        return this._axios.post("/dcm", values).then((res) => res.data);
+    }
+
+    getIdDcm(id) {
+        return this._axios.get(`/dcm/${id}`).then((res) => res);
+    }
+    updateDcm(id, values) {
+        return this._axios.put(`/dcm/${id}`, values).then((res) => res);
+    }
 }
 
 const api = new Api("http://localhost:3000/api/v2");

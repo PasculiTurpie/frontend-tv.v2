@@ -87,7 +87,8 @@ const IrdForm = () => {
                                             <p><strong>Nombre Ird:</strong> ${values.marcaIrd}</p>
                                             <p><strong>Modelo:</strong> ${values.modelIrd}</p>
                                           `,
-                            }).then(() => {});
+                            });
+                            resetForm();
                         } catch (error) {
                             console.log(error);
                             Swal.fire({

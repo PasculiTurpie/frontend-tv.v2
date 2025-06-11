@@ -53,7 +53,7 @@ const IrdListar = () => {
         if (result.isConfirmed) {
             try {
                 await api.deleteIrd(id);
-                getAllIrds(); // Refresca la lista después de confirmar
+                refreshList(); // Refresca la lista después de confirmar
                 await Swal.fire({
                     title: "¡Eliminado!",
                     text: "El registro ha sido eliminado",

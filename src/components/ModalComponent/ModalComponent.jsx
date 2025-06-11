@@ -1,6 +1,6 @@
 import "./ModalComponent.css";
 import Close from "../../../public/images/close.svg";
-import { Form } from "formik";
+
 
 const ModalComponent = ({
     modalOpen,
