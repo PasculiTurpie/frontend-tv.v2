@@ -120,7 +120,7 @@ const ModalIrd = ({ itemId, modalOpen, setModalOpen, title, refreshList }) => {
                     title={title}
                     setModalOpen={setModalOpen}
                 >
-                    <Form className={stylesIrd.form__add}>
+                    <Form className="form__add">
                         <div className={stylesIrd.rows__group}>
                             <div className={stylesIrd.columns__group}>
                                 <div className="form__group">

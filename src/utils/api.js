@@ -78,6 +78,10 @@ class Api {
     updateIrd(id, values) {
         return this._axios.put(`/ird/${id}`, values).then((res) => res.data);
     }
+    /*Rutas para gestión DCM*/
+    getDcm() {
+        return this._axios.get("/dcm").then((res) => res);
+    }
 }
 
 const api = new Api("http://localhost:3000/api/v2");

@@ -34,6 +34,24 @@ const Sidebar = () => {
         <li>
           <Link to="/ird">Encoder Ird</Link>
         </li>
+        <li>
+          <Link to="/dcm">Dcm</Link>
+        </li>
+        <li>
+          <Link to="/titan">Encoder Titan</Link>
+        </li>
+        <li>
+          <Link to="/dcmVmx">Dcm Vmx</Link>
+        </li>
+        <li>
+          <Link to="/rtesVmx">Rtes Vmx</Link>
+        </li>
+        <li>
+          <Link to="/str">STR</Link>
+        </li>
+        <li>
+          <Link to="/router">Router</Link>
+        </li>
         <hr />
         <li>
           <Link to="/registrar-user">Usuarios</Link>

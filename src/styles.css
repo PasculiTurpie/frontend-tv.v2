@@ -34,7 +34,9 @@
 .btn-danger {
     background-color: #d6244d;
 }
-
+.btn-danger:hover{
+    background-color: #850220;
+}
 .total-list {
     font-weight: bold;
 }
@@ -81,6 +83,7 @@ select {
     padding: 30px;
     row-gap: 15px;
     border-radius: 8px;
+    background: #fff;
 }
 .form__add-more {
     display: flex;
