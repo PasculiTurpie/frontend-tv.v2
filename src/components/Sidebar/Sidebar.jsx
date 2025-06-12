@@ -32,6 +32,12 @@ const Sidebar = () => {
           <Link to="/satelite">Satélite</Link>
         </li>
         <li>
+          <Link to="/str">STR</Link>
+        </li>
+        <li>
+          <Link to="/str">Fibra</Link>
+        </li>
+        <li>
           <Link to="/ird">Encoder Ird</Link>
         </li>
         <li>
@@ -45,9 +51,6 @@ const Sidebar = () => {
         </li>
         <li>
           <Link to="/rtesVmx">Rtes Vmx</Link>
-        </li>
-        <li>
-          <Link to="/str">STR</Link>
         </li>
         <li>
           <Link to="/router">Router</Link>

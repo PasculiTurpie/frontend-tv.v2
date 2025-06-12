@@ -4,10 +4,8 @@ import styles from "./Ird.module.css";
 import * as Yup from "yup";
 import Swal from "sweetalert2";
 import api from "../../utils/api";
+import { ipMulticastRegex, ipVideoMulticast } from "../../utils/regexValidate";
 
-const ipMulticastRegex = /^(2(?:[0-4]\d|5[0-5])\.(?:[0-9]{1,2}|1\d\d|2[0-4]\d|25[0-5])\.(?:[0-9]{1,2}|1\d\d|2[0-4]\d|25[0-5])\.(?:[0-9]{1,2}|1\d\d|2[0-4]\d|25[0-5]))$/;
-
-const ipVideoMulticast = /^(192.168)?\.(\d{1,3}\.)\d{1,3}$/;
 
 const IrdSchema = Yup.object().shape({
     ipAdminIrd: Yup.string().required("Campo obligatorio").matches(/^172\.19\.\d{1,3}\.\d{1,3}$/, "Ingresa una ip válida"),

@@ -3,27 +3,24 @@ import { Link } from "react-router-dom";
 import * as Yup from "yup";
 import Swal from "sweetalert2";
 import api from "../../utils/api";
+import { ipMulticastRegex, ipGestionRegex } from "../../utils/regexValidate";
 
-const ipMulticastRegex =
-    /^(2(?:[0-4]\d|5[0-5])\.(?:[0-9]{1,2}|1\d\d|2[0-4]\d|25[0-5])\.(?:[0-9]{1,2}|1\d\d|2[0-4]\d|25[0-5])\.(?:[0-9]{1,2}|1\d\d|2[0-4]\d|25[0-5]))$/;
-
-const ipGestionRegex = /172.19.14\.\d/;
 
 const RegisterSchemaTitan = Yup.object().shape({
-    nombreTitan: Yup.string(),
-    urlTitan: Yup.string().matches(
+    nombreTitan: Yup.string().required("Campo obligatorio"),
+    urlTitan: Yup.string().required("Campo obligatorio").matches(
         /(?:https?\:\/\/\w+\.\w+\.\w+.+)/,
         "Ingresa una url válida"
     ),
-    mcastIn: Yup.string().matches(
+    mcastIn: Yup.string().required("Campo obligatorio").matches(
         ipMulticastRegex,
         "Debe ser una multicast válida"
     ),
-    mcastOut: Yup.string().matches(
+    mcastOut: Yup.string().required("Campo obligatorio").matches(
         ipMulticastRegex,
         "Debe ser una multicast válida"
     ),
-    ipGestion: Yup.string().matches(ipGestionRegex, "Debe ser una ip válida"),
+    ipGestion: Yup.string().required("Campo obligatorio").matches(ipGestionRegex, "Debe ser una ip válida"),
 });
 
 const FormEncoderTitan = () => {
@@ -82,6 +79,7 @@ const FormEncoderTitan = () => {
         {({errors, touched })=>(
 
           <Form className="form__add">
+          <h1 className="form__titulo">Registrar Titan</h1>
              <div className="form__group">
                                             <label
                                                 htmlFor="nombreTitan"

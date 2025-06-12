@@ -20,6 +20,8 @@ import ListarDcm from "./pages/Dcm/ListarDcm";
 import FormDcm from "./pages/Dcm/FormDcm";
 import ListarEncoderTitan from "./pages/EncoderTitan/ListarEncoderTitan";
 import FormEncoderTitan from "./pages/EncoderTitan/FormEncoderTitan";
+import ListarDcmVmx from "./pages/DcmVmx/ListarDcmVmx";
+import FormDcmVmx from "./pages/DcmVmx/FormDcmVmx";
 const App = () => {
     return (
         <>
@@ -108,6 +110,22 @@ const App = () => {
                         element={
                             /*    <ProtectedRoute> */
                             <FormEncoderTitan />
+                            /*     </ProtectedRoute> */
+                        }
+                    />
+                    <Route
+                        path="/listar-dcmVmx"
+                        element={
+                            /*    <ProtectedRoute> */
+                            <ListarDcmVmx />
+                            /*     </ProtectedRoute> */
+                        }
+                    />
+                    <Route
+                        path="/dcmVmx"
+                        element={
+                            /*    <ProtectedRoute> */
+                            <FormDcmVmx />
                             /*     </ProtectedRoute> */
                         }
                     />

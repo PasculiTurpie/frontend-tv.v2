@@ -266,8 +266,7 @@ const RegisterUser = () => {
                                                 : "red",
                                         }}
                                     >
-                                        {rules.domain ? "✔" : "✖"} Un
-                                        dominio (@grupogtd.com)
+                                        {rules.domain ? "✔" : "✖"} Dominio (@grupogtd.com)
                                     </li>
 
                                     </ul>

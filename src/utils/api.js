@@ -114,6 +114,25 @@ class Api {
     updateTitan(id, values) {
         return this._axios.put(`/titan/${id}`, values).then((res) => res);
     }
+
+    /*Rutas para gestión DCMVMX*/
+
+    getDcmVmx() {
+        return this._axios.get("/dcmVmx").then((res) => res);
+    }
+    deleteDcmVmx(id) {
+        return this._axios.delete(`/dcmVmx/${id}`).then((res) => res);
+    }
+    createDcmVmx(values) {
+        return this._axios.post("/dcmVmx", values).then((res) => res.data);
+    }
+
+    getIdDcmVmx(id) {
+        return this._axios.get(`/dcmVmx/${id}`).then((res) => res);
+    }
+    updateDcmVmx(id, values) {
+        return this._axios.put(`/dcmVmx/${id}`, values).then((res) => res);
+    }
 }
 
 const api = new Api("http://localhost:3000/api/v2");

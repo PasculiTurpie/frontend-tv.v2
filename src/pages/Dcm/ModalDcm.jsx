@@ -6,11 +6,8 @@ import * as Yup from "yup";
 import Swal from "sweetalert2";
 import stylesDcm from "./Dcm.module.css";
 import ModalComponent from "../../components/ModalComponent/ModalComponent";
+import { ipMulticastRegex, ipGestionRegex } from "../../utils/regexValidate";
 
-const ipMulticastRegex =
-    /^(2(?:[0-4]\d|5[0-5])\.(?:[0-9]{1,2}|1\d\d|2[0-4]\d|25[0-5])\.(?:[0-9]{1,2}|1\d\d|2[0-4]\d|25[0-5])\.(?:[0-9]{1,2}|1\d\d|2[0-4]\d|25[0-5]))$/;
-
-const ipGestionRegex = /172.19.14\.\d/;
 
 const UpdateSchemaDcm = Yup.object().shape({
     nombreDcm: Yup.string(),

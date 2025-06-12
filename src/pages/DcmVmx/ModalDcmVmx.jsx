@@ -1,85 +1,98 @@
-import { Field, Form, Formik } from "formik";
-import React from "react";
-import { Link } from "react-router-dom";
+import React, { useEffect, useState } from "react";
+
+import api from "../../utils/api";
+import { Formik, Form, Field, ErrorMessage } from "formik";
 import * as Yup from "yup";
 import Swal from "sweetalert2";
-import api from "../../utils/api";
+import stylesDcmVmx from "./DcmVmx.module.css";
+import ModalComponent from "../../components/ModalComponent/ModalComponent";
 import { ipMulticastRegex, ipGestionRegex } from "../../utils/regexValidate";
 
-
-const AddSchemaDcm = Yup.object().shape({
-    nombreDcm: Yup.string().required("Campo obligatorio"),
-    mcastIn: Yup.string()
-        .matches(ipMulticastRegex, "Debe ser una multicast válida")
-        .required("Campo obligatorio"),
-    mcastOut: Yup.string()
-        .matches(ipMulticastRegex, "Debe ser una multicast válida")
-        .required("Campo obligatorio"),
-    ipGestion: Yup.string()
-        .matches(ipGestionRegex, "Debe ser una ip válida")
-        .required("Campo obligatorio"),
+const UpdateSchemaDcmVmx = Yup.object().shape({
+    nombreDcmVmx: Yup.string(),
+    urlDcmVmx: Yup.string(),
+    mcastIn: Yup.string().matches(
+        ipMulticastRegex,
+        "Debe ser una multicast válida"
+    ),
+    mcastOut: Yup.string().matches(
+        ipMulticastRegex,
+        "Debe ser una multicast válida"
+    ),
+    ipGestion: Yup.string().matches(ipGestionRegex, "Debe ser una ip válida"),
     port: Yup.string().required("Campo obligatorio"),
 });
 
-const FormDcm = () => {
+const ModalDcmVmx = ({
+    itemId,
+    modalOpen,
+    setModalOpen,
+    title,
+    refreshList,
+}) => {
+    const [dataDcmVmx, setDataDcmVmx] = useState(null);
+
+    useEffect(() => {
+        if (itemId) {
+            console.log(itemId);
+            api.getIdDcmVmx(itemId).then((res) => {
+                console.log(res.data);
+                setDataDcmVmx(res.data);
+            });
+        }
+    }, [itemId]);
+
+    if (!dataDcmVmx) return null;
+
     return (
         <>
-            <div className="outlet-main">
-                <nav aria-label="breadcrumb">
-                    <ol className="breadcrumb">
-                        <li className="breadcrumb-item">
-                            <Link to="/dcm-listar">Listar</Link>
-                        </li>
-                        <li
-                            className="breadcrumb-item active"
-                            aria-current="page"
-                        >
-                            Formulario
-                        </li>
-                    </ol>
-                </nav>
-
-                <Formik
-                    initialValues={{
-                        nombreDcm: "",
-                        mcastIn: "",
-                        mcastOut: "",
-                        ipGestion: "",
-                        port: "",
-                    }}
-                    validationSchema={AddSchemaDcm}
-                    enableReinitialize={true}
-                    onSubmit={async (values, { resetForm }) => {
-                        try {
-                            const response = await api.createDcm(values);
-                            console.log(response);
-                            Swal.fire({
-                                title: "Dcm guardado exitosamente",
-                                icon: "success",
-                                html: `
-                                <p><strong>Nombre Dcm:</strong> ${values.nombreDcm}</p>
-                                <p><strong>Modelo:</strong> ${values.ipGestion}</p>
-                              `,
-                            });
-                          resetForm();
-                        } catch (error) {
-                            console.log(error);
-                            Swal.fire({
-                                title: "Error",
-                                icon: "error",
-                                text: `Duplicidad de datos`,
-                                footer: `${error.response.data.message}`,
-                            });
-                        }
-                    }}
-                >
-                    {({ errors, touched }) => (
-                        <Form className="form__add">
-                            <h1 className="form__titulo">Ingresa un DCM</h1>
-
+            <Formik
+                initialValues={{
+                    nombreDcmVmx: dataDcmVmx.nombreDcmVmx || "",
+                    mcastIn: dataDcmVmx.mcastIn || "",
+                    mcastOut: dataDcmVmx.mcastOut || "",
+                    ipGestion: dataDcmVmx.ipGestion || "",
+                }}
+                validationSchema={UpdateSchemaDcmVmx}
+                onSubmit={async (values, { resetForm }) => {
+                    try {
+                        await api.updateDcmVmx(itemId, values);
+                        console.log(values);
+                        Swal.fire({
+                            icon: "success",
+                            title: "Equipo actualizado",
+                            text: "El equipo Dcm se ha actualizado exitosamente!",
+                            footer: `<h4>${values.nombreDcmVmx}</h4>
+                  <h4>${values.ipGestion}</h4>
+                  
+                  `,
+                        });
+                        refreshList();
+                        setModalOpen(false);
+                        resetForm();
+                    } catch (error) {
+                        Swal.fire({
+                            icon: "error",
+                            title: "Ups!!",
+                            text: `${
+                                error.response?.data?.message ||
+                                "Error desconocido"
+                            }`,
+                        });
+                        console.error(error);
+                    }
+                }}
+            >
+                {({ errors, touched }) => (
+                    <ModalComponent
+                        modalOpen={modalOpen}
+                        title={title}
+                        setModalOpen={setModalOpen}
+                    >
+                        <Form className={stylesDcmVmx.form__add}>
                             <div className="form__group">
                                 <label
-                                    htmlFor="nombreDcm"
+                                    htmlFor="nombreDcmVmx"
                                     className="form__group-label"
                                 >
                                     Nombre Dcm
@@ -88,13 +101,34 @@ const FormDcm = () => {
                                         type="text"
                                         className="form__group-input"
                                         placeholder="Nombre dcm"
-                                        name="nombreDcm"
+                                        name="nombreDcmVmx"
                                     />
                                 </label>
 
-                                {errors.nombreDcm && touched.nombreDcm ? (
+                                {errors.nombreDcmVmx && touched.nombreDcmVmx ? (
                                     <div className="form__group-error">
-                                        {errors.nombreDcm}
+                                        {errors.nombreDcmVmx}
+                                    </div>
+                                ) : null}
+                            </div>
+                            <div className="form__group">
+                                <label
+                                    htmlFor="urlDcm"
+                                    className="form__group-label"
+                                >
+                                    Url Dcm
+                                    <br />
+                                    <Field
+                                        type="text"
+                                        className="form__group-input"
+                                        placeholder="Url dcm"
+                                        name="urlDcmVmx"
+                                    />
+                                </label>
+
+                                {errors.urlDcmVmx && touched.urlDcmVmx ? (
+                                    <div className="form__group-error">
+                                        {errors.urlDcmVmx}
                                     </div>
                                 ) : null}
                             </div>
@@ -190,11 +224,11 @@ const FormDcm = () => {
                                 Enviar
                             </button>
                         </Form>
-                    )}
-                </Formik>
-            </div>
+                    </ModalComponent>
+                )}
+            </Formik>
         </>
     );
 };
 
-export default FormDcm;
+export default ModalDcmVmx;
