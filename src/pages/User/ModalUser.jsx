@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import ModalComponent from "../ModalComponent/ModalComponent";
+import ModalComponent from "../../components/ModalComponent/ModalComponent";
 import api from "../../utils/api";
 import { Formik, Form, Field, ErrorMessage } from "formik";
 import * as Yup from "yup";

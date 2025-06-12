@@ -95,6 +95,25 @@ class Api {
     updateDcm(id, values) {
         return this._axios.put(`/dcm/${id}`, values).then((res) => res);
     }
+
+    /*Rutas para gestión DCM*/
+
+    getTitan() {
+        return this._axios.get("/titan").then((res) => res);
+    }
+    deleteTitan(id) {
+        return this._axios.delete(`/titan/${id}`).then((res) => res);
+    }
+    createTitan(values) {
+        return this._axios.post("/titan", values).then((res) => res.data);
+    }
+
+    getIdTitan(id) {
+        return this._axios.get(`/titan/${id}`).then((res) => res);
+    }
+    updateTitan(id, values) {
+        return this._axios.put(`/titan/${id}`, values).then((res) => res);
+    }
 }
 
 const api = new Api("http://localhost:3000/api/v2");

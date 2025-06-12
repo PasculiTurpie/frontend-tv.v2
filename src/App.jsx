@@ -9,8 +9,8 @@ import SatelliteForm from "./pages/Satellite/SatelliteForm";
 import { SatelliteList } from "./pages/Satellite/SatelliteList";
 import IrdForm from "./pages/Ird/IrdForm";
 import IrdListar from "./pages/Ird/IrdListar";
-import RegisterUser from "./components/User/RegisterUser";
-import ListarUsers from "./components/User/ListarUsers";
+import RegisterUser from "./pages/User/RegisterUser";
+import ListarUsers from "./pages/User/ListarUsers";
 import Login from "./components/Login/Login";
 import AddSignal from "./pages/AddSignal/AddSignal";
 import DetailCard from "./components/DatailCard/DetailCard";
@@ -18,6 +18,8 @@ import Diagrama from "./components/Diagrama/Diagrama";
 import Diag from "./components/Diagrama/Diag";
 import ListarDcm from "./pages/Dcm/ListarDcm";
 import FormDcm from "./pages/Dcm/FormDcm";
+import ListarEncoderTitan from "./pages/EncoderTitan/ListarEncoderTitan";
+import FormEncoderTitan from "./pages/EncoderTitan/FormEncoderTitan";
 const App = () => {
     return (
         <>
@@ -90,6 +92,22 @@ const App = () => {
                         element={
                             /*    <ProtectedRoute> */
                             <FormDcm />
+                            /*     </ProtectedRoute> */
+                        }
+                    />
+                    <Route
+                        path="/listar-titan"
+                        element={
+                            /*    <ProtectedRoute> */
+                            <ListarEncoderTitan />
+                            /*     </ProtectedRoute> */
+                        }
+                    />
+                    <Route
+                        path="/titan"
+                        element={
+                            /*    <ProtectedRoute> */
+                            <FormEncoderTitan />
                             /*     </ProtectedRoute> */
                         }
                     />
