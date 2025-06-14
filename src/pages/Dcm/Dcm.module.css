@@ -8,3 +8,22 @@
   border-radius : 8px;
   background: #fff;
 }
+.rows__group {
+    display: flex;
+    flex-direction: row;
+    column-gap: 10px;
+}
+
+.columns__group {
+    display: flex;
+    flex-direction: column;
+    row-gap: 10px;
+    margin-bottom: 20px;
+}
+
+.button {
+    width: 150px;
+    padding: 5px 8px;
+    color: white;
+    border-radius: 5px;
+}

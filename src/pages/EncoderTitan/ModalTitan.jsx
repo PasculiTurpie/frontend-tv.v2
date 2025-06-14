@@ -96,113 +96,120 @@ const ModalTitan = ({
                         setModalOpen={setModalOpen}
                     >
                         <Form className={stylesTitan.form__add}>
-                            <div className="form__group">
-                                <label
-                                    htmlFor="nombreTitan"
-                                    className="form__group-label"
-                                >
-                                    Nombre Titan
-                                    <br />
-                                    <Field
-                                        type="text"
-                                        className="form__group-input"
-                                        placeholder="Nombre titan"
-                                        name="nombreTitan"
-                                    />
-                                </label>
+                            <div className={stylesTitan.rows__group}>
+                                <div className={stylesTitan.columns__group}>
+                                    <div className="form__group">
+                                        <label
+                                            htmlFor="nombreTitan"
+                                            className="form__group-label"
+                                        >
+                                            Nombre Titan
+                                            <br />
+                                            <Field
+                                                type="text"
+                                                className="form__group-input"
+                                                placeholder="Nombre titan"
+                                                name="nombreTitan"
+                                            />
+                                        </label>
 
-                                {errors.nombreTitan && touched.nombreTitan ? (
-                                    <div className="form__group-error">
-                                        {errors.nombreTitan}
+                                        {errors.nombreTitan &&
+                                        touched.nombreTitan ? (
+                                            <div className="form__group-error">
+                                                {errors.nombreTitan}
+                                            </div>
+                                        ) : null}
                                     </div>
-                                ) : null}
-                            </div>
-                            <div className="form__group">
-                                <label
-                                    htmlFor="urlTitan"
-                                    className="form__group-label"
-                                >
-                                    Url Titan
-                                    <br />
-                                    <Field
-                                        type="text"
-                                        className="form__group-input"
-                                        placeholder="Url imagen"
-                                        name="urlTitan"
-                                    />
-                                </label>
+                                    <div className="form__group">
+                                        <label
+                                            htmlFor="urlTitan"
+                                            className="form__group-label"
+                                        >
+                                            Url Titan
+                                            <br />
+                                            <Field
+                                                type="text"
+                                                className="form__group-input"
+                                                placeholder="Url imagen"
+                                                name="urlTitan"
+                                            />
+                                        </label>
 
-                                {errors.urlTitan && touched.urlTitan ? (
-                                    <div className="form__group-error">
-                                        {errors.urlTitan}
+                                        {errors.urlTitan && touched.urlTitan ? (
+                                            <div className="form__group-error">
+                                                {errors.urlTitan}
+                                            </div>
+                                        ) : null}
                                     </div>
-                                ) : null}
-                            </div>
 
-                            <div className="form__group">
-                                <label
-                                    htmlFor="urlTitan"
-                                    className="form__group-label"
-                                >
-                                    Multicast In Titan
-                                    <br />
-                                    <Field
-                                        type="text"
-                                        className="form__group-input"
-                                        placeholder=" Multicast In"
-                                        name="mcastIn"
-                                    />
-                                </label>
+                                    <div className="form__group">
+                                        <label
+                                            htmlFor="urlTitan"
+                                            className="form__group-label"
+                                        >
+                                            Multicast In Titan
+                                            <br />
+                                            <Field
+                                                type="text"
+                                                className="form__group-input"
+                                                placeholder=" Multicast In"
+                                                name="mcastIn"
+                                            />
+                                        </label>
 
-                                {errors.mcastIn && touched.mcastIn ? (
-                                    <div className="form__group-error">
-                                        {errors.mcastIn}
+                                        {errors.mcastIn && touched.mcastIn ? (
+                                            <div className="form__group-error">
+                                                {errors.mcastIn}
+                                            </div>
+                                        ) : null}
                                     </div>
-                                ) : null}
-                            </div>
+                                </div>
+                                <div className={stylesTitan.columns__group}>
+                                    <div className="form__group">
+                                        <label
+                                            htmlFor="mcastOut"
+                                            className="form__group-label"
+                                        >
+                                            Multicast Out Titan
+                                            <br />
+                                            <Field
+                                                type="text"
+                                                className="form__group-input"
+                                                placeholder="Multicast Out"
+                                                name="mcastOut"
+                                            />
+                                        </label>
 
-                            <div className="form__group">
-                                <label
-                                    htmlFor="mcastOut"
-                                    className="form__group-label"
-                                >
-                                    Multicast Out Titan
-                                    <br />
-                                    <Field
-                                        type="text"
-                                        className="form__group-input"
-                                        placeholder="Multicast Out"
-                                        name="mcastOut"
-                                    />
-                                </label>
-
-                                {errors.mcastOut && touched.mcastOut ? (
-                                    <div className="form__group-error">
-                                        {errors.mcastOut}
+                                        {errors.mcastOut && touched.mcastOut ? (
+                                            <div className="form__group-error">
+                                                {errors.mcastOut}
+                                            </div>
+                                        ) : null}
                                     </div>
-                                ) : null}
-                            </div>
 
-                            <div className="form__group">
-                                <label
-                                    htmlFor="ipGestion"
-                                    className="form__group-label"
-                                >
-                                    Ip Gestión Titan
-                                    <br />
-                                    <Field
-                                        type="text"
-                                        className="form__group-input"
-                                        placeholder="Ip gestión"
-                                        name="ipGestion"
-                                    />
-                                </label>
+                                    <div className="form__group">
+                                        <label
+                                            htmlFor="ipGestion"
+                                            className="form__group-label"
+                                        >
+                                            Ip Gestión Titan
+                                            <br />
+                                            <Field
+                                                type="text"
+                                                className="form__group-input"
+                                                placeholder="Ip gestión"
+                                                name="ipGestion"
+                                            />
+                                        </label>
 
-                                {errors.ipGestion && touched.ipGestion ? (
-                                    <div className="form__group-error">
-                                        {errors.ipGestion}
+                                        {errors.ipGestion &&
+                                        touched.ipGestion ? (
+                                            <div className="form__group-error">
+                                                {errors.ipGestion}
+                                            </div>
+                                        ) : null}
                                     </div>
-                                ) : null}
+                                </div>
                             </div>
                             <button
                                 type="submit"

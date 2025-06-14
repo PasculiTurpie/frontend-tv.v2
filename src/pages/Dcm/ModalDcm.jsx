@@ -8,7 +8,6 @@ import stylesDcm from "./Dcm.module.css";
 import ModalComponent from "../../components/ModalComponent/ModalComponent";
 import { ipMulticastRegex, ipGestionRegex } from "../../utils/regexValidate";
 
-
 const UpdateSchemaDcm = Yup.object().shape({
     nombreDcm: Yup.string(),
     urlDcm: Yup.string(),
@@ -87,132 +86,140 @@ const ModalDcm = ({ itemId, modalOpen, setModalOpen, title, refreshList }) => {
                         setModalOpen={setModalOpen}
                     >
                         <Form className={stylesDcm.form__add}>
-                            <div className="form__group">
-                                <label
-                                    htmlFor="nombreDcm"
-                                    className="form__group-label"
-                                >
-                                    Nombre Dcm
-                                    <br />
-                                    <Field
-                                        type="text"
-                                        className="form__group-input"
-                                        placeholder="Nombre dcm"
-                                        name="nombreDcm"
-                                    />
-                                </label>
+                            <div className={stylesDcm.rows__group}>
+                                <div className={stylesDcm.columns__group}>
+                                    <div className="form__group">
+                                        <label
+                                            htmlFor="nombreDcm"
+                                            className="form__group-label"
+                                        >
+                                            Nombre Dcm
+                                            <br />
+                                            <Field
+                                                type="text"
+                                                className="form__group-input"
+                                                placeholder="Nombre dcm"
+                                                name="nombreDcm"
+                                            />
+                                        </label>
 
-                                {errors.nombreDcm && touched.nombreDcm ? (
-                                    <div className="form__group-error">
-                                        {errors.nombreDcm}
+                                        {errors.nombreDcm &&
+                                        touched.nombreDcm ? (
+                                            <div className="form__group-error">
+                                                {errors.nombreDcm}
+                                            </div>
+                                        ) : null}
                                     </div>
-                                ) : null}
-                            </div>
-                            <div className="form__group">
-                                <label
-                                    htmlFor="urlDcm"
-                                    className="form__group-label"
-                                >
-                                    Url Dcm
-                                    <br />
-                                    <Field
-                                        type="text"
-                                        className="form__group-input"
-                                        placeholder="Url dcm"
-                                        name="urlDcm"
-                                    />
-                                </label>
+                                    <div className="form__group">
+                                        <label
+                                            htmlFor="urlDcm"
+                                            className="form__group-label"
+                                        >
+                                            Url Dcm
+                                            <br />
+                                            <Field
+                                                type="text"
+                                                className="form__group-input"
+                                                placeholder="Url dcm"
+                                                name="urlDcm"
+                                            />
+                                        </label>
 
-                                {errors.urlDcm && touched.urlDcm ? (
-                                    <div className="form__group-error">
-                                        {errors.urlDcm}
+                                        {errors.urlDcm && touched.urlDcm ? (
+                                            <div className="form__group-error">
+                                                {errors.urlDcm}
+                                            </div>
+                                        ) : null}
                                     </div>
-                                ) : null}
-                            </div>
 
-                            <div className="form__group">
-                                <label
-                                    htmlFor="mcastIn"
-                                    className="form__group-label"
-                                >
-                                    Multicast In
-                                    <br />
-                                    <Field
-                                        type="text"
-                                        className="form__group-input"
-                                        placeholder="Multicast in"
-                                        name="mcastIn"
-                                    />
-                                </label>
+                                    <div className="form__group">
+                                        <label
+                                            htmlFor="mcastIn"
+                                            className="form__group-label"
+                                        >
+                                            Multicast In
+                                            <br />
+                                            <Field
+                                                type="text"
+                                                className="form__group-input"
+                                                placeholder="Multicast in"
+                                                name="mcastIn"
+                                            />
+                                        </label>
 
-                                {errors.mcastIn && touched.mcastIn ? (
-                                    <div className="form__group-error">
-                                        {errors.mcastIn}
+                                        {errors.mcastIn && touched.mcastIn ? (
+                                            <div className="form__group-error">
+                                                {errors.mcastIn}
+                                            </div>
+                                        ) : null}
                                     </div>
-                                ) : null}
-                            </div>
-                            <div className="form__group">
-                                <label
-                                    htmlFor="mcastOut"
-                                    className="form__group-label"
-                                >
-                                    Multicast Out
-                                    <br />
-                                    <Field
-                                        type="text"
-                                        className="form__group-input"
-                                        placeholder="Nombre dcm"
-                                        name="mcastOut"
-                                    />
-                                </label>
+                                </div>
+                                <div className={stylesDcm.columns__group}>
+                                    <div className="form__group">
+                                        <label
+                                            htmlFor="mcastOut"
+                                            className="form__group-label"
+                                        >
+                                            Multicast Out
+                                            <br />
+                                            <Field
+                                                type="text"
+                                                className="form__group-input"
+                                                placeholder="Nombre dcm"
+                                                name="mcastOut"
+                                            />
+                                        </label>
 
-                                {errors.mcastOut && touched.mcastOut ? (
-                                    <div className="form__group-error">
-                                        {errors.mcastOut}
+                                        {errors.mcastOut && touched.mcastOut ? (
+                                            <div className="form__group-error">
+                                                {errors.mcastOut}
+                                            </div>
+                                        ) : null}
                                     </div>
-                                ) : null}
-                            </div>
-                            <div className="form__group">
-                                <label
-                                    htmlFor="ipGestion"
-                                    className="form__group-label"
-                                >
-                                    Ip gestión
-                                    <br />
-                                    <Field
-                                        type="text"
-                                        className="form__group-input"
-                                        placeholder="Ip gestión"
-                                        name="ipGestion"
-                                    />
-                                </label>
+                                    <div className="form__group">
+                                        <label
+                                            htmlFor="ipGestion"
+                                            className="form__group-label"
+                                        >
+                                            Ip gestión
+                                            <br />
+                                            <Field
+                                                type="text"
+                                                className="form__group-input"
+                                                placeholder="Ip gestión"
+                                                name="ipGestion"
+                                            />
+                                        </label>
 
-                                {errors.ipGestion && touched.ipGestion ? (
-                                    <div className="form__group-error">
-                                        {errors.ipGestion}
+                                        {errors.ipGestion &&
+                                        touched.ipGestion ? (
+                                            <div className="form__group-error">
+                                                {errors.ipGestion}
+                                            </div>
+                                        ) : null}
                                     </div>
-                                ) : null}
-                            </div>
-                            <div className="form__group">
-                                <label
-                                    htmlFor="port"
-                                    className="form__group-label"
-                                >
-                                    Puerto
-                                    <br />
-                                    <Field
-                                        type="text"
-                                        className="form__group-input"
-                                        placeholder="Nombre dcm"
-                                        name="port"
-                                    />
-                                </label>
+                                    <div className="form__group">
+                                        <label
+                                            htmlFor="port"
+                                            className="form__group-label"
+                                        >
+                                            Puerto
+                                            <br />
+                                            <Field
+                                                type="text"
+                                                className="form__group-input"
+                                                placeholder="Nombre dcm"
+                                                name="port"
+                                            />
+                                        </label>
 
-                                {errors.port && touched.port ? (
-                                    <div className="form__group-error">
-                                        {errors.port}
+                                        {errors.port && touched.port ? (
+                                            <div className="form__group-error">
+                                                {errors.port}
+                                            </div>
+                                        ) : null}
                                     </div>
-                                ) : null}
+                                </div>
                             </div>
                             <button
                                 type="submit"

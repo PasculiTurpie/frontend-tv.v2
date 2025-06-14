@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import * as Yup from "yup";
 import Swal from "sweetalert2";
 import api from "../../utils/api";
+import stylesDcm from "./Dcm.module.css";
 import { ipMulticastRegex, ipGestionRegex } from "../../utils/regexValidate";
 
 
@@ -76,6 +77,8 @@ const FormDcm = () => {
                     {({ errors, touched }) => (
                         <Form className="form__add">
                             <h1 className="form__titulo">Ingresa un DCM</h1>
+<div className={stylesDcm.rows__group}>
+                                <div className={stylesDcm.columns__group}>
 
                             <div className="form__group">
                                 <label
@@ -141,6 +144,9 @@ const FormDcm = () => {
                                     </div>
                                 ) : null}
                             </div>
+
+                                </div>
+<div className={stylesDcm.columns__group}>
                             <div className="form__group">
                                 <label
                                     htmlFor="ipGestion"
@@ -182,6 +188,8 @@ const FormDcm = () => {
                                         {errors.port}
                                     </div>
                                 ) : null}
+                            </div>
+                            </div>
                             </div>
                             <button
                                 type="submit"

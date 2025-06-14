@@ -20,7 +20,6 @@ const UpdateSchemaDcmVmx = Yup.object().shape({
         "Debe ser una multicast válida"
     ),
     ipGestion: Yup.string().matches(ipGestionRegex, "Debe ser una ip válida"),
-    port: Yup.string().required("Campo obligatorio"),
 });
 
 const ModalDcmVmx = ({
@@ -52,6 +51,7 @@ const ModalDcmVmx = ({
                     mcastIn: dataDcmVmx.mcastIn || "",
                     mcastOut: dataDcmVmx.mcastOut || "",
                     ipGestion: dataDcmVmx.ipGestion || "",
+                    urlDcmVmx: dataDcmVmx.urlDcmVmx || "",
                 }}
                 validationSchema={UpdateSchemaDcmVmx}
                 onSubmit={async (values, { resetForm }) => {
@@ -90,6 +90,8 @@ const ModalDcmVmx = ({
                         setModalOpen={setModalOpen}
                     >
                         <Form className={stylesDcmVmx.form__add}>
+                        <div className={stylesDcmVmx.rows__group}>
+                                                        <div className={stylesDcmVmx.columns__group}>
                             <div className="form__group">
                                 <label
                                     htmlFor="nombreDcmVmx"
@@ -154,6 +156,8 @@ const ModalDcmVmx = ({
                                     </div>
                                 ) : null}
                             </div>
+                            </div>
+                            <div className={stylesDcmVmx.columns__group}>
                             <div className="form__group">
                                 <label
                                     htmlFor="mcastOut"
@@ -196,27 +200,9 @@ const ModalDcmVmx = ({
                                     </div>
                                 ) : null}
                             </div>
-                            <div className="form__group">
-                                <label
-                                    htmlFor="port"
-                                    className="form__group-label"
-                                >
-                                    Puerto
-                                    <br />
-                                    <Field
-                                        type="text"
-                                        className="form__group-input"
-                                        placeholder="Nombre dcm"
-                                        name="port"
-                                    />
-                                </label>
 
-                                {errors.port && touched.port ? (
-                                    <div className="form__group-error">
-                                        {errors.port}
-                                    </div>
-                                ) : null}
                             </div>
+                           </div>
                             <button
                                 type="submit"
                                 className={`button btn-primary`}
