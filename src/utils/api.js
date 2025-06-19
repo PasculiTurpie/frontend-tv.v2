@@ -133,6 +133,24 @@ class Api {
     updateDcmVmx(id, values) {
         return this._axios.put(`/dcmVmx/${id}`, values).then((res) => res);
     }
+
+    /*Rutas para gestión RTESVMX*/
+     getRtesVmx() {
+        return this._axios.get("/rtesVmx").then((res) => res);
+    }
+    deleteRtesVmx(id) {
+        return this._axios.delete(`/rtesVmx/${id}`).then((res) => res);
+    }
+    createRtesVmx(values) {
+        return this._axios.post("/rtesVmx", values).then((res) => res.data);
+    }
+
+    getIdRtesVmx(id) {
+        return this._axios.get(`/rtesVmx/${id}`).then((res) => res);
+    }
+    updateRtesVmx(id, values) {
+        return this._axios.put(`/rtesVmx/${id}`, values).then((res) => res);
+    }
 }
 
 const api = new Api("http://localhost:3000/api/v2");

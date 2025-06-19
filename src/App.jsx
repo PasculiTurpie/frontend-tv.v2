@@ -22,6 +22,8 @@ import ListarEncoderTitan from "./pages/EncoderTitan/ListarEncoderTitan";
 import FormEncoderTitan from "./pages/EncoderTitan/FormEncoderTitan";
 import ListarDcmVmx from "./pages/DcmVmx/ListarDcmVmx";
 import FormDcmVmx from "./pages/DcmVmx/FormDcmVmx";
+import RtesVmxListar from "./pages/RtesVmx/RtesVmxListar";
+import RtesVmxForm from "./pages/RtesVmx/RtesVmxForm";
 const App = () => {
     return (
         <>
@@ -129,6 +131,23 @@ const App = () => {
                             /*     </ProtectedRoute> */
                         }
                     />
+                    <Route
+                        path="/rtesVmx-listar"
+                        element={
+                            /*    <ProtectedRoute> */
+                            <RtesVmxListar />
+                            /*     </ProtectedRoute> */
+                        }
+                    />
+                    <Route
+                        path="/rtesVmx"
+                        element={
+                            /*    <ProtectedRoute> */
+                            <RtesVmxForm />
+                            /*     </ProtectedRoute> */
+                        }
+                    />
+                    
                     <Route path="/signal" element={<AddSignal />} />
                     <Route path="/signal/:id" element={<DetailCard />} />
                     <Route path="/diagrama/:id" element={<Diagrama />} />
