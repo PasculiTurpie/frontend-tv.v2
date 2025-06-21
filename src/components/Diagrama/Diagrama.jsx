@@ -1,6 +1,7 @@
 import ReactFlow, { Background, Controls, Handle, Position } from "reactflow";
 import './Diagram.css'
 import "reactflow/dist/style.css";
+import { Tooltip } from "react-tooltip";
 
 const nodes = [
     {
@@ -101,8 +102,14 @@ const edges = [
         source: "1",
         target: "2",
         animated: true,
+        label: 'Salida SDI',
+        labelStyle: { fill: 'black', fontWeight: 8100 },
         position: { x: 600, y: 100 },
         style: { stroke: "#ff0072", strokeWidth: 2 },
+        data: {
+            bandwidth: '10Gbps',
+            protocolo: 'UDP'
+          }
     },
     {
         id: "e2-3",
@@ -144,6 +151,7 @@ const edges = [
         source: "57",
         target: "8",
         animated: true,
+
         style: { stroke: "#ff0072", strokeWidth: 2 },
     },
 ];
@@ -155,20 +163,24 @@ const handleTargetInfo = (e) => {
 const ImageNode = ({ data }) => {
     console.log(data)
     return (
+        <>
         <div style={{ textAlign: "center" }}>
             <img
                 src={data.image}
                 alt={data.label}
                 style={{ width: 100, height: 160, objectFit: 'contain' }}
-                data-id={data._id}
+                    data-id={data._id}
                 onClick={handleTargetInfo}
             />
-            <div style={{ fontSize: 16, marginTop: 5 }}>{data.label}</div>
+             <div style={{ fontSize: 16 }}>{data.label}</div>
             {/* Entrada */}
-            <Handle type="target" position={Position.Left} style={{ background: '#555' }} />
+                <Handle type="target" position={Position.Left} style={{ background: '#555' }} onConnect={(params) => console.log('Conectado desde:', params)} />
             {/* Salida */}
             <Handle type="source" position={Position.Right} style={{ background: '#555' }} />
         </div>
+            
+        </>
+
     );
 };
 

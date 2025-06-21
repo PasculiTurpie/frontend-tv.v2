@@ -5,6 +5,7 @@ import { Link } from "react-router-dom";
 import * as Yup from "yup";
 import Swal from "sweetalert2";
 import api from "../../utils/api";
+import RtesVmxModal from "./RtesVmxModal";
 
 const RtesVmxListar = () => {
     const [rtesVmxs, setRtesVmxs] = useState([]);
@@ -52,7 +53,7 @@ const RtesVmxListar = () => {
 
         if (result.isConfirmed) {
             try {
-                await api.deleteDcmVmx(id);
+                await api.deleteRtesVmx(id);
                 console.log(id);
                 refreshList(); // Refresca la lista después de confirmar
                 await Swal.fire({
@@ -152,6 +153,18 @@ const RtesVmxListar = () => {
                     </table>
                 )}
             </div>
+            {modalOpen && (
+                <RtesVmxModal
+                    modalOpen={modalOpen}
+                    setModalOpen={setModalOpen}
+                    handleCancel={handleCancel}
+                    handleOk={handleOk}
+                    showModal={showModal}
+                    refreshList={refreshList}
+                    itemId={itemId}
+                    title="Actualizar RTES VMX"
+                />
+            )}
         </>
     );
 };
