@@ -6,9 +6,8 @@ import Swal from "sweetalert2";
 import api from "../../utils/api";
 import stylesSwitch from "./Switch.module.css";
 
-const UpdateSchemaSwitch = Yup.object().shape({
+const RegisterSchemaSwitch = Yup.object().shape({
     nameSwitch: Yup.string().required("Campo obligatorio"),
-    urlConmutador: Yup.string().required("Campo obligatorio"),
     interfacePort: Yup.string().required("Campo obligatorio"),
     vlanInterface: Yup.string().required("Campo obligatorio"),
 });
@@ -46,8 +45,7 @@ const FormSwitch = ({
                         interfacePort: "",
                         vlanInterface: "",
                     }}
-                    validationSchema={UpdateSchemaSwitch}
-                    enableReinitialize={true}
+            validationSchema={RegisterSchemaSwitch}
                     onSubmit={async (values, { resetForm }) => {
                         try {
                             const response = await api.createSwitch(values);
