@@ -135,7 +135,7 @@ class Api {
     }
 
     /*Rutas para gestión RTESVMX*/
-     getRtesVmx() {
+    getRtesVmx() {
         return this._axios.get("/rtesVmx").then((res) => res);
     }
     deleteRtesVmx(id) {
@@ -150,6 +150,24 @@ class Api {
     }
     updateRtesVmx(id, values) {
         return this._axios.put(`/rtesVmx/${id}`, values).then((res) => res);
+    }
+
+    /*Rutas para gestión Switch*/
+    getSwitch() {
+        return this._axios.get("/switch").then((res) => res);
+    }
+    deleteSwitch(id) {
+        return this._axios.delete(`/switch/${id}`).then((res) => res);
+    }
+    createSwitch(values) {
+        return this._axios.post("/switch", values).then((res) => res.data);
+    }
+
+    getIdSwitch(id) {
+        return this._axios.get(`/switch/${id}`).then((res) => res);
+    }
+    updateSwitch(id, values) {
+        return this._axios.put(`/switch/${id}`, values).then((res) => res);
     }
 }
 

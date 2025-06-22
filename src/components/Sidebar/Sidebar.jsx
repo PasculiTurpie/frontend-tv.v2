@@ -53,6 +53,9 @@ const Sidebar = () => {
           <Link to="/rtesVmx">Rtes Vmx</Link>
         </li>
         <li>
+          <Link to="/switch">Switch</Link>
+        </li>
+        <li>
           <Link to="/router">Router</Link>
         </li>
         <hr />

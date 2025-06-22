@@ -24,6 +24,8 @@ import ListarDcmVmx from "./pages/DcmVmx/ListarDcmVmx";
 import FormDcmVmx from "./pages/DcmVmx/FormDcmVmx";
 import RtesVmxListar from "./pages/RtesVmx/RtesVmxListar";
 import RtesVmxForm from "./pages/RtesVmx/RtesVmxForm";
+import FormSwitch from "./pages/Switch/FormSwitch";
+import ListarSwitch from "./pages/Switch/ListarSwitch";
 const App = () => {
     return (
         <>
@@ -132,6 +134,14 @@ const App = () => {
                         }
                     />
                     <Route
+                        path="/rtesVmx"
+                        element={
+                            /*    <ProtectedRoute> */
+                            <RtesVmxForm />
+                            /*     </ProtectedRoute> */
+                        }
+                    />
+                    <Route
                         path="/rtesVmx-listar"
                         element={
                             /*    <ProtectedRoute> */
@@ -140,10 +150,18 @@ const App = () => {
                         }
                     />
                     <Route
-                        path="/rtesVmx"
+                        path="/switch"
                         element={
                             /*    <ProtectedRoute> */
-                            <RtesVmxForm />
+                            <FormSwitch />
+                            /*     </ProtectedRoute> */
+                        }
+                    />
+                    <Route
+                        path="/switch-listar"
+                        element={
+                            /*    <ProtectedRoute> */
+                            <ListarSwitch />
                             /*     </ProtectedRoute> */
                         }
                     />
