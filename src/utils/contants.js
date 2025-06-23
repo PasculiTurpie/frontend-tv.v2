@@ -1,192 +1,169 @@
-const signal = [
-    {
-        id: 3,
-        nameChannel: "DREAMWORKS",
-        numberChannelSur: "3",
-        numberChannelCn: "3",
-        logoChannel: "https://i.ibb.co/KX2gxHz/Dreamworks.jpg",
-        severidadChannel: "4",
-        tipoTecnologia: "MPEG4",
-        multicastChannel: "239.255.3.50",
-        satelite: {
-            urlSatelite: "https://i.ibb.co/C3HD0NvQ/parabolic.png",
-            nameSatelite: "IS-21",
-            polarization: "Horizontal",
+const dataFlow = {
+    nameChannel: "DREAMWORKS",
+    numberChannelSur: "3",
+    numberChannelCn: "3",
+    logoChannel: "https://i.ibb.co/KX2gxHz/Dreamworks.jpg",
+    severidadChannel: "4",
+    tipoTecnologia: "Cobre",
+    contacto: [
+        {
+            nombreContact: "Jorge Sepúlveda",
+            email: "jsepulveda@gmail.com",
+            telefono: "+56 9 88776655",
         },
-        proveedor: {
-            nombreProveedor: "DreamWorks Pictures"
+    ],
+    nodes: [
+        {
+            id: "1",
+            type: "image",
+            position: { x: 0, y: 0 },
+            data: {
+                label: "IS-21",
+                image: "https://i.ibb.co/m5dxbBRh/parabolic.png",
+            },
         },
-        contact: [
-            {
-                nameContact: "Artemisa Brown",
-                emailContact: "abrown@gmail.com",
-                phoneContact: "911223344",
+        {
+            id: "2",
+            type: "image",
+            position: { x: 250, y: 0 },
+            data: {
+                label: "IRD Cisco D9859",
+                image: "https://i.ibb.co/pvW06r6K/ird-motorola.png",
             },
-            {
-                nameContact: "Joe Doe",
-                emailContact: "jdoe@gmail.com",
-                phoneContact: "922334455",
-            },
-        ],
-        equipos: [{
-            decoderIrd: {
-                imageUrldecoderIrd: "https://i.ibb.co/pvW06r6K/ird-motorola.png",
-                ipGestion: "172.19.1.207",
-                marcaReceptor: "cisco",
-                modeloReceptor: "D9859",
-                versionReceptor: "1.93",
-                idUA: "000-673-4175-7",
-                tidReceptor: "361356018397",
-                tipoReceptor: "Multi",
-                frecuenciaReceptor: "4.04",
-                simbolRate: "30.0",
-                fecReceptor: "auto",
-                modulaciónReceptor: "DVB-S2",
-                rollOffReceptor: ".20",
-                nidReceptor: "1",
-                cVirtualReceptor: "195",
-                vctReceptor: "n/a",
-                salidaReceptor: "ip",
-                multicastReceptor: "239.2.3.222",
-                ipVideoMulticast: "192.168.53.198",
-                filaRack: "2",
-                bastidorRack: "5",
-            },
-            switch: {
-                nameSwitch: "TV7",
-                interfacePort: "Gi 1/0/2",
-                valanSwitch: "Vlan420",
-                imageUrlSwitch: "https://i.ibb.co/35Wht924/switch.png",
-            },
-            dcm: {
-                nameDcm: "DCM5_LAMS",
-                urlDcm: "https://i.ibb.co/x8wwnL0F/dcm.png",
-                ipGestioDcm: "172.19.14.131",
-                multicastIn: "239.2.3.222",
-                multicastOut: "239.2.5.236",
-                port: "2001",
-            },
-            encoderTitan: {
-                multicastIn: "239.2.5.236",
-                multicastOut: "239.3.200.3",
-                urlEncoderTitan: "https://i.ibb.co/vxdpzSVh/ateme-titan.png",
-                nameTitan: "TL-HOST_157",
-                ipGestionTitan: "172.19.14.157",
-            },
-            dcmVmx: {
-                urlDcmVmx: "https://i.ibb.co/C5RRCQrM/vmx-encryptor.png",
-                nameDcmVmk: "DCM6_LAMS",
-                multicastIn: "239.3.200.3",
-                multicastOut: "239.255.3.50",
-            },
-            rtesVmx: {
-                urlRtesVmx: "https://i.ibb.co/C5RRCQrM/vmx-encryptor.png",
-                nameRtesVmx: "RTES2",
-                multicastIn: "239.255.3.50",
-                multicastOut: "239.255.3.50",
-            },
-            routerAsr: {
-                urlRouterAsr: "https://i.ibb.co/TxRKYM3X/router.png",
-                nameAsr: "Lams",
-                multicastIn: "239.255.3.50",
-                unicastMulticast: "192.168.66.244/28",
-            }
-        }]
-    },
-    {
-        id: 4,
-        nameChannel: "DREAMWORKS",
-        numberChannelSur: "4",
-        numberChannelCn: "4",
-        logoChannel: "https://i.ibb.co/3kQ7rxB/CINEPREMIUMLOGO.webp",
-        severidadChannel: "4",
-        tipoTecnologia: "MPEG4",
-        multicastChannel: "239.255.3.50",
-        satelite: {
-            urlSatelite: "https://i.ibb.co/C3HD0NvQ/parabolic.png",
-            nameSatelite: "IS-21",
-            polarization: "Horizontal",
         },
-        contact: [
-            {
-                nameContact: "Artemisa Brown",
-                emailContact: "abrown@gmail.com",
-                phoneContact: "911223344",
+        {
+            id: "3",
+            type: "image",
+            position: { x: 500, y: 0 },
+            data: {
+                label: "Switch TV7",
+                image: "https://i.ibb.co/FqX45Lsn/switch.png",
             },
-            {
-                nameContact: "Joe Doe",
-                emailContact: "jdoe@gmail.com",
-                phoneContact: "922334455",
-            },
-        ],
-        proveedor: {
-            nombreProveedor: "DreamWorks Pictures"
         },
-        equipos: [{
-            decoderIrd: {
-                imageUrldecoderIrd: "https://i.ibb.co/pvW06r6K/ird-motorola.png",
-                ipGestion: "172.19.1.207",
-                marcaReceptor: "cisco",
-                modeloReceptor: "D9859",
-                versionReceptor: "1.93",
-                idUA: "000-673-4175-7",
-                tidReceptor: "361356018397",
-                tipoReceptor: "Multi",
-                frecuenciaReceptor: "4.04",
-                simbolRate: "30.0",
-                fecReceptor: "auto",
-                modulaciónReceptor: "DVB-S2",
-                rollOffReceptor: ".20",
-                nidReceptor: "1",
-                cVirtualReceptor: "195",
-                vctReceptor: "n/a",
-                salidaReceptor: "ip",
-                multicastReceptor: "239.2.3.222",
-                ipVideoMulticast: "192.168.53.198",
-                filaRack: "2",
-                bastidorRack: "5",
+        {
+            id: "4",
+            type: "image",
+            position: { x: 750, y: 0 },
+            data: {
+                label: "Titan TL-HOST_109",
+                image: "https://i.ibb.co/zHmRSv8C/ateme-titan.png",
             },
-            switch: {
-                nameSwitch: "TV7",
-                interfacePort: "Gi 1/0/2",
-                valanSwitch: "Vlan420",
-                imageUrlSwitch: "https://i.ibb.co/35Wht924/switch.png",
+        },
+        {
+            id: "5",
+            type: "image",
+            position: { x: 1000, y: 0 },
+            data: {
+                label: "DCM5_LAMS",
+                image: "https://i.ibb.co/xKZdK3mK/dcm.png",
             },
-            dcm: {
-                nameDcm: "DCM5_LAMS",
-                urlDcm: "https://i.ibb.co/x8wwnL0F/dcm.png",
-                ipGestioDcm: "172.19.14.131",
-                multicastIn: "239.2.3.222",
-                multicastOut: "239.2.5.236",
-                port: "2001",
+        },
+        {
+            id: "6",
+            type: "image",
+            position: { x: 1250, y: 0 },
+            data: {
+                label: "DCM6_LAMS",
+                image: "https://i.ibb.co/sSnvD0G/vmx-encryptor.png",
             },
-            encoderTitan: {
-                multicastIn: "239.2.5.236",
-                multicastOut: "239.3.200.3",
-                urlEncoderTitan: "https://i.ibb.co/vxdpzSVh/ateme-titan.png",
-                nameTitan: "TL-HOST_157",
-                ipGestionTitan: "172.19.14.157",
+        },
+        {
+            id: "57",
+            type: "image", // Nodo personalizado (debes definirlo con React)
+            position: { x: 1500, y: 0 },
+            data: {
+                label: "RTES2",
+                image: "https://i.ibb.co/sSnvD0G/vmx-encryptor.png",
+                description: "Codificador VMX para RTES2",
+                status: "activo", // puedes usar esto para cambiar color o estilos
+                ports: [
+                    { id: "in1", label: "Entrada ASI", direction: "input" },
+                    { id: "out1", label: "Salida IP", direction: "output" },
+                ],
+                metadata: {
+                    fabricante: "VMX Corp",
+                    modelo: "Encryptor 5000",
+                    ubicacion: "Rack 7 - Canal RTES2",
+                },
             },
-            dcmVmx: {
-                urlDcmVmx: "https://i.ibb.co/C5RRCQrM/vmx-encryptor.png",
-                nameDcmVmk: "DCM6_LAMS",
-                multicastIn: "239.3.200.3",
-                multicastOut: "239.255.3.50",
+            className: "custom-node-class",
+            draggable: true,
+            selectable: true,
+            connectable: true,
+            sourcePosition: "right",
+            targetPosition: "left",
+        },
+        {
+            id: "8",
+            type: "image",
+            position: { x: 1750, y: 0 },
+            data: {
+                label: "Router_Asr",
+                image: "https://i.ibb.co/TxRKYM3X/router.png",
             },
-            rtesVmx: {
-                urlRtesVmx: "https://i.ibb.co/C5RRCQrM/vmx-encryptor.png",
-                nameRtesVmx: "RTES2",
-                multicastIn: "239.255.3.50",
-                multicastOut: "239.255.3.50",
+        },
+    ],
+    edges: [
+        {
+            id: "e1-2",
+            source: "1",
+            target: "2",
+            animated: true,
+            label: "Salida SDI",
+            labelStyle: { fill: "black", fontWeight: 8100 },
+            position: { x: 600, y: 100 },
+            style: { stroke: "#ff0072", strokeWidth: 2 },
+            data: {
+                bandwidth: "10Gbps",
+                protocolo: "UDP",
             },
-            routerAsr: {
-                urlRouterAsr: "https://i.ibb.co/TxRKYM3X/router.png",
-                nameAsr: "Lams",
-                multicastIn: "239.255.3.50",
-                unicastMulticast: "192.168.66.244/28",
-            }
-        }]
-    }
-];
+        },
+        {
+            id: "e2-3",
+            source: "2",
+            target: "3",
+            animated: true,
+            style: { stroke: "#ff0072", strokeWidth: 2 },
+        },
+        {
+            id: "e3-4",
+            source: "3",
+            target: "4",
+            animated: true,
+            style: { stroke: "#ff0072", strokeWidth: 2 },
+        },
+        {
+            id: "e4-5",
+            source: "4",
+            target: "5",
+            animated: true,
+            style: { stroke: "#ff0072", strokeWidth: 2 },
+        },
+        {
+            id: "e5-6",
+            source: "5",
+            target: "6",
+            animated: true,
+            style: { stroke: "#ff0072", strokeWidth: 2 },
+        },
+        {
+            id: "e6-7",
+            source: "6",
+            target: "57",
+            animated: true,
+            style: { stroke: "#ff0072", strokeWidth: 2 },
+        },
+        {
+            id: "e7-8",
+            source: "57",
+            target: "8",
+            animated: true,
 
-export default signal;
+            style: { stroke: "#ff0072", strokeWidth: 2 },
+        },
+    ],
+};
+
+console.log(dataFlow);
+
+export default dataFlow;

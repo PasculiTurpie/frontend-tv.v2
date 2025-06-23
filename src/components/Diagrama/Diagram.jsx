@@ -1,36 +1,31 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import ReactFlow, { Controls, Background } from 'reactflow';
 import "reactflow/dist/style.css";
+import  dataFlow  from '../../utils/contants';
+
+console.log(dataFlow)
 
 
-const nodes = [
-  {
-    id: '1', // required
-    position: { x: 400, y: 200 }, // required
-    data: { label: 'Nodo 1' }, // required
-  },
-  {
-    id: '2', // required
-    position: { x: 400, y: 400 }, // required
-    data: { label: 'Nodo 2' }, // required
-  },
-];
 
-const edges = [
-  {
-    id: 'e3-4',
-    source: '1',
-    target: '2',
-    data: {
-      startLabel: 'start edge label',
-      endLabel: 'end edge label',
-    },
-    type: 'start-end',
-  },
-];
+
 
 const Diagram = () => {
+  const [nodes, setNodes] = useState([])
+  const [edges, setEdges] = useState([])
   const [variant, setVariant] = useState('dots')
+
+
+  useEffect(() => {
+    setNodes(dataFlow.nodes)
+    setEdges(dataFlow.edges)
+    
+  }, [])
+
+  console.log(nodes)
+  console.log(edges)
+  
+
+
   return (
     <>
       <div className='container__diagram' >
@@ -39,7 +34,7 @@ const Diagram = () => {
             nodes={nodes} edges={edges} fitView
             
         >
-            <Background variant={variant} color='grey' />
+            <Background variant={variant} color='grey' gap='20'/>
           <Controls />
       </ReactFlow>
 
