@@ -19,7 +19,7 @@ const Sidebar = () => {
       )}
       <p className="profile">
         Bienvenido<br />
-        <strong>{user?.username || "Usuario"}</strong>
+        <strong>{user?.username || "Anónimo"}</strong>
       </p>
 
       <hr className="sidebar__line" />
@@ -57,6 +57,19 @@ const Sidebar = () => {
         </li>
         <li>
           <Link to="/router">Router</Link>
+        </li>
+        <hr />
+        <p className="nodo">
+          Nodos
+        </p>
+        <li>
+          <Link to="/nodo">Nodo</Link>
+        </li>
+        <li>
+          <Link to="/link">Enlace</Link>
+        </li>
+        <li>
+          <Link to="/diagram">Diagrama</Link>
         </li>
         <hr />
         <li>

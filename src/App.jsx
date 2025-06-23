@@ -26,6 +26,7 @@ import RtesVmxListar from "./pages/RtesVmx/RtesVmxListar";
 import RtesVmxForm from "./pages/RtesVmx/RtesVmxForm";
 import FormSwitch from "./pages/Switch/FormSwitch";
 import ListarSwitch from "./pages/Switch/ListarSwitch";
+import Diagram from "./components/Diagrama/Diagram";
 const App = () => {
     return (
         <>
@@ -162,6 +163,14 @@ const App = () => {
                         element={
                             /*    <ProtectedRoute> */
                             <ListarSwitch />
+                            /*     </ProtectedRoute> */
+                        }
+                    />
+                    <Route
+                        path="/diagram"
+                        element={
+                            /*    <ProtectedRoute> */
+                            <Diagram />
                             /*     </ProtectedRoute> */
                         }
                     />
