@@ -18,7 +18,7 @@ const nodes = [
     {
         id: "2",
         type: "image",
-        position: { x: 250, y: 0 },
+        position: { x: 250, y: 200 },
         data: {
             label: "IRD Cisco D9859",
             image: "https://i.ibb.co/pvW06r6K/ird-motorola.png",
@@ -27,7 +27,7 @@ const nodes = [
     {
         id: "3",
         type: "image",
-        position: { x: 500, y: 0 },
+        position: { x: 500, y: 200 },
         data: {
             label: "Switch TV7",
             image: "https://i.ibb.co/FqX45Lsn/switch.png",
@@ -36,7 +36,7 @@ const nodes = [
     {
         id: "4",
         type: "image",
-        position: { x: 750, y: 0 },
+        position: { x: 750, y: 200 },
         data: {
             label: "Titan TL-HOST_109",
             image: "https://i.ibb.co/zHmRSv8C/ateme-titan.png",
@@ -45,7 +45,7 @@ const nodes = [
     {
         id: "5",
         type: "image",
-        position: { x: 1000, y: 0 },
+        position: { x: 1000, y: 200 },
         data: {
             label: "DCM5_LAMS",
             image: "https://i.ibb.co/xKZdK3mK/dcm.png",
@@ -54,7 +54,7 @@ const nodes = [
     {
         id: "6",
         type: "image",
-        position: { x: 1250, y: 0 },
+        position: { x: 1250, y: 200 },
         data: {
             label: "DCM6_LAMS",
             image: "https://i.ibb.co/sSnvD0G/vmx-encryptor.png",
@@ -63,7 +63,7 @@ const nodes = [
     {
         id: "57",
         type: "image", // Nodo personalizado (debes definirlo con React)
-        position: { x: 1500, y: 0 },
+        position: { x: 1500, y: 200 },
         data: {
             label: "RTES2",
             image: "https://i.ibb.co/sSnvD0G/vmx-encryptor.png",
@@ -89,7 +89,7 @@ const nodes = [
     {
         id: "8",
         type: "image",
-        position: { x: 1750, y: 0 },
+        position: { x: 650, y: 0 },
         data: {
             label: "Router_Asr",
             image: "https://i.ibb.co/TxRKYM3X/router.png",
@@ -194,7 +194,7 @@ const Diagrama = () => {
     return (
         <div
             className="container__diagram"
-            style={{ height: "400px", width: "100%" }}
+            style={{ width: "100%", height: "100vh"  }}
         >
             <ReactFlow
                 nodes={nodes}
