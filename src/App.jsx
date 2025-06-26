@@ -27,6 +27,8 @@ import RtesVmxForm from "./pages/RtesVmx/RtesVmxForm";
 import FormSwitch from "./pages/Switch/FormSwitch";
 import ListarSwitch from "./pages/Switch/ListarSwitch";
 import Diagram from "./components/Diagrama/Diagram";
+import Nodo from "./components/Nodo/Nodo";
+import NodoListar from "./components/Nodo/NodoListar";
 const App = () => {
     return (
         <>
@@ -174,7 +176,22 @@ const App = () => {
                             /*     </ProtectedRoute> */
                         }
                     />
-                    
+                    <Route
+                        path="/nodo"
+                        element={
+                            /*    <ProtectedRoute> */
+                            <Nodo />
+                            /*     </ProtectedRoute> */
+                        }
+                    />
+                    <Route
+                        path="/nodo-listar"
+                        element={
+                            /*    <ProtectedRoute> */
+                            <NodoListar />
+                            /*     </ProtectedRoute> */
+                        }
+                    />
                     <Route path="/signal" element={<AddSignal />} />
                     <Route path="/signal/:id" element={<DetailCard />} />
                     <Route path="/diagrama/:id" element={<Diagrama />} />
