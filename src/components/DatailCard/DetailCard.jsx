@@ -2,6 +2,7 @@ import axios from "axios";
 import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import "./DetailCard.css";
+import api from '../../utils/api'
 
 const DetailCard = () => {
     const { id } = useParams();
@@ -11,8 +12,7 @@ const DetailCard = () => {
 
 
     useEffect(() => {
-        axios
-            .get(`http://localhost:3000/api/v2/signal/${id}`)
+        api.getIdSignal(id)
             .then((response) => {
 
                 setDetailCard(response.data);

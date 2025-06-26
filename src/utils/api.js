@@ -63,7 +63,22 @@ class Api {
     }
 
     /*Rutas para gestión Ird's */
-    getIrd() {
+    getSignal() {
+        return this._axios.get("/signal").then((res) => res);
+    }
+    getIdSignal(id) {
+        return this._axios.get(`/signal/${id}`).then((res) => res);
+    }
+    deleteSignal(id) {
+        return this._axios.delete(`/signal/${id}`).then((res) => res);
+    }
+    updateSignal(id, values) {
+        return this._axios.put(`/signal/${id}`, values).then((res) => res.data);
+    }
+
+
+    /*Rutas para gestión de IRD*/
+     getIrd() {
         return this._axios.get("/ird").then((res) => res);
     }
     createIrd(values) {

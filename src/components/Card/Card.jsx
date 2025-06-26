@@ -3,6 +3,7 @@ import "./Card.css";
 /* import signal from "../../utils/contants"; */
 import axios from "axios";
 import { useLocation, useNavigate } from "react-router-dom";
+import api from '../../utils/api'
 
 const Card = () => {
     const navigate = useNavigate();
@@ -11,11 +12,19 @@ const Card = () => {
 
     const [signalTv, setSignalTv] = useState([]);
 
-    useEffect(() => {
-        axios.get("http://localhost:3000/api/v2/signal").then((response) => {
+    const getAllSignal = () =>{
+api.getSignal().then((response) => {
             setSignalTv(response.data);
         })
+    }
+
+    useEffect(() => {
+        refreshList()
     }, []);
+
+    const refreshList = () =>{
+        getAllSignal()
+    }
 
     const handleclick = (e) => {
         const card = e.target.closest(".card__container"); // busca el contenedor más cercano
@@ -49,8 +58,11 @@ const Card = () => {
                             className="card__logo"
                             src={signalItem.logoChannel}
                         />
-                        <span className="card__severidad">{`Severidad: ${signalItem.severidadChannel}`}</span>
-                        {/* <p>{signalItem.satelite.nameSatelite}</p> */}
+                        <div className="card__severidad">
+
+                        <span>{signalItem.tipoTecnologia}</span><br />
+                        <span>{`Severidad: ${signalItem.severidadChannel}`}</span>
+                        </div>
                     </div>
                 );
             })}

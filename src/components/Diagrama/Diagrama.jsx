@@ -2,6 +2,7 @@ import ReactFlow, { Background, Controls, Handle, Position } from "reactflow";
 import './Diagram.css'
 import "reactflow/dist/style.css";
 import { Tooltip } from "react-tooltip";
+import { useParams } from "react-router-dom";
 
 const nodes = [
     {
@@ -161,7 +162,6 @@ const handleTargetInfo = (e) => {
     console.log(e.target)
 }
 const ImageNode = ({ data }) => {
-    console.log(data)
     return (
         <>
         <div style={{ textAlign: "center" }}>
@@ -189,6 +189,8 @@ const nodeTypes = {
 };
 
 const Diagrama = () => {
+    const {id}  = useParams()
+    console.log(id)
     return (
         <div
             className="container__diagram"
