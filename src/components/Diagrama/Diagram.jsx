@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
-import { ReactFlow, Controls, Background, Handle, Position, MarkerType } from '@xyflow/react';
-import '@xyflow/react/dist/style.css';
+import { ReactFlow, Controls, Background, Handle, Position, MarkerType } from 'reactflow';
+import "reactflow/dist/style.css";
+
 
 
 
