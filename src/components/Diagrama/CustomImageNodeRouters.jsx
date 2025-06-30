@@ -14,10 +14,11 @@ const CustomImageNodeRouters = ({ data }) => {
 
         />
         <div style={{ fontSize: 16 }}>{data.label}</div>
-        {/* Entrada */}
-        <Handle type="target" id='target-router1' position={Position.Bottom} style={{ left:40,background: 'red' }} />
-        {/* Salida */}
-        <Handle type="source" id='source-router1' position={Position.Bottom} style={{ right: 100, background: 'green' }} />
+   
+        <Handle type="source" id='source-router1' position={Position.Bottom} style={{left:20, background: 'green' }} />
+        <Handle type="target" id='target-router1' position={Position.Bottom} style={{ left:80, background: 'red' }} />    
+       {/*  <Handle type="target" id='target-router1' position={Position.Bottom} style={{left:20, background: 'red' }} />
+        <Handle type="source" id='source-router1' position={Position.Top} style={{ left:0, background: 'red' }} /> */}
         
       </div>
     </>

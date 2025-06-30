@@ -125,7 +125,7 @@ const edges = [
     {
         id: "e5-6",
         source: "5",
-        target: "8",
+        target: "3",
         type: "step",
         animated: true,
         style: { stroke: "#ff0072", strokeWidth: 2 },
@@ -133,12 +133,10 @@ const edges = [
     {
         id: "e6-7",
         source: "6",
-        sourceHandle: "source-router1",
         target: "8",
-        targetHandle: "target-router1",
         type: "step",
         animated: true,
-        style: { stroke: "red", strokeWidth: 2 },
+        label:'entrada 1',
         markerEnd: {
             type: MarkerType.ArrowClosed,
             width: 10, // Opcional: ancho de la flecha
@@ -150,12 +148,10 @@ const edges = [
     {
         id: "e6-8",
         source: "8",
-        sourceHandle: "source-router2",
         target: "6",
-        targetHandle: "target-router2",
         type: "step",
+        label:'entrada 2',
         animated: true,
-        style: { stroke: "green", strokeWidth: 2 },
         markerEnd: {
             type: MarkerType.ArrowClosed,
             width: 10, // Opcional: ancho de la flecha
@@ -164,21 +160,7 @@ const edges = [
         },
         style: { stroke: "green", strokeWidth: 2 },
     },
-    /* {
-        id: "e7-9",
-        source: "7",
-        target: "3",
-        animated: true,
-        type: "step",
-        markerEnd: {
-            type: MarkerType.ArrowClosed,
-            width: 10,        // Opcional: ancho de la flecha
-            height: 10,       // Opcional: alto de la flecha
-            color: 'red'
-
-        }        ,
-        style: { stroke: "blue", strokeWidth: 2 },
-    }, */
+    
 ];
 
 const handleTargetInfo = (e) => {
@@ -188,6 +170,11 @@ const ImageNode = ({ data }) => {
     return (
         <>
             <div style={{ textAlign: "center" }}>
+            {
+                setInterval(() =>{
+
+                })
+            }
                 {data.image ? (
                     <img
                         src={data.image}

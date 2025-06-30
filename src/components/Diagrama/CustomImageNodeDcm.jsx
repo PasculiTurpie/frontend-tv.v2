@@ -23,14 +23,14 @@ const CustomImageNodeDcm = ({data}) => {
                     type="target"
                     id="target-router2"
                     position={Position.Top}
-                    style={{ left: 40, background: "red" }}
+                    style={{ left: 20, background: "green" }}
                 />
                 {/* Salida */}
                 <Handle
                     type="source"
                     id="source-router2"
                     position={Position.Top}
-                    style={{ right: 100, background: "green" }}
+                    style={{ left: 80, background: "red" }}
                 />
             </div>
         </>
