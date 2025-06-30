@@ -4,6 +4,7 @@ import "reactflow/dist/style.css";
 
 
 
+
 const CustomNode = ({ data }) => {
   return (
     <div style={{ padding: 10, border: '1px solid #444', borderRadius: 10, background: '#fff', width:130 }}>
@@ -42,10 +43,7 @@ const CustomNode = ({ data }) => {
     </div>
   );
 };
-/* const edgeTypes = {
-  custom: CustomEdge,
-  'start-end': CustomEdgeStartEnd,
-}; */
+
 
 const dataFlow = {
   nameChannel: "DREAMWORKS",
@@ -86,11 +84,6 @@ const dataFlow = {
       label: 'Entrada A',
       labelPosition: 'start',
       style: { stroke: 'red' },
-      data: {
-        
-        startLabel: 'start edge label',
-        endLabel: 'end edge label'},
-        labelStyle: { fill: 'red', fontWeight: 700 },
       animated: true,
       markerEnd: {
         type: MarkerType.ArrowClosed,
@@ -124,6 +117,7 @@ console.log(dataFlow)
 
 
 const nodeTypes = {
+  
   custom: CustomNode,
 };
 
