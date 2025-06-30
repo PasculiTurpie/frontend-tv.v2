@@ -135,8 +135,10 @@ const edges = [
         source: "6",
         target: "8",
         type: "step",
+        /* sourceHandle:'source-dcm1',
+        targetHandle:'target-router1', */
         animated: true,
-        label:'entrada 1',
+        label:'239.255.3.56',
         markerEnd: {
             type: MarkerType.ArrowClosed,
             width: 10, // Opcional: ancho de la flecha
@@ -147,10 +149,12 @@ const edges = [
     },
     {
         id: "e6-8",
-        source: "8",
+        source: "8",        
         target: "6",
+        /* sourceHandle:'source-router1',
+        targetHandle:'target-dcm1',  */      
         type: "step",
-        label:'entrada 2',
+        label:'239.255.3.154',
         animated: true,
         markerEnd: {
             type: MarkerType.ArrowClosed,

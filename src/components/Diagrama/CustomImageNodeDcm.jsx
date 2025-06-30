@@ -21,16 +21,16 @@ const CustomImageNodeDcm = ({data}) => {
                 {/* Entrada */}
                 <Handle
                     type="target"
-                    id="target-router2"
+                    id="source-router1"
                     position={Position.Top}
-                    style={{ left: 20, background: "green" }}
+                    style={{ left: 20, background: "blue" }}
                 />
                 {/* Salida */}
                 <Handle
                     type="source"
-                    id="source-router2"
+                    id="target-dcm1"
                     position={Position.Top}
-                    style={{ left: 80, background: "red" }}
+                    style={{ left: 80, background: "orange" }}
                 />
             </div>
         </>
