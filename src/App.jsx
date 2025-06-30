@@ -15,7 +15,6 @@ import Login from "./components/Login/Login";
 import AddSignal from "./pages/AddSignal/AddSignal";
 import DetailCard from "./components/DatailCard/DetailCard";
 import Diagrama from "./components/Diagrama/Diagrama";
-import Diag from "./components/Diagrama/Diag";
 import ListarDcm from "./pages/Dcm/ListarDcm";
 import FormDcm from "./pages/Dcm/FormDcm";
 import ListarEncoderTitan from "./pages/EncoderTitan/ListarEncoderTitan";

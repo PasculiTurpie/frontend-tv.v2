@@ -1,9 +1,18 @@
-import ReactFlow, { Background, Controls, Handle, Position } from "reactflow";
-import './Diagram.css'
-import "reactflow/dist/style.css";
+import {
+    ReactFlow,
+    Background,
+    Controls,
+    Handle,
+    Position,
+    MarkerType,
+} from "@xyflow/react";
+import "./Diagram.css";
+import "@xyflow/react/dist/style.css";
 import { Tooltip } from "react-tooltip";
 import { useParams } from "react-router-dom";
-
+import CustomImageNodeRouters from "./CustomImageNodeRouters";
+import CustomImageNodeDcm from "./CustomImageNodeDcm"
+import { getMarkerEnd } from "reactflow";
 const nodes = [
     {
         id: "1",
@@ -12,7 +21,7 @@ const nodes = [
         data: {
             label: "IS-21",
             image: "https://i.ibb.co/m5dxbBRh/parabolic.png",
-            _id:"987538453hj45o3i4u9834"
+            _id: "987538453hj45o3i4u9834",
         },
     },
     {
@@ -53,8 +62,8 @@ const nodes = [
     },
     {
         id: "6",
-        type: "image",
         position: { x: 500, y: 300 },
+        type: "dcm",
         data: {
             label: "DCM6_LAMS",
             image: "https://i.ibb.co/sSnvD0G/vmx-encryptor.png",
@@ -67,28 +76,11 @@ const nodes = [
         data: {
             label: "RTES2",
             image: "https://i.ibb.co/sSnvD0G/vmx-encryptor.png",
-            description: "Codificador VMX para RTES2",
-            status: "activo", // puedes usar esto para cambiar color o estilos
-            ports: [
-                { id: "in1", label: "Entrada ASI", direction: "input" },
-                { id: "out1", label: "Salida IP", direction: "output" },
-            ],
-            metadata: {
-                fabricante: "VMX Corp",
-                modelo: "Encryptor 5000",
-                ubicacion: "Rack 7 - Canal RTES2",
-            }
-        },
-        className: "custom-node-class",
-        draggable: true,
-        selectable: true,
-        connectable: true,
-        sourcePosition: "right",
-        targetPosition: "left"
-      },
+        }
+    },
     {
         id: "8",
-        type: "image",
+        type: "router",
         position: { x: 500, y: 0 },
         data: {
             label: "Router_Asr",
@@ -102,30 +94,24 @@ const edges = [
         id: "e1-2",
         source: "1",
         target: "2",
-        type:'step',
+        type: "step",
         animated: true,
-        label: 'Salida SDI',
-        labelStyle: { fill: 'black', fontWeight: 8100 },
-        position: { x: 600, y: 100 },
         style: { stroke: "#ff0072", strokeWidth: 2 },
-        data: {
-            bandwidth: '10Gbps',
-            protocolo: 'UDP'
-          }
-    },
+        
+},
     {
         id: "e2-3",
         source: "2",
         target: "5",
-        type:'step',
+        type: "step",
         animated: true,
         style: { stroke: "#ff0072", strokeWidth: 2 },
     },
     {
         id: "e3-4",
         source: "3",
-        target: "6",
-        type:'step',
+        target: "4",
+        type: "step",
         animated: true,
         style: { stroke: "#ff0072", strokeWidth: 2 },
     },
@@ -133,7 +119,7 @@ const edges = [
         id: "e4-5",
         source: "4",
         target: "7",
-        type:'step',
+        type: "step",
         animated: true,
         style: { stroke: "#ff0072", strokeWidth: 2 },
     },
@@ -141,66 +127,115 @@ const edges = [
         id: "e5-6",
         source: "5",
         target: "8",
-        type:'step',
+        type: "step",
         animated: true,
         style: { stroke: "#ff0072", strokeWidth: 2 },
     },
     {
         id: "e6-7",
-        source: "6",
-        target: "8",
-        type:'step',
+        source: '6',
+        sourceHandle: 'source-router1',
+        target: '8',
+        targetHandle: 'target-router1',
+        type: 'step',
         animated: true,
-        style: { stroke: "#ff0072", strokeWidth: 2 },
+        style: { stroke: "red", strokeWidth: 2 },
+        markerEnd: {
+            type: MarkerType.ArrowClosed,
+            width: 10,        // Opcional: ancho de la flecha
+            height: 10,       // Opcional: alto de la flecha
+            color: 'red'
+
+        } ,
+        style: { stroke: "red", strokeWidth: 2 },
     },
     {
-        id: "e7-8",
-        source: "7",
-        target: "8",
+        id: "e6-8",
+        source: "8",
+        sourceHandle: 'source-router2',
+        target: "6",
+        targetHandle: 'target-router2',
+        type: "step",
         animated: true,
-        type:'step',
-        style: { stroke: "#ff0072", strokeWidth: 2 },
+        style: { stroke: "green", strokeWidth: 2 },
+        markerEnd: {
+            type: MarkerType.ArrowClosed,
+            width: 10,        // Opcional: ancho de la flecha
+            height: 10,       // Opcional: alto de la flecha
+            color: 'green'
+
+        },
+        style: { stroke: "green", strokeWidth: 2 },
     },
+    /* {
+        id: "e7-9",
+        source: "7",
+        target: "3",
+        animated: true,
+        type: "step",
+        markerEnd: {
+            type: MarkerType.ArrowClosed,
+            width: 10,        // Opcional: ancho de la flecha
+            height: 10,       // Opcional: alto de la flecha
+            color: 'red'
+
+        }        ,
+        style: { stroke: "blue", strokeWidth: 2 },
+    }, */
 ];
 
-
 const handleTargetInfo = (e) => {
-    console.log(e.target)
-}
+    console.log(e.target);
+};
 const ImageNode = ({ data }) => {
     return (
         <>
-        <div style={{ textAlign: "center" }}>
-            <img
-                src={data.image}
-                alt={data.label}
-                style={{ width: 100, height: 'fit-object', objectFit: 'contain' }}
+            <div style={{ textAlign: "center" }}>
+                <img
+                    src={data.image}
+                    alt={data.label}
+                    style={{
+                        width: 100,
+                        height: "fit-object",
+                        objectFit: "contain",
+                    }}
                     data-id={data._id}
-                onClick={handleTargetInfo}
-            />
-             <div style={{ fontSize: 16 }}>{data.label}</div>
-            {/* Entrada */}
-                <Handle type="target" position={Position.Left} style={{ background: '#555' }} onConnect={(params) => console.log('Conectado desde:', params)} />
-            {/* Salida */}
-            <Handle type="source" position={Position.Right} style={{ background: '#555' }} />
-        </div>
-            
+                    onClick={handleTargetInfo}
+                />
+                <div style={{ fontSize: 16 }}>{data.label}</div>
+                {/* Entrada */}
+                <Handle
+                    type="target"
+                    position={Position.Left}
+                    style={{ background: "#555" }}
+                    onConnect={(params) =>
+                        console.log("Conectado desde:", params)
+                    }
+                />
+                {/* Salida */}
+                <Handle
+                    type="source"
+                    position={Position.Right}
+                    style={{ background: "#555" }}
+                />
+            </div>
         </>
-
     );
 };
 
 const nodeTypes = {
     image: ImageNode,
+    router: CustomImageNodeRouters,
+    dcm: CustomImageNodeDcm,
 };
 
 const Diagrama = () => {
-    const {id}  = useParams()
-    console.log(id)
+    const { id } = useParams();
+    console.log(id);
     return (
         <div
             className="container__diagram"
-            style={{ width: "100%", height: "70vh"  }}
+            style={{ width: "100%", height: "70vh" }}
         >
             <ReactFlow
                 nodes={nodes}
@@ -212,8 +247,7 @@ const Diagrama = () => {
                 <Controls />
             </ReactFlow>
             <hr />
-            <h2>Detalle</h2>
-          
+            <h1>Detalle</h1>
         </div>
     );
 };
