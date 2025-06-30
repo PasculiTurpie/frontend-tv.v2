@@ -170,14 +170,18 @@ const handleTargetInfo = (e) => {
 const ImageNode = ({ data }) => {
     return (
         <>
-        <div style={{ textAlign: "center" }}>
+        (<div style={{ textAlign: "center" }}>
+            
+        {data.image ? (
             <img
                 src={data.image}
                 alt={data.label}
                 style={{ width: 100, height: 'fit-object', objectFit: 'contain' }}
                     data-id={data._id}
                 onClick={handleTargetInfo}
-            />
+            />) : (<span className="loader"></span>)
+        }
+        
              <div style={{ fontSize: 16 }}>{data.label}</div>
             {/* Entrada */}
                 <Handle type="target" position={Position.Left} style={{ background: '#555' }} onConnect={(params) => console.log('Conectado desde:', params)} />
