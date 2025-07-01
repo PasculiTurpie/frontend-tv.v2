@@ -92,7 +92,7 @@ const DetailCard = () => {
                         return (
                            
                                 
-                                    <tr>
+                                    <tr className="background__tr">
                                         <td>{contact.nombreContact}</td>
                                         <td>{contact.telefono}</td>
                                         <td>{contact.email}</td>
