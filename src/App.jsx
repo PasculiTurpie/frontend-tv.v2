@@ -28,6 +28,8 @@ import ListarSwitch from "./pages/Switch/ListarSwitch";
 import Diagram from "./components/Diagrama/Diagram";
 import Nodo from "./components/Nodo/Nodo";
 import NodoListar from "./components/Nodo/NodoListar";
+import Channel from "./pages/Channel.jsx/Channel";
+import ChannelList from "./pages/Channel.jsx/ChannelList";
 const App = () => {
     return (
         <>
@@ -188,6 +190,22 @@ const App = () => {
                         element={
                             /*    <ProtectedRoute> */
                             <NodoListar />
+                            /*     </ProtectedRoute> */
+                        }
+                    />
+                    <Route
+                        path="/channel"
+                        element={
+                            /*    <ProtectedRoute> */
+                            <Channel />
+                            /*     </ProtectedRoute> */
+                        }
+                    />
+                    <Route
+                        path="/channel-list"
+                        element={
+                            /*    <ProtectedRoute> */
+                            <ChannelList />
                             /*     </ProtectedRoute> */
                         }
                     />

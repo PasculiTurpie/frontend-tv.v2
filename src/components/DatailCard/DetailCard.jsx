@@ -83,11 +83,14 @@ const DetailCard = () => {
                 <>
                     <h1 className="form__titulo">Contacto proveedor</h1>
                     <table>
+                        <thead>
                                     <tr>
                                         <th>Nombre</th>
                                         <th>Telefono</th>
                                         <th>Email</th>
-                                    </tr>
+                            </tr>
+                        </thead>
+                        <tbody>
                     {contacts.map((contact) => {
                         return (
                            
@@ -101,6 +104,7 @@ const DetailCard = () => {
                             
                         );
                     })}
+                        </tbody>
                         </table>
                         </>
             </ModalContact>

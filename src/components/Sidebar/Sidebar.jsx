@@ -28,6 +28,7 @@ const Sidebar = () => {
         <li>
           <Link to="/">Inicio</Link>
         </li>
+        <hr />
         <li>
           <Link to="/satelite">Satélite</Link>
         </li>
@@ -57,6 +58,9 @@ const Sidebar = () => {
         </li>
         <li>
           <Link to="/router">Router</Link>
+        </li>
+        <li>
+          <Link to="/channel">Señal</Link>
         </li>
         <hr />
         <p className="nodo">
