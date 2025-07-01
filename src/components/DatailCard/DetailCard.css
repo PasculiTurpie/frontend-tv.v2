@@ -45,3 +45,9 @@
     top: 20px;
     right: 30px;
 }
+th, td{
+    padding:10px;
+}
+tr:nth-child(even) {
+  background-color: #f2f2f2;
+}

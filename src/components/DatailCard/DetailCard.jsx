@@ -10,7 +10,7 @@ const DetailCard = () => {
     const [DetailCard, setDetailCard] = useState({});
     const navigate = useNavigate();
     const location = useLocation();
-    const [contacts, setContacts] = useState([])
+    const [contacts, setContacts] = useState([]);
 
     const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -20,12 +20,12 @@ const DetailCard = () => {
     useEffect(() => {
         api.getIdSignal(id).then((response) => {
             setDetailCard(response.data);
-            console.log(response.data)
-            setContacts(response.data.contact)
+            console.log(response.data);
+            setContacts(response.data.contact);
         });
     }, []);
-    
-    console.log(contacts)
+
+    console.log(contacts);
 
     const handleClickDiagram = () => {
         navigate(`/diagrama/${id}`);
@@ -59,15 +59,17 @@ const DetailCard = () => {
                     <p>{DetailCard.tipoTecnologia}</p>
                     <p>Severidad: {DetailCard.severidadChannel}</p>
                     <div className="card__detail-button">
-                    {
-                        !DetailCard.contact?.length == 0 ? <button
-                            className="button btn-success"
-                            onClick={openModal}
-                        >
-                            Contacto
-                        </button> : ''
-                    }
-                        
+                        {!DetailCard.contact?.length == 0 ? (
+                            <button
+                                className="button btn-success"
+                                onClick={openModal}
+                            >
+                                Contacto
+                            </button>
+                        ) : (
+                            ""
+                        )}
+
                         <button
                             onClick={handleClickDiagram}
                             className="button btn-primary"
@@ -80,15 +82,27 @@ const DetailCard = () => {
             <ModalContact isOpen={isModalOpen} onClose={closeModal}>
                 <>
                     <h1 className="form__titulo">Contacto proveedor</h1>
-                    {
-                        contacts.map((contact) =>{
-                            return(
-
-                            <p>{contact.nombreContact}</p>
-                            )
-                        })
-                    }
-                </>
+                    <table>
+                                    <tr>
+                                        <th>Nombre</th>
+                                        <th>Telefono</th>
+                                        <th>Email</th>
+                                    </tr>
+                    {contacts.map((contact) => {
+                        return (
+                           
+                                
+                                    <tr>
+                                        <td>{contact.nombreContact}</td>
+                                        <td>{contact.telefono}</td>
+                                        <td>{contact.email}</td>
+                                    </tr>
+                              
+                            
+                        );
+                    })}
+                        </table>
+                        </>
             </ModalContact>
         </>
     );
