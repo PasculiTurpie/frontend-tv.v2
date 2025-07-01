@@ -10,6 +10,7 @@ const DetailCard = () => {
     const [DetailCard, setDetailCard] = useState({});
     const navigate = useNavigate();
     const location = useLocation();
+    const [contacts, setContacts] = useState([])
 
     const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -19,8 +20,12 @@ const DetailCard = () => {
     useEffect(() => {
         api.getIdSignal(id).then((response) => {
             setDetailCard(response.data);
+            console.log(response.data)
+            setContacts(response.data.contact)
         });
     }, []);
+    
+    console.log(contacts)
 
     const handleClickDiagram = () => {
         navigate(`/diagrama/${id}`);
@@ -75,6 +80,14 @@ const DetailCard = () => {
             <ModalContact isOpen={isModalOpen} onClose={closeModal}>
                 <>
                     <h1 className="form__titulo">Contacto proveedor</h1>
+                    {
+                        contacts.map((contact) =>{
+                            return(
+
+                            <p>{contact.nombreContact}</p>
+                            )
+                        })
+                    }
                 </>
             </ModalContact>
         </>
