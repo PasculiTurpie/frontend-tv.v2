@@ -73,8 +73,9 @@ const DetailCard = () => {
                 </div>
             </div>
             <ModalContact isOpen={isModalOpen} onClose={closeModal}>
-                <h2>Hola desde el modal</h2>
-                <p>Este es el contenido del modal.</p>
+                <>
+                    <h1 className="form__titulo">Contacto proveedor</h1>
+                </>
             </ModalContact>
         </>
     );
