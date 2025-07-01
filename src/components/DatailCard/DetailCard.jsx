@@ -54,7 +54,15 @@ const DetailCard = () => {
                     <p>{DetailCard.tipoTecnologia}</p>
                     <p>Severidad: {DetailCard.severidadChannel}</p>
                     <div className="card__detail-button">
-                        <button className="button btn-success" onClick={openModal}>Contacto</button>
+                    {
+                        !DetailCard.contact?.length == 0 ? <button
+                            className="button btn-success"
+                            onClick={openModal}
+                        >
+                            Contacto
+                        </button> : ''
+                    }
+                        
                         <button
                             onClick={handleClickDiagram}
                             className="button btn-primary"
@@ -65,9 +73,8 @@ const DetailCard = () => {
                 </div>
             </div>
             <ModalContact isOpen={isModalOpen} onClose={closeModal}>
-            <h2>Hola desde el modal</h2>
-        <p>Este es el contenido del modal.</p>
-
+                <h2>Hola desde el modal</h2>
+                <p>Este es el contenido del modal.</p>
             </ModalContact>
         </>
     );
