@@ -11,14 +11,6 @@ import { ipMulticastRegex, ipGestionRegex } from "../../utils/regexValidate";
 const UpdateSchemaDcm = Yup.object().shape({
     nombreDcm: Yup.string(),
     urlDcm: Yup.string(),
-    mcastIn: Yup.string().matches(
-        ipMulticastRegex,
-        "Debe ser una multicast válida"
-    ),
-    mcastOut: Yup.string().matches(
-        ipMulticastRegex,
-        "Debe ser una multicast válida"
-    ),
     ipGestion: Yup.string().matches(ipGestionRegex, "Debe ser una ip válida"),
     port: Yup.string().required("Campo obligatorio"),
 });
@@ -44,8 +36,6 @@ const ModalDcm = ({ itemId, modalOpen, setModalOpen, title, refreshList }) => {
                 initialValues={{
                     nombreDcm: dataDcm.nombreDcm || "",
                     urlDcm: dataDcm.urlDcm || "",
-                    mcastIn: dataDcm.mcastIn || "",
-                    mcastOut: dataDcm.mcastOut || "",
                     ipGestion: dataDcm.ipGestion || "",
                     port: dataDcm.port || "",
                 }}
@@ -128,51 +118,6 @@ const ModalDcm = ({ itemId, modalOpen, setModalOpen, title, refreshList }) => {
                                         {errors.urlDcm && touched.urlDcm ? (
                                             <div className="form__group-error">
                                                 {errors.urlDcm}
-                                            </div>
-                                        ) : null}
-                                    </div>
-
-                                    <div className="form__group">
-                                        <label
-                                            htmlFor="mcastIn"
-                                            className="form__group-label"
-                                        >
-                                            Multicast In
-                                            <br />
-                                            <Field
-                                                type="text"
-                                                className="form__group-input"
-                                                placeholder="Multicast in"
-                                                name="mcastIn"
-                                            />
-                                        </label>
-
-                                        {errors.mcastIn && touched.mcastIn ? (
-                                            <div className="form__group-error">
-                                                {errors.mcastIn}
-                                            </div>
-                                        ) : null}
-                                    </div>
-                                </div>
-                                <div className={stylesDcm.columns__group}>
-                                    <div className="form__group">
-                                        <label
-                                            htmlFor="mcastOut"
-                                            className="form__group-label"
-                                        >
-                                            Multicast Out
-                                            <br />
-                                            <Field
-                                                type="text"
-                                                className="form__group-input"
-                                                placeholder="Nombre dcm"
-                                                name="mcastOut"
-                                            />
-                                        </label>
-
-                                        {errors.mcastOut && touched.mcastOut ? (
-                                            <div className="form__group-error">
-                                                {errors.mcastOut}
                                             </div>
                                         ) : null}
                                     </div>

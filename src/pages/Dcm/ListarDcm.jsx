@@ -119,7 +119,6 @@ const ListarDcm = () => {
                         <thead>
                             <tr>
                                 <th>Marca Ird</th>
-                                <th>Multicast salida</th>
                                 <th>Ip de gestión</th>
                                 <th className="action">Acciones</th>
                             </tr>
@@ -128,7 +127,6 @@ const ListarDcm = () => {
                             {dcms.map((dcm) => (
                                 <tr key={dcm._id} id={dcm._id}>
                                     <td>{dcm.nombreDcm}</td>
-                                    <td>{dcm.mcastOut}</td>
                                     <td>
                                         <Link
                                             to={`http://${dcm.ipGestion}`}
