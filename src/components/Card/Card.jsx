@@ -36,7 +36,7 @@ api.getSignal().then((response) => {
 
     return (
         <>
-            {signalTv.map((signalItem, index) => {
+            {signalTv.length === 0 ? <p className="error__data">No se pudo obtener los datos, comuniquesé con el administrador</p> :(signalTv.map((signalItem, index) => {
                 return (
                     <div
                         className="card__container"
@@ -65,7 +65,7 @@ api.getSignal().then((response) => {
                         </div>
                     </div>
                 );
-            })}
+            }))}
         </>
     );
 };

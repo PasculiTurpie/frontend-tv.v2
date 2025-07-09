@@ -47,3 +47,10 @@
 
 
 }
+.error__data{
+    color:red;
+    font-size: 22px;
+    box-sizing: border-box;
+    margin-top:0;
+    
+}
