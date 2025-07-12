@@ -76,9 +76,8 @@ class Api {
         return this._axios.put(`/signal/${id}`, values).then((res) => res.data);
     }
 
-
     /*Rutas para gestión de IRD*/
-     getIrd() {
+    getIrd() {
         return this._axios.get("/ird").then((res) => res);
     }
     createIrd(values) {
@@ -183,6 +182,24 @@ class Api {
     }
     updateSwitch(id, values) {
         return this._axios.put(`/switch/${id}`, values).then((res) => res);
+    }
+
+    /*Rutas para gestión Equipo*/
+    getEquipo() {
+        return this._axios.get("/equipo").then((res) => res);
+    }
+    deleteEquipo(id) {
+        return this._axios.delete(`/equipo/${id}`).then((res) => res);
+    }
+    createEquipo(values) {
+        return this._axios.post("/equipo", values).then((res) => res.data);
+    }
+
+    getIdEquipo(id) {
+        return this._axios.get(`/equipo/${id}`).then((res) => res);
+    }
+    updateEquipo(id, values) {
+        return this._axios.put(`/equipo/${id}`, values).then((res) => res);
     }
 }
 

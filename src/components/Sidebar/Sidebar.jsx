@@ -29,6 +29,9 @@ const Sidebar = () => {
           <Link to="/">Inicio</Link>
         </li>
         <hr />
+        <p className="nodo">
+          Origen
+        </p>
         <li>
           <Link to="/satelite">Satélite</Link>
         </li>
@@ -37,6 +40,13 @@ const Sidebar = () => {
         </li>
         <li>
           <Link to="/str">Fibra</Link>
+        </li>
+        <hr />
+        <p className="nodo">
+          Equipos
+        </p>
+        <li>
+          <Link to="/equipment">Equipos</Link>
         </li>
         <li>
           <Link to="/ird">Encoder Ird</Link>
@@ -59,6 +69,10 @@ const Sidebar = () => {
         <li>
           <Link to="/router">Router</Link>
         </li>
+        <hr />
+        <p className="nodo">
+          Canal
+        </p>
         <li>
           <Link to="/channel">Señal</Link>
         </li>

@@ -30,6 +30,8 @@ import Nodo from "./components/Nodo/Nodo";
 import NodoListar from "./components/Nodo/NodoListar";
 import Channel from "./pages/Channel.jsx/Channel";
 import ChannelList from "./pages/Channel.jsx/ChannelList";
+import Equipment from "./pages/Equipment/Equipment";
+import ListEquipment from "./pages/Equipment/ListEquipment";
 const App = () => {
     return (
         <>
@@ -206,6 +208,22 @@ const App = () => {
                         element={
                             /*    <ProtectedRoute> */
                             <ChannelList />
+                            /*     </ProtectedRoute> */
+                        }
+                    />
+                    <Route
+                        path="/equipment"
+                        element={
+                            /*    <ProtectedRoute> */
+                            <Equipment />
+                            /*     </ProtectedRoute> */
+                        }
+                    />
+                    <Route
+                        path="/equipment-list"
+                        element={
+                            /*    <ProtectedRoute> */
+                            <ListEquipment />
                             /*     </ProtectedRoute> */
                         }
                     />
