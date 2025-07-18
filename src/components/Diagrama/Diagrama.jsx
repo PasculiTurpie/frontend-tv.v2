@@ -228,7 +228,7 @@ const Diagrama = () => {
     return (
         <div
             className="container__diagram"
-            style={{ width: "90%", height: '70vh' }}
+            style={{ width: '90%', height: '600px' }}
         >
             <ReactFlow
                 nodes={nodes}
