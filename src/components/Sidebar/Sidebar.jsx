@@ -76,9 +76,12 @@ const Sidebar = () => {
         <li>
           <Link to="/channel">Señal</Link>
         </li>
+        <li>
+          <Link to="/contact">Contacto proveedor</Link>
+        </li>
         <hr />
         <p className="nodo">
-          Nodos
+          Diagramar
         </p>
         <li>
           <Link to="/nodo">Nodo</Link>
