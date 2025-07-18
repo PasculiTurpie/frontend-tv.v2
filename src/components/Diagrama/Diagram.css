@@ -4,7 +4,7 @@
     width: 100%;
     min-height: calc(100vh - 301px);
 }
-.loader {
+/* .loader {
         width: 48px;
         height: 48px;
         border-radius: 50%;
@@ -37,4 +37,4 @@
           50%  {clip-path:polygon(50% 50%,0 0,100% 0,100% 100%,100% 100%,100% 100%)}
           75%  {clip-path:polygon(50% 50%,0 0,100% 0,100% 100%,0 100%,0 100%)}
           100% {clip-path:polygon(50% 50%,0 0,100% 0,100% 100%,0 100%,0 0)}
-      }
+      } */

@@ -201,6 +201,24 @@ class Api {
     updateEquipo(id, values) {
         return this._axios.put(`/equipo/${id}`, values).then((res) => res);
     }
+
+    /*Rutas para gestión Tipo Equipo*/
+    getTipoEquipo() {
+        return this._axios.get("/tipo-equipo").then((res) => res);
+    }
+    deleteTipoEquipo(id) {
+        return this._axios.delete(`/tipo-equipo/${id}`).then((res) => res);
+    }
+    createTipoEquipo(values) {
+        return this._axios.post("/tipo-equipo", values).then((res) => res.data);
+    }
+
+    getIdTipoEquipo(id) {
+        return this._axios.get(`/tipo-equipo/${id}`).then((res) => res);
+    }
+    updateTipoEquipo(id, values) {
+        return this._axios.put(`/tipo-equipo/${id}`, values).then((res) => res);
+    }
 }
 
 const api = new Api("http://localhost:3000/api/v2");

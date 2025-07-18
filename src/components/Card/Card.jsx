@@ -4,6 +4,7 @@ import "./Card.css";
 import axios from "axios";
 import { useLocation, useNavigate } from "react-router-dom";
 import api from '../../utils/api'
+import Loader from '../../components/Loader/Loader';
 
 const Card = () => {
     const navigate = useNavigate();
@@ -36,7 +37,7 @@ api.getSignal().then((response) => {
 
     return (
         <>
-            {signalTv.length === 0 ? <p className="error__data">No se pudo obtener los datos, comuniquesé con el administrador</p> :(signalTv.map((signalItem, index) => {
+            {signalTv.length === 0 ? <p className="error__data">Buscando datos...</p> :(signalTv.map((signalItem, index) => {
                 return (
                     <div
                         className="card__container"
