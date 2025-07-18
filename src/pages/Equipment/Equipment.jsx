@@ -164,6 +164,13 @@ const Equipment = () => {
                                                 </div>
                                             ) : null}
                                         </div>
+                                    </div>
+
+                                    <div
+                                        className={
+                                            stylesEquipment.columns__group
+                                        }
+                                    >
                                         <div className="form__group">
                                             <label
                                                 htmlFor="tipoNombre"
@@ -183,7 +190,9 @@ const Equipment = () => {
                                                     </option>
                                                     {tipoEquipments.map(
                                                         (tipoEquipment) => {
-                                                            console.log(tipoEquipment)
+                                                            console.log(
+                                                                tipoEquipment
+                                                            );
                                                             return (
                                                                 <option
                                                                     Key={
@@ -235,6 +244,7 @@ const Equipment = () => {
                                         </div>
                                     </div>
                                 </div>
+
                                 <button
                                     type="submit"
                                     className={`button btn-primary`}
@@ -244,6 +254,7 @@ const Equipment = () => {
                             </Form>
                         )}
                     </Formik>
+                <hr />
                     <Formik
                         initialValues={{
                             tipoNombre: "",
@@ -275,6 +286,7 @@ const Equipment = () => {
                         }}
                     >
                         {({ errors, touched }) => (
+                            
                             <Form className="form__add">
                                 <h1 className="form__titulo">
                                     Registrar Tipo Equipo
@@ -312,6 +324,7 @@ const Equipment = () => {
                                 <button
                                     type="submit"
                                     className={`button btn-primary`}
+                                    onClick={refreshList()}
                                 >
                                     Enviar
                                 </button>

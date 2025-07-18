@@ -30,7 +30,7 @@
 }
 .double__form {
     display: flex;
+    width: 500px;
     flex-direction: column;
-    background: 2px solid red;
-    row-gap: 20px;
+    gap: 20px;
 }
