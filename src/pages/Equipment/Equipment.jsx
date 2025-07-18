@@ -34,7 +34,7 @@ const Equipment = () => {
 
     useEffect(() => {
         refreshList();
-    }, []);
+    }, [tipoEquipments]);
 
     const refreshList = () => {
         dataEquipo();
@@ -324,7 +324,7 @@ const Equipment = () => {
                                 <button
                                     type="submit"
                                     className={`button btn-primary`}
-                                    onClick={refreshList()}
+                                    onClick={()=>refreshList()}
                                 >
                                     Enviar
                                 </button>
