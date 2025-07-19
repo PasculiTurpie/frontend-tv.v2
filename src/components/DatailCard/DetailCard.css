@@ -45,12 +45,15 @@
     top: 20px;
     right: 30px;
 }
-th{
-    text-decoration:underline;
-}
+
 th,
 td {
     padding: 10px;
+}
+
+
+tr:nth-child(odd) {
+    background-color: beige;
 }
 .background__tr:nth-child(even) {
     font-weight: bold;

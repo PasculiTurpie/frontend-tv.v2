@@ -58,13 +58,17 @@ class Api {
 
     /* Rutas para gestión de Señal */
 
-    getSignal() {
+    /*    getSignal() {
         return this._axios.get("/signal").then((res) => res.data);
     }
 
-    /*Rutas para gestión Ird's */
+ */
     getSignal() {
         return this._axios.get("/signal").then((res) => res);
+    }
+
+    createSignal(values) {
+        return this._axios.post("/signal", values).then((res) => res.data);
     }
     getIdSignal(id) {
         return this._axios.get(`/signal/${id}`).then((res) => res);
