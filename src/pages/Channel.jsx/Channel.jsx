@@ -274,12 +274,16 @@ const Channel = () => {
                       >
                         <option value={"0"}>--Seleccionar--</option>
                         {
-                          contactos.map((contacto) => {
-                            console.log((contacto))
-                            return (
-                              <option key={contacto._id} value={contacto._id}>{ contacto.email}</option>
-                            )
-                          })
+                          contactos
+                            .filter(contacto => contacto.email && contacto.email.trim() !== "")
+                            .map((contacto) => {
+                              console.log(contacto);
+                              return (
+                                <option key={contacto._id} value={contacto._id}>
+                                  {contacto.email}
+                                </option>
+                              )
+                            })
                         }
                       </Field>
                     </label>

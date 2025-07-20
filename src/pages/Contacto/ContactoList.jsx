@@ -127,8 +127,8 @@ const ContactoList = () => {
                         <tbody>
                             {contacts.map((contact) => (
                                 <tr key={contact._id} id={contact._id}>
-                                    <td>{contact.nombreContact}</td>
-                                    <td>{contact.email}</td>
+                                    <td className="text__align">{contact.nombreContact}</td>
+                                    <td className="text__align">{contact.email}</td>
                                     <td>{contact.telefono}</td>
                                     <td className="button-action">
                                         <button

@@ -130,7 +130,7 @@ const ChannelList = () => {
                         <tbody>
                             {channels.map((channel) => (
                                 <tr key={channel._id} id={channel._id}>
-                                    <td>{channel.nameChannel}</td>
+                                    <td className="text__align">{channel.nameChannel}</td>
                                     <td>{channel.numberChannelCn}</td>
                                     <td>{channel.numberChannelSur}</td>
                                     <td>{channel.tipoTecnologia.toUpperCase()}</td>

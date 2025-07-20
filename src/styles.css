@@ -6,6 +6,9 @@
 .table {
     border-top: 2px solid rgb(226, 226, 226);
 }
+.text__align{
+    text-align: left;
+}
 
 .button-action {
     display: flex;

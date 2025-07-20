@@ -7,8 +7,8 @@ import { otherEmail, phoneValidate } from "../../utils/regexValidate.js";
 
 const SchemaContacto = Yup.object().shape({
     nombreContact: Yup.string().required("Campo obligatorio"),
-  email: Yup.string().required("Campo obligatorio").matches(otherEmail, "Debe ser un correo válido"),
-  telefono: Yup.string().matches(phoneValidate, "Debe ser un telefono válido").required("Campo obligatorio"),
+    email: Yup.string().matches(otherEmail, "Debe ser un correo válido"),
+    telefono: Yup.string().matches(phoneValidate, "Debe ser un telefono válido"),
 });
 
 const Contacto = () => {
@@ -43,7 +43,7 @@ const Contacto = () => {
                                 title: "Contacto guardado exitosamente",
                                 icon: "success",
                                 html: `
-                      <p><strong>Nombre Switch:</strong> ${values.nombreContact}</p>
+                      <p><strong>Nombre:</strong> ${values.nombreContact}</p>
                     `,
                             });
                             resetForm();
