@@ -18,6 +18,7 @@ const SchemaChannel = Yup.object().shape({
 })
 const Channel = () => {
   const [tipoTechs, setTipoTechs] = useState([])
+  const [contactos, setContactos] = useState([])
 
   const getTipoTech = () => {
     api.getTipoTech()
@@ -27,9 +28,17 @@ const Channel = () => {
         setTipoTechs(res.data)
     })
   }
+  const getContactos = () => {
+    api.getContact()
+      .then((res) => {
+        console.log(res.data)
+        setContactos(res.data)
+    })
+  }
 
   const refreshList = () => {
     getTipoTech()
+    getContactos()
   }
 
   useEffect(() => {
@@ -262,7 +271,17 @@ const Channel = () => {
                         className="form__group-input"
                         placeholder="Contacto"
                         name="contact"
-                      />
+                      >
+                        <option value={"0"}>--Seleccionar--</option>
+                        {
+                          contactos.map((contacto) => {
+                            console.log((contacto))
+                            return (
+                              <option key={contacto._id} value={contacto._id}>{ contacto.email}</option>
+                            )
+                          })
+                        }
+                      </Field>
                     </label>
 
                     {errors.contact &&
