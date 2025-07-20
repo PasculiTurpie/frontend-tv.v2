@@ -32,6 +32,8 @@ import Channel from "./pages/Channel.jsx/Channel";
 import ChannelList from "./pages/Channel.jsx/ChannelList";
 import Equipment from "./pages/Equipment/Equipment";
 import ListEquipment from "./pages/Equipment/ListEquipment";
+import Contacto from "./pages/Contacto/Contacto";
+import ContactoList from "./pages/Contacto/ContactoList";
 const App = () => {
     return (
         <>
@@ -224,6 +226,22 @@ const App = () => {
                         element={
                             /*    <ProtectedRoute> */
                             <ListEquipment />
+                            /*     </ProtectedRoute> */
+                        }
+                    />
+                    <Route
+                        path="/contact"
+                        element={
+                            /*    <ProtectedRoute> */
+                            <Contacto />
+                            /*     </ProtectedRoute> */
+                        }
+                    />
+                    <Route
+                        path="/contact-list"
+                        element={
+                            /*    <ProtectedRoute> */
+                            <ContactoList />
                             /*     </ProtectedRoute> */
                         }
                     />

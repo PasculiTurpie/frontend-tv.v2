@@ -223,6 +223,23 @@ class Api {
     updateTipoEquipo(id, values) {
         return this._axios.put(`/tipo-equipo/${id}`, values).then((res) => res);
     }
+    /*Rutas para gestión Contacto*/
+    getContact() {
+        return this._axios.get("/contact").then((res) => res);
+    }
+    deleteContact(id) {
+        return this._axios.delete(`/contact/${id}`).then((res) => res);
+    }
+    createContact(values) {
+        return this._axios.post("/contact", values).then((res) => res.data);
+    }
+
+    getIdContact(id) {
+        return this._axios.get(`/contact/${id}`).then((res) => res);
+    }
+    updateContact(id, values) {
+        return this._axios.put(`/contact/${id}`, values).then((res) => res);
+    }
 }
 
 const api = new Api("http://localhost:3000/api/v2");
