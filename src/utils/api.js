@@ -240,6 +240,23 @@ class Api {
     updateContact(id, values) {
         return this._axios.put(`/contact/${id}`, values).then((res) => res);
     }
+    /*Rutas para gestión Tipo tecnología*/
+    getTipoTech() {
+        return this._axios.get("/tecnologia").then((res) => res);
+    }
+    deleteTipoTech(id) {
+        return this._axios.delete(`/tecnologia/${id}`).then((res) => res);
+    }
+    createTipoTech(values) {
+        return this._axios.post("/tecnologia", values).then((res) => res.data);
+    }
+
+    getIdTipoTech(id) {
+        return this._axios.get(`/tecnologia/${id}`).then((res) => res);
+    }
+    updateTipoTech(id, values) {
+        return this._axios.put(`/tecnologia/${id}`, values).then((res) => res);
+    }
 }
 
 const api = new Api("http://localhost:3000/api/v2");

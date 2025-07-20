@@ -1,7 +1,6 @@
 import { Field, Form, Formik } from "formik";
-import React from "react";
-import api from "../../utils/api";
 import { Link } from "react-router-dom";
+import api from "../../utils/api";
 import * as Yup from "yup";
 import Swal from "sweetalert2";
 import { otherEmail, phoneValidate } from "../../utils/regexValidate.js";

@@ -9,7 +9,7 @@ const emailValidate = /^[A-Z][a-z]+\.([A-Z][a-z]+)@grupogtd\.com$/;
 
 const otherEmail= /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 
-
+const urlRegex = /^(https?:\/\/)?([\w\-]+\.)+[a-zA-Z]{2,}(:\d+)?(\/[^\s]*)?$/;
 const phoneValidate = /^(?:\+?56)?(?:0)?(9\d{8}|[2-9]\d{7})$/;
 
 export {
@@ -19,4 +19,5 @@ export {
     emailValidate,
     phoneValidate,
     otherEmail,
+    urlRegex,
 };
