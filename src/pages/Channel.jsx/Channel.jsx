@@ -14,11 +14,10 @@ const SchemaChannel = Yup.object().shape({
   logoChannel: Yup.string().matches(urlRegex, "Ingrese una url válida").required("Campo obligatorio"),
     severidadChannel:Yup.string().required("Campo obligatorio"),
   tipoTecnologia: Yup.string().required("Campo obligatorio"),
-  contact:Yup.string(),
 })
 const Channel = () => {
   const [tipoTechs, setTipoTechs] = useState([])
-  const [contactos, setContactos] = useState([])
+  /* const [contactos, setContactos] = useState([]) */
 
   const getTipoTech = () => {
     api.getTipoTech()
@@ -28,17 +27,16 @@ const Channel = () => {
         setTipoTechs(res.data)
     })
   }
-  const getContactos = () => {
+  /* const getContactos = () => {
     api.getContact()
       .then((res) => {
         console.log(res.data)
         setContactos(res.data)
     })
-  }
+  } */
 
   const refreshList = () => {
     getTipoTech()
-    getContactos()
   }
 
   useEffect(() => {
@@ -257,45 +255,7 @@ const Channel = () => {
                     ) : null}
                   </div>
                 </div>
-                <div className="columns__group" >
-                  <div className="form__group">
-                    <label
-                      htmlFor="contact"
-                      className="form__group-label"
-                    >
-                      Contacto
-                      <br />
-                      <Field
-                        as="select"
-                        type="text"
-                        className="form__group-input"
-                        placeholder="Contacto"
-                        name="contact"
-                      >
-                        <option value={"0"}>--Seleccionar--</option>
-                        {
-                          contactos
-                            .filter(contacto => contacto.email && contacto.email.trim() !== "")
-                            .map((contacto) => {
-                              console.log(contacto);
-                              return (
-                                <option key={contacto._id} value={contacto._id}>
-                                  {contacto.email}
-                                </option>
-                              )
-                            })
-                        }
-                      </Field>
-                    </label>
-
-                    {errors.contact &&
-                      touched.contact ? (
-                      <div className="form__group-error">
-                        {errors.contact}
-                      </div>
-                    ) : null}
-                  </div>
-                </div>
+                
                 
               </div>
 
