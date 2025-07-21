@@ -12,6 +12,8 @@ const SignalContact = () => {
     const [optionsContact, setOptionsContact] = useState([]);
     const [selectedSignal, setSelectedSignal] = useState(null);
     const [selectedContact, setSelectedContact] = useState(null);
+    const [idSignal, setIdSignal] = useState(null);
+    const [idContact, setIdContact] = useState(null);
 
     const getAllSignal = () => {
         api.getSignal().then((res) => {
@@ -19,18 +21,24 @@ const SignalContact = () => {
                 value: signal._id,
                 label: signal.nameChannel
             }));
+            console.log(optSignal)
             setOptionsSignal(optSignal)
+            console.log(selectedSignal?.value)
+            setIdSignal(selectedSignal?.value)
             
         });
     };
 
     const getAllContact = () => {
         api.getContact().then((res) => {
-            const optContact = res.data.map(contact =>({
+            const optContact = res.data.filter(contact => contact.nombreContact && contact.nombreContact.trim() !== "").map(contact =>({
                 value: contact._id,
-                label: contact.email
+                label: contact.nombreContact
             }));
+            console.log(optContact)
             setOptionsContact(optContact)
+            console.log(selectedContact?.value)
+            setIdContact(selectedContact?.value)
         });
     };
 
@@ -41,7 +49,11 @@ const SignalContact = () => {
 
     useEffect(() => {
         refreshList();
-    }, []);
+    }, [selectedSignal, selectedContact]);
+
+    const updateSignal = () =>{
+
+    }
 
     return (
         <>
