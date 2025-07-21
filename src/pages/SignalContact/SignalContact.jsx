@@ -1,129 +1,129 @@
-import { Form, Formik } from "formik";
+import { Form, Formik, Field, ErrorMessage } from "formik";
 import { useEffect, useState } from "react";
 import Select from "react-select";
 import api from "../../utils/api";
-import stylesSignalContact from './SignalContact.module.css'
+import stylesSignalContact from './SignalContact.module.css';
+import * as Yup from "yup";
+import Swal from "sweetalert2";
 
-
-
+const UpdateContactSignal = Yup.object().shape({
+    nameChannel: Yup.object().required('Campo obligatorio'),
+    contact: Yup.array().min(1, 'Selecciona al menos un contacto').required('Campo obligatorio'),
+});
 
 const SignalContact = () => {
     const [optionsSignal, setOptionsSignal] = useState([]);
     const [optionsContact, setOptionsContact] = useState([]);
-    const [selectedSignal, setSelectedSignal] = useState(null);
-    const [selectedContact, setSelectedContact] = useState(null);
-    const [idSignal, setIdSignal] = useState(null);
-    const [idContact, setIdContact] = useState(null);
 
     const getAllSignal = () => {
         api.getSignal().then((res) => {
-            const optSignal = res.data.map(signal =>({
+            const optSignal = res.data.map(signal => ({
                 value: signal._id,
                 label: signal.nameChannel
             }));
-            console.log(optSignal)
-            setOptionsSignal(optSignal)
-            console.log(selectedSignal?.value)
-            setIdSignal(selectedSignal?.value)
-            
+            setOptionsSignal(optSignal);
         });
     };
 
     const getAllContact = () => {
         api.getContact().then((res) => {
-            const optContact = res.data.filter(contact => contact.nombreContact && contact.nombreContact.trim() !== "").map(contact =>({
-                value: contact._id,
-                label: contact.nombreContact
-            }));
-            console.log(optContact)
-            setOptionsContact(optContact)
-            console.log(selectedContact?.value)
-            setIdContact(selectedContact?.value)
+            const optContact = res.data
+                .filter(contact => contact.nombreContact && contact.nombreContact.trim() !== "")
+                .map(contact => ({
+                    value: contact._id,
+                    label: contact.nombreContact
+                }));
+            setOptionsContact(optContact);
         });
     };
 
-    const refreshList = () => {
+    useEffect(() => {
         getAllSignal();
         getAllContact();
+    }, []);
+
+    const handleSubmit = async (values, { resetForm }) => {
+        try {
+            await api.updateSignal(values.nameChannel.value, {
+                contact: values.contact.map(c => c.value)
+            });
+            
+            Swal.fire({
+                icon: "success",
+                title: "Asignado exitosamente",
+            });
+            resetForm();
+        } catch (error) {
+            Swal.fire({
+                icon: "error",
+                title: "Error",
+                text: error?.response?.data?.message || "Error desconocido",
+            });
+        }
     };
-
-    useEffect(() => {
-        refreshList();
-    }, [selectedSignal, selectedContact]);
-
-    const updateSignal = () =>{
-
-    }
+    
 
     return (
-        <>
-            <div className="outlet-main">
-                <Formik initialValues={{}}>
+        <div className="outlet-main">
+            <Formik
+                initialValues={{
+                    nameChannel: null,
+                    contact: null,
+                }}
+                validationSchema={UpdateContactSignal}
+                onSubmit={handleSubmit}
+            >
+                {({ setFieldValue, values, errors, touched }) => (
                     <Form className="form__add">
-                        <h1 className="form__titulo">Asignar contacto</h1>
+                        <h1 className="form__titulo">Asignar contactos</h1>
+
                         <div className="rows__group">
                             <div className="columns__group">
                                 <div className="form__group">
-                                    <label
-                                        htmlFor="nameChannel"
-                                        className="form__group-label"
-                                    >
-                                        Nombre canal
-                                        <br />
-                                        <Select
-                                            className={`form__group-input ${stylesSignalContact.select__email}`}
-                                            name="nameChannel"
-                                            options={optionsSignal}
-                                            placeholder="Nombre canal"
-                                            value={selectedSignal}
-                                            onChange={setSelectedSignal}
-                                            isSearchable
-                                        />
-                                    </label>
-
-                                    {/* {errors.nameChannel &&
-                                            touched.nameChannel ? (
-                                                <div className="form__group-error">
-                                                    {errors.nameChannel}
-                                                </div>
-                                            ) : null} */}
+                                    <label className="form__group-label">Nombre canal</label>
+                                    <Select
+                                        className={`form__group-input ${stylesSignalContact.select__email}`}
+                                        name="nameChannel"
+                                        options={optionsSignal}
+                                        placeholder="Nombre canal"
+                                        value={values.nameChannel}
+                                        onChange={option => setFieldValue("nameChannel", option)}
+                                        isSearchable
+                                    />
+                                    {errors.nameChannel && touched.nameChannel && (
+                                        <div className="form__group-error">{errors.nameChannel}</div>
+                                    )}
                                 </div>
                             </div>
+
                             <div className="columns__group">
                                 <div className="form__group">
-                                    <label
-                                        htmlFor="contact"
-                                        className="form__group-label"
-                                    >
-                                        Contacto
-                                        <br />
-                                        <Select
-                                            className={`form__group-input ${stylesSignalContact.select__email}`}
-                                            name="contact"
-                                            options={optionsContact}
-                                            placeholder="Contacto"
-                                            value={selectedContact}
-                                            onChange={setSelectedContact}
-                                            isSearchable
-                                        />
-                                    </label>
+                                    <label className="form__group-label">Contacto</label>
+                                    <Select
+                                        className={`form__group-input ${stylesSignalContact.select__email}`}
+                                        name="contact"
+                                        options={optionsContact}
+                                        placeholder="Selecciona contactos"
+                                        value={values.contact}
+                                        onChange={(selected) => setFieldValue("contact", selected)}
+                                        isMulti
+                                        isSearchable
+                                    />
 
-                                    {/* {errors.contact &&
-                                            touched.contact ? (
-                                                <div className="form__group-error">
-                                                    {errors.contact}
-                                                </div>
-                                            ) : null} */}
+                                    {errors.contact && touched.contact && (
+                                        <div className="form__group-error">{errors.contact}</div>
+                                    )}
                                 </div>
                             </div>
                         </div>
+
                         <button type="submit" className={`button btn-primary`}>
-                            Enviar
+                            Añadir
                         </button>
                     </Form>
-                </Formik>
-            </div>
-        </>
+                )}
+            </Formik>
+        </div>
     );
 };
 
