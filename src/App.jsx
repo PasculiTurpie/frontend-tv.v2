@@ -34,6 +34,7 @@ import Equipment from "./pages/Equipment/Equipment";
 import ListEquipment from "./pages/Equipment/ListEquipment";
 import Contacto from "./pages/Contacto/Contacto";
 import ContactoList from "./pages/Contacto/ContactoList";
+import SignalContact from "./pages/SignalContact/SignalContact";
 const App = () => {
     return (
         <>
@@ -242,6 +243,14 @@ const App = () => {
                         element={
                             /*    <ProtectedRoute> */
                             <ContactoList />
+                            /*     </ProtectedRoute> */
+                        }
+                    />
+                    <Route
+                        path="/signal-contact"
+                        element={
+                            /*    <ProtectedRoute> */
+                            <SignalContact />
                             /*     </ProtectedRoute> */
                         }
                     />

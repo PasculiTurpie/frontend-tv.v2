@@ -23,7 +23,6 @@ const Channel = () => {
     api.getTipoTech()
       .then((res) => {
         console.log(res.data)
-        const dataTipotech = res.data
         setTipoTechs(res.data)
     })
   }
@@ -199,10 +198,8 @@ const Channel = () => {
                       <br />
                       <Field
                         as="select"
-                        type="text"
-                        className="form__group-input"
-                        placeholder="Severidad"
-                        name="severidadChannel"                      
+  className="form__group-input"
+  name="severidadChannel"                     
                       >
                         <option value={"0"}>--Seleccionar--</option>
                         <option value={"1"}>1</option>
@@ -230,9 +227,7 @@ const Channel = () => {
                       <br />
                       <Field
                         as="select"
-                        type="text"
                         className="form__group-input"
-                        placeholder="Tipotecnología"
                         name="tipoTecnologia"
                       >
                         <option value={"0"}>--Seleccionar--</option>

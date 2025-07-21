@@ -79,6 +79,9 @@ const Sidebar = () => {
         <li>
           <Link to="/contact">Contacto proveedor</Link>
         </li>
+        <li>
+          <Link to="/signal-contact">Asignar contacto</Link>
+        </li>
         <hr />
         <p className="nodo">
           Diagramar

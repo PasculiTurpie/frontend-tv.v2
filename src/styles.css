@@ -77,6 +77,7 @@ th, td {
 
 }
 
+
 select {
     width: 170px;
 }
@@ -263,8 +264,7 @@ select {
     margin-bottom: 20px;
 }
 
-.button {
-    width: 150px;
+.button {    
     padding: 5px 8px;
     color: white;
     border-radius: 5px;
