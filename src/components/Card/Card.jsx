@@ -61,7 +61,7 @@ api.getSignal().then((response) => {
                         />
                         <div className="card__severidad">
 
-                        <span>{signalItem.tipoTecnologia}</span><br />
+                        <span>{signalItem.tipoTecnologia.toUpperCase()}</span><br />
                         <span>{`Severidad: ${signalItem.severidadChannel}`}</span>
                         </div>
                     </div>

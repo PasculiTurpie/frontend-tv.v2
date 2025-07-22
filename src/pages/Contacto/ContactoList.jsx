@@ -15,7 +15,10 @@ const ContactoList = () => {
         api.getContact()
             .then((res) => {
                 console.log(res.data);
-                setContacts(res.data);
+                const sortedContacts = res.data.sort((a, b) =>
+                    a.nombreContact.localeCompare(b.nombreContact)
+                );
+                setContacts(sortedContacts);
                 setIsLoading(false);
             })
             .catch((error) => {
@@ -27,9 +30,9 @@ const ContactoList = () => {
                     text: `${error.message}`,
                     footer: '<a href="#">Contactar a administrador</a>',
                 });
-                setIsLoading(false); // también en caso de error
+                setIsLoading(false);
             });
-    };
+    };    
     const refreshList = () => {
         getAllContact();
     };
@@ -127,7 +130,7 @@ const ContactoList = () => {
                         <tbody>
                             {contacts.map((contact) => (
                                 <tr key={contact._id} id={contact._id}>
-                                    <td className="text__align">{contact.nombreContact}</td>
+                                    <td className="text__align">{contact.nombreContact.toUpperCase()}</td>
                                     <td className="text__align">{contact.email}</td>
                                     <td>{contact.telefono}</td>
                                     <td className="button-action">

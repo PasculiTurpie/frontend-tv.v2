@@ -15,7 +15,10 @@ const ChannelList = () => {
         api.getSignal()
             .then((res) => {
                 console.log(res.data);
-                setChannels(res.data);
+                const sortedChannels = res.data.sort((a, b) =>
+                    a.nameChannel.localeCompare(b.nameChannel)
+                );
+                setChannels(sortedChannels);
                 setIsLoading(false);
             })
             .catch((error) => {
@@ -27,7 +30,7 @@ const ChannelList = () => {
                     text: `${error.message}`,
                     footer: '<a href="#">Contactar a administrador</a>',
                 });
-                setIsLoading(false); // también en caso de error
+                setIsLoading(false);
             });
     };
 
@@ -130,10 +133,14 @@ const ChannelList = () => {
                         <tbody>
                             {channels.map((channel) => (
                                 <tr key={channel._id} id={channel._id}>
-                                    <td className="text__align">{channel.nameChannel}</td>
+                                    <td className="text__align">
+                                        {channel.nameChannel}
+                                    </td>
                                     <td>{channel.numberChannelCn}</td>
                                     <td>{channel.numberChannelSur}</td>
-                                    <td>{channel.tipoTecnologia.toUpperCase()}</td>
+                                    <td>
+                                        {channel.tipoTecnologia.toUpperCase()}
+                                    </td>
                                     <td className="button-action">
                                         <button
                                             className="button btn-primary"
@@ -146,9 +153,7 @@ const ChannelList = () => {
                                         <button
                                             className="button btn-danger"
                                             onClick={() =>
-                                                deleteChannel(
-                                                    channel._id
-                                                )
+                                                deleteChannel(channel._id)
                                             }
                                         >
                                             Eliminar

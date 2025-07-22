@@ -15,11 +15,13 @@ const SignalContact = () => {
     const [optionsSignal, setOptionsSignal] = useState([]);
     const [optionsContact, setOptionsContact] = useState([]);
 
+
     const getAllSignal = () => {
         api.getSignal().then((res) => {
+            console.log(res.data)
             const optSignal = res.data.map(signal => ({
                 value: signal._id,
-                label: signal.nameChannel
+                label: `${signal.nameChannel} ${signal.tipoTecnologia.toUpperCase() }`
             }));
             setOptionsSignal(optSignal);
         });
@@ -52,7 +54,7 @@ const SignalContact = () => {
                 icon: "success",
                 title: "Asignado exitosamente",
             });
-            resetForm();
+            /* resetForm(); */
         } catch (error) {
             Swal.fire({
                 icon: "error",

@@ -76,7 +76,13 @@ th, td {
     box-shadow: none;
 
 }
-
+/* .css-13cymwt-control{
+    background-color: #fff;
+outline         : none;
+border          : 1px solid rgb(5, 53, 156);
+padding         : 3px 5px;
+width           : 250px;
+} */
 
 select {
     width: 170px;

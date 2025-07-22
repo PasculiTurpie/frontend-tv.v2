@@ -234,7 +234,7 @@ const Channel = () => {
                         {
                           tipoTechs.map((tipoTech) => {
                             return(
-                              <option key={tipoTech._id} value={tipoTech._id}>{tipoTech.nombreTipo.toUpperCase()}</option>
+                              <option key={tipoTech._id} value={tipoTech.nombreTipo}>{tipoTech.nombreTipo.toUpperCase()}</option>
 
                             )
                           })

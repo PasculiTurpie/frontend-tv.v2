@@ -20,10 +20,7 @@ const Contacto = () => {
                         <li className="breadcrumb-item">
                             <Link to="/contact-list">Listar</Link>
                         </li>
-                        <li
-                            className="breadcrumb-item active"
-                            aria-current="page"
-                        >
+                        <li className="breadcrumb-item active" aria-current="page">
                             Formulario
                         </li>
                     </ol>
@@ -42,9 +39,7 @@ const Contacto = () => {
                             Swal.fire({
                                 title: "Contacto guardado exitosamente",
                                 icon: "success",
-                                html: `
-                      <p><strong>Nombre:</strong> ${values.nombreContact}</p>
-                    `,
+                                html: `<p><strong>Nombre:</strong> ${values.nombreContact}</p>`,
                             });
                             resetForm();
                         } catch (error) {
@@ -58,16 +53,13 @@ const Contacto = () => {
                         }
                     }}
                 >
-                    {({ errors, touched }) => (
+                    {({ errors, touched, setFieldValue }) => (
                         <Form className="form__add">
                             <h1 className="form__titulo">Registrar contacto</h1>
                             <div className="rows__group">
                                 <div className="columns__group">
                                     <div className="form__group">
-                                        <label
-                                            htmlFor="nombreContact"
-                                            className="form__group-label"
-                                        >
+                                        <label htmlFor="nombreContact" className="form__group-label">
                                             Nombre contacto
                                             <br />
                                             <Field
@@ -75,21 +67,19 @@ const Contacto = () => {
                                                 className="form__group-input"
                                                 placeholder="Nombre contacto"
                                                 name="nombreContact"
+                                                onBlur={(e) => {
+                                                    const value = e.target.value.trim();
+                                                    setFieldValue('nombreContact', value.replace(/\s+/g, ' '));
+                                                }}
                                             />
                                         </label>
-
-                                        {errors.nombreContact &&
-                                        touched.nombreContact ? (
-                                            <div className="form__group-error">
-                                                {errors.nombreContact}
-                                            </div>
-                                        ) : null}
+                                        {errors.nombreContact && touched.nombreContact && (
+                                            <div className="form__group-error">{errors.nombreContact}</div>
+                                        )}
                                     </div>
+
                                     <div className="form__group">
-                                        <label
-                                            htmlFor="email"
-                                            className="form__group-label"
-                                        >
+                                        <label htmlFor="email" className="form__group-label">
                                             Email
                                             <br />
                                             <Field
@@ -97,20 +87,19 @@ const Contacto = () => {
                                                 className="form__group-input"
                                                 placeholder="Email"
                                                 name="email"
+                                                onBlur={(e) => {
+                                                    const value = e.target.value.trim();
+                                                    setFieldValue('email', value.replace(/\s+/g, ''));
+                                                }}
                                             />
                                         </label>
-
-                                        {errors.email && touched.email ? (
-                                            <div className="form__group-error">
-                                                {errors.email}
-                                            </div>
-                                        ) : null}
+                                        {errors.email && touched.email && (
+                                            <div className="form__group-error">{errors.email}</div>
+                                        )}
                                     </div>
+
                                     <div className="form__group">
-                                        <label
-                                            htmlFor="telefono"
-                                            className="form__group-label"
-                                        >
+                                        <label htmlFor="telefono" className="form__group-label">
                                             Teléfono
                                             <br />
                                             <Field
@@ -118,23 +107,19 @@ const Contacto = () => {
                                                 className="form__group-input"
                                                 placeholder="Teléfono"
                                                 name="telefono"
+                                                onBlur={(e) => {
+                                                    const value = e.target.value.trim();
+                                                    setFieldValue('telefono', value.replace(/\s+/g, ''));
+                                                }}
                                             />
                                         </label>
-
-                                        {errors.telefono && touched.telefono ? (
-                                            <div className="form__group-error">
-                                                {errors.telefono}
-                                            </div>
-                                        ) : null}
+                                        {errors.telefono && touched.telefono && (
+                                            <div className="form__group-error">{errors.telefono}</div>
+                                        )}
                                     </div>
                                 </div>
                             </div>
-                            <button
-                                type="submit"
-                                className={`button btn-primary`}
-                            >
-                                Enviar
-                            </button>
+                            <button type="submit" className={`button btn-primary`}>Enviar</button>
                         </Form>
                     )}
                 </Formik>
