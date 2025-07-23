@@ -16,18 +16,21 @@
 }
 .card__title{
     text-align: center;
+    font-size: 16px;
     padding-top: 5px;
 }
 .card__logo {
-    width: 150px;
+    width: 50%;
+    object-fit: cover;
 }
 .card__number{
     display:flex;
     width: 100%;
     flex-direction: row;
     justify-content: space-around;
-    
-    
+}
+.card__number-item{
+    font-size: 16px;
 }
 .card__group-item{
     width: 100%;
