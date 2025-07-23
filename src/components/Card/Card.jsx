@@ -37,7 +37,8 @@ api.getSignal().then((response) => {
 
     return (
         <>
-            {signalTv.length === 0 ? <p className="error__data">Buscando datos...</p> :(signalTv.map((signalItem, index) => {
+            {signalTv.length === 0 ? <p className="error__data">Buscando datos...</p> : (signalTv.map((signalItem, index) => {
+                { console.log(signalItem.severidadChannel)}
                 return (
                     <div
                         className="card__container"
@@ -61,7 +62,7 @@ api.getSignal().then((response) => {
                         />
                         <div className="card__severidad">
 
-                        <span>{signalItem.tipoTecnologia.toUpperCase()}</span><br />
+                        <span>{signalItem.tipoTecnologia}</span><br />
                         <span>{`Severidad: ${signalItem.severidadChannel}`}</span>
                         </div>
                     </div>
