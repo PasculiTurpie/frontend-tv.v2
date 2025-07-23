@@ -35,9 +35,12 @@ import ListEquipment from "./pages/Equipment/ListEquipment";
 import Contacto from "./pages/Contacto/Contacto";
 import ContactoList from "./pages/Contacto/ContactoList";
 import SignalContact from "./pages/SignalContact/SignalContact";
+
+import ScrollToTop from "./components/ScrollToTop/ScrollToTop"; 
 const App = () => {
     return (
         <>
+            <ScrollToTop />
             <Routes>
                 <Route path="/" element={<Layout />}>
                     <Route index element={<Home />} />

@@ -139,7 +139,7 @@ const ChannelList = () => {
                                     <td>{channel.numberChannelCn}</td>
                                     <td>{channel.numberChannelSur}</td>
                                     <td>
-                                        {channel.tipoTecnologia.toUpperCase()}
+                                        {channel.tipoTecnologia?.toUpperCase()}
                                     </td>
                                     <td className="button-action">
                                         <button

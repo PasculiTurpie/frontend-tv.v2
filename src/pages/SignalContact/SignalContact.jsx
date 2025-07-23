@@ -19,10 +19,16 @@ const SignalContact = () => {
     const getAllSignal = () => {
         api.getSignal().then((res) => {
             console.log(res.data)
-            const optSignal = res.data.map(signal => ({
-                value: signal._id,
-                label: `${signal.nameChannel} ${signal.tipoTecnologia.toUpperCase() }`
-            }));
+            const optSignal = res.data.map(signal => {
+    const label = signal.nameChannel
+        ? `${signal.nameChannel} ${signal.tipoTecnologia ? signal.tipoTecnologia.toUpperCase() : ''}`
+        : 'Canal sin nombre';
+    
+    return {
+        value: signal._id,
+        label
+    };
+});
             setOptionsSignal(optSignal);
         });
     };
