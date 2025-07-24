@@ -38,38 +38,53 @@ const DetailCard = () => {
             <div className="container__card-detail">
                 <div className="card-detail-container">
                     <button
-                        className="button-back button btn-warning"
+                        className="button-back btn-warning"
                         onClick={handleBackSubmit}
                     >
-                        Volver
+                        ← Volver
                     </button>
+
                     <div className="card-detail-header">
                         <img
                             className="card__detail-logo"
                             src={DetailCard.logoChannel}
-                        ></img>
+                            alt="Logo Canal"
+                        />
                         <h3 className="card-detail-title">
                             {DetailCard.nameChannel}
                         </h3>
                     </div>
+
                     <div className="card__detail-numbers">
-                        <span>Número Cn: {DetailCard.numberChannelCn}</span>
-                        <span>Número Sur: {DetailCard.numberChannelSur}</span>
+                        <span>
+                            <strong>Norte:</strong>{" "}
+                            <span className="card__detail-info">{DetailCard.numberChannelCn}</span>
+                        </span>
+                        <span>
+                            <strong>Sur:</strong>{" "}
+                            <span className="card__detail-info">{DetailCard.numberChannelSur}</span>
+                        </span>
                     </div>
-                    <p>{DetailCard.tipoTecnologia}</p>
-                    <p>Severidad: {DetailCard.severidadChannel}</p>
+                    <div className="card__detail-numbers">
+                        <span>
+                            <strong>Tecnología:</strong>{" "}
+                            <span className="card__detail-info">{DetailCard.tipoTecnologia}</span>
+                        </span>
+                        <span>
+                            <strong>Severidad:</strong>{" "}
+                            <span className="card__detail-info">{DetailCard.severidadChannel}</span>
+                        </span>
+                    </div>
+
                     <div className="card__detail-button">
-                        {!DetailCard.contact?.length == 0 ? (
+                        {DetailCard.contact?.length > 0 && (
                             <button
                                 className="button btn-success"
                                 onClick={openModal}
                             >
                                 Contacto
                             </button>
-                        ) : (
-                            ""
                         )}
-
                         <button
                             onClick={handleClickDiagram}
                             className="button btn-primary"
@@ -81,32 +96,29 @@ const DetailCard = () => {
             </div>
             <ModalContact isOpen={isModalOpen} onClose={closeModal}>
                 <>
-                    <h1 className="form__titulo">Contacto proveedor</h1>
-                    <table>
+                    <h1 className="modal-contact__title">Contacto proveedor</h1>
+                    <table className="modal-contact__table">
                         <thead>
-                                    <tr>
-                                        <th>Nombre</th>
-                                        <th>Telefono</th>
-                                        <th>Email</th>
+                            <tr>
+                                <th>Nombre</th>
+                                <th>Teléfono</th>
+                                <th>Email</th>
                             </tr>
                         </thead>
                         <tbody>
-                    {contacts.map((contact) => {
-                        return (
-                           
-                                
-                                    <tr className="background__tr">
-                                        <td>{contact.nombreContact}</td>
-                                        <td>{contact.telefono}</td>
-                                        <td>{contact.email}</td>
-                                    </tr>
-                              
-                            
-                        );
-                    })}
+                            {contacts.map((contact) => (
+                                <tr
+                                    key={contact._id}
+                                    className="modal-contact__row"
+                                >
+                                    <td>{contact.nombreContact}</td>
+                                    <td>{contact.telefono}</td>
+                                    <td>{contact.email}</td>
+                                </tr>
+                            ))}
                         </tbody>
-                        </table>
-                        </>
+                    </table>
+                </>
             </ModalContact>
         </>
     );

@@ -6,7 +6,7 @@
 .table {
     border-top: 2px solid rgb(226, 226, 226);
 }
-.text__align{
+.text__align {
     text-align: left;
 }
 
@@ -22,6 +22,8 @@
     padding: 5px 8px;
     color: white;
     border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.2s ease-in-out;
 }
 
 .ant-btn-variant-outlined {
@@ -31,6 +33,9 @@
 .btn-primary {
     background-color: #4db89b;
 }
+.btn-primary:hover {
+    background-color: #059669;
+}
 .separate {
     margin-top: 15px;
 }
@@ -38,7 +43,7 @@
 .btn-danger {
     background-color: #d6244d;
 }
-.btn-danger:hover{
+.btn-danger:hover {
     background-color: #850220;
 }
 .total-list {
@@ -52,7 +57,8 @@
     margin: 0 auto;
 }
 
-th, td {
+th,
+td {
     height: 51.5px;
     text-align: center;
     white-space: nowrap;
@@ -74,7 +80,6 @@ th, td {
 
 .form__modal {
     box-shadow: none;
-
 }
 /* .css-13cymwt-control{
     background-color: #fff;
@@ -119,11 +124,9 @@ select {
 
 .form__group-label {
     font-size: 15px;
-    
 }
-.form__group:nth-child(1){
-    margin-top:20px;
-
+.form__group:nth-child(1) {
+    margin-top: 20px;
 }
 
 .form__group-input {
@@ -206,7 +209,6 @@ select {
 
 .form__modal-component {
     position: relative;
-    
 }
 
 .modal__title {
@@ -270,7 +272,7 @@ select {
     margin-bottom: 20px;
 }
 
-.button {    
+.button {
     padding: 5px 8px;
     color: white;
     border-radius: 5px;
@@ -281,7 +283,6 @@ select {
     flex-direction: column;
     gap: 20px;
 }
-
 
 .loader {
     position: relative;
