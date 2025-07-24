@@ -1,7 +1,5 @@
 import React, { useEffect, useState } from "react";
 import "./Card.css";
-/* import signal from "../../utils/contants"; */
-import axios from "axios";
 import { useLocation, useNavigate } from "react-router-dom";
 import api from '../../utils/api'
 import Loader from '../../components/Loader/Loader';
@@ -12,12 +10,25 @@ const Card = () => {
 
 
     const [signalTv, setSignalTv] = useState([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [hasError, setHasError] = useState(false);
 
-    const getAllSignal = () =>{
-api.getSignal().then((response) => {
-            setSignalTv(response.data);
-        })
-    }
+    const getAllSignal = async () => {
+        try {
+            const response = await api.getSignal();
+            if (response.data.length > 0) {
+                setSignalTv(response.data);
+                setHasError(false);
+            } else {
+                setHasError(true); // No se encontraron datos
+            }
+        } catch (error) {
+            console.error("Error al obtener las señales:", error);
+            setHasError(true);
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
     useEffect(() => {
         refreshList()
@@ -37,9 +48,14 @@ api.getSignal().then((response) => {
 
     return (
         <>
-            {signalTv.length === 0 ? <p className="error__data">Buscando datos...</p> : (signalTv.map((signalItem, index) => {
-                { console.log(signalItem.severidadChannel)}
-                return (
+            {isLoading ? (
+                <Loader message="Cargando y conectando con el servidor..." />
+            ) : hasError ? (
+                <p className="error__data">
+                    No se encuentran datos. Comuníquese con el administrador.
+                </p>
+            ) : (
+                signalTv.map((signalItem, index) => (
                     <div
                         className="card__container"
                         key={index}
@@ -52,22 +68,21 @@ api.getSignal().then((response) => {
                             </h4>
                             <div className="card__number">
                                 <h5 className="card__number-item">{`Norte: ${signalItem.numberChannelCn}`}</h5>
-
                                 <h5 className="card__number-item">{`Sur: ${signalItem.numberChannelSur}`}</h5>
                             </div>
                         </div>
                         <img
                             className="card__logo"
                             src={signalItem.logoChannel}
+                            alt="Logo del canal"
                         />
                         <div className="card__severidad">
-
-                        <span>{signalItem.tipoTecnologia}</span><br />
-                        <span>{`Severidad: ${signalItem.severidadChannel}`}</span>
+                            <span>{signalItem.tipoTecnologia}</span><br />
+                            <span>{`Severidad: ${signalItem.severidadChannel}`}</span>
                         </div>
                     </div>
-                );
-            }))}
+                ))
+            )}
         </>
     );
 };

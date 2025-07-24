@@ -5,11 +5,11 @@ import { Formik, Form, Field, ErrorMessage } from "formik";
 import * as Yup from "yup";
 import Swal from "sweetalert2";
 import ModalComponent from "../../components/ModalComponent/ModalComponent";
-import { emailValidate, phoneValidate } from "../../utils/regexValidate.js";
+import { otherEmail, phoneValidate } from "../../utils/regexValidate.js";
 
 const UpdateSchemaContact = Yup.object().shape({
     nombreContact: Yup.string(),
-    email: Yup.string().matches(emailValidate, "Debe ser un correo válido"),
+    email: Yup.string().matches(otherEmail, "Debe ser un correo válido"),
     telefono: Yup.string().matches(
         phoneValidate,
         "Debe ser un teléfono válido"
