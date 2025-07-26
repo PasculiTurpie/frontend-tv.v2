@@ -32,13 +32,12 @@ const Equipment = () => {
         });
     };
 
-    useEffect(() => {
-        refreshList();
-    }, [tipoEquipments]);
-
     const refreshList = () => {
         dataEquipo();
     };
+    useEffect(() => {
+        refreshList();
+    }, []);
 
     return (
         <>

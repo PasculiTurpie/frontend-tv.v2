@@ -1,7 +1,7 @@
 .container__card-detail {
     width: 100%;
     min-height: 100vh;
-    background: #f4f6f8;
+    background: #ffffff;
     display: flex;
     justify-content: center;
     align-items: start;
@@ -91,7 +91,7 @@ strong{
     text-align: center;
 }
 .card__detail-info{
-    color:rgb(255, 123, 0);
+    color:rgb(4, 34, 99);
     font-size: 20px;
     font-weight: bold;
 }

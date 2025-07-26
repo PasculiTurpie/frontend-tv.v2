@@ -2,9 +2,17 @@ import React, { useState } from "react";
 import "./Header.css";
 import Logo from "../../../public/images/layout_set_logo.png";
 import Search from "../Search/Search";
+import { useParams, useLocation } from 'react-router-dom'
 
 
 const Header = () => {
+
+    const params = useParams()
+    const location = useLocation();
+
+    console.log(location)
+
+    console.log(params)
     
     return (
         <>

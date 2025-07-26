@@ -35,8 +35,10 @@ import ListEquipment from "./pages/Equipment/ListEquipment";
 import Contacto from "./pages/Contacto/Contacto";
 import ContactoList from "./pages/Contacto/ContactoList";
 import SignalContact from "./pages/SignalContact/SignalContact";
+import ScrollToTop from "./components/ScrollToTop/ScrollToTop";
+import SearchFilter from "./components/SearchFilter/SearchFilter";
 
-import ScrollToTop from "./components/ScrollToTop/ScrollToTop"; 
+
 const App = () => {
     return (
         <>
@@ -258,6 +260,7 @@ const App = () => {
                         }
                     />
                     <Route path="/signal" element={<AddSignal />} />
+                    <Route path="/search" element={<SearchFilter />}/>
                     <Route path="/signal/:id" element={<DetailCard />} />
                     <Route path="/diagrama/:id" element={<Diagrama />} />
                 </Route>
