@@ -1,6 +1,6 @@
 import React, { useContext } from "react";
 import "./Nav.css";
-import { NavLink } from "react-router-dom";
+import { Link, NavLink } from "react-router-dom";
 import { UserContext } from "../context/UserContext";
 import LogoutButton from "../LogoutButton/LogoutButton";
 
@@ -11,23 +11,23 @@ const Nav = () => {
         <div className="nav">
             <ul className="nav__menu-list">
                 <li className="nav__links">
-                    <NavLink activeClassName="active" className="nav__links-text" to="/">
+                    <Link className="nav__links-text" to="/">
                         Inicio
-                    </NavLink>
+                    </Link>
                 </li>
                 {isAuth ? (
                     <LogoutButton />
                 ) : (
                     <li className="nav__links">
-                <NavLink activeClassName="active" className="nav__links-text" to="/login">
+                <Link className="nav__links-text" to="/login">
                             Admin
-                        </NavLink>
+                        </Link>
                     </li>
                 )}
                 <li className="nav__links">
-            <NavLink activeClassName="active" className="nav__links-text" to="/signal">
+            <Link className="nav__links-text" to="/signal">
                         Señal
-                    </NavLink>{" "}
+                    </Link>{" "}
                 </li>
             </ul>
         </div>

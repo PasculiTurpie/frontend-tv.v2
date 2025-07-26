@@ -24,11 +24,11 @@ a{
   
 }
 
-.active{
+/* .active{
   color:rgb(219, 216, 216);
   border:none;
   padding:5px 15px;
   border-radius: 5px;
   border-bottom:4px solid #FFA100;
   transition:border-bottom .5s ease;
-}
+} */
