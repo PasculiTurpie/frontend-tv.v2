@@ -27,10 +27,7 @@ const SearchFilter = () => {
     return (
         <>
             <div className="outlet-main">
-                Skip: {skip}, limit: {limit}
-                <button className="button btn-primary" onClick={handleNext}>
-                    Next
-                </button>
+               
             </div>
         </>
     );
