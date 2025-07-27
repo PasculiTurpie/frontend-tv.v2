@@ -260,7 +260,7 @@ const App = () => {
                         }
                     />
                     <Route path="/signal" element={<AddSignal />} />
-                    <Route path="/search" element={<SearchFilter />}/>
+                    <Route path="/search" element={<SearchFilter />} />
                     <Route path="/signal/:id" element={<DetailCard />} />
                     <Route path="/diagrama/:id" element={<Diagrama />} />
                 </Route>

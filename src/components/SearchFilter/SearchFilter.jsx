@@ -1,26 +1,39 @@
-import React from 'react'
-import { Link } from 'react-router-dom'
+import { useLocation, useNavigate } from "react-router-dom";
 
 const SearchFilter = () => {
-  return (
-    <>
-       <div className="outlet-main">
-                      <nav aria-label="breadcrumb">
-                          <ol className="breadcrumb">
-                              <li className="breadcrumb-item">
-                                  <Link to="/channel-list">Listar</Link>
-                              </li>
-                              <li
-                                  className="breadcrumb-item active"
-                                  aria-current="page"
-                              >
-                                  Formulario
-                              </li>
-                          </ol>
-        </nav>
-        </div>
-    </>
-  )
-}
+    const location = useLocation();
+    /*   const {id} = useParams(); */
+    const navigate = useNavigate();
 
-export default SearchFilter
+    console.log(location);
+
+    const query = new URLSearchParams(location.search);
+
+    console.log(query);
+
+    const skip = parseInt(query.get("skip")) || 0;
+    const limit = parseInt(query.get("limit")) || 15;
+
+    console.log(skip, limit);
+
+    const handleNext = () => {
+        console.log("Next");
+        query.set("skip", skip);
+        const newSkip = skip + limit;
+        /*  query.set("limit", 15); */
+        navigate(`/search?skip=${newSkip}&limit=${limit}`);
+    };
+
+    return (
+        <>
+            <div className="outlet-main">
+                Skip: {skip}, limit: {limit}
+                <button className="button btn-primary" onClick={handleNext}>
+                    Next
+                </button>
+            </div>
+        </>
+    );
+};
+
+export default SearchFilter;
