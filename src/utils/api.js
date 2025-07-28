@@ -80,6 +80,10 @@ class Api {
         return this._axios.put(`/signal/${id}`, values).then((res) => res.data);
     }
 
+      searchFilter(keyword) {
+        return this._axios.get(`/search?keyword=${keyword}`).then((res) => res);
+    }
+
     /*Rutas para gestión de IRD*/
     getIrd() {
         return this._axios.get("/ird").then((res) => res);

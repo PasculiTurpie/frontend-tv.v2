@@ -1,11 +1,10 @@
 import "./Search.css";
 import * as Yup from "yup";
 import Swal from "sweetalert2";
-import api from "../../utils/api";
-import { Field, Form, Formik } from "formik";
-import SearchFilter from "../SearchFilter/SearchFilter";
-import { useState } from "react";
 
+import { Field, Form, Formik } from "formik";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 const SchemaSearch = Yup.object().shape({
     searchFilter: Yup.string().trim(
@@ -13,13 +12,9 @@ const SchemaSearch = Yup.object().shape({
     ),
 });
 
-
-
 const Search = () => {
-
-
-  const [searchFilterData, setSearchFilterData] = useState('')
-  
+    const [searchFilterData, setSearchFilterData] = useState("");
+    const navigate = useNavigate()
 
     return (
         <>
@@ -29,30 +24,36 @@ const Search = () => {
                 }}
                 validationSchema={SchemaSearch}
                 onSubmit={async (values, { resetForm }) => {
-                  try {
-                    setSearchFilterData(values)
+                    try {
+                        setSearchFilterData(values);
                         console.log(values);
+                        navigate(`/search?keyword=${searchFilterData}`)
                         resetForm();
                     } catch (error) {
                         console.error(error);
-                  }
-                  console.log(searchFilterData)
-          }}
-          
+                    }
+                    console.log(searchFilterData);
+                }}
             >
                 <Form className="form__search">
-                    <Field
-                        className="input__text-search"
-                        type="text"
-                        placeholder="Buscar"
-              name="searchFilter"
-              onChange={(e) => {
-                console.log(e.target.value)
-              }}
-                    />
+                    <Field name="searchFilter">
+                        {({ field, form }) => (
+                            <input
+                                {...field}
+                                className="input__text-search"
+                                type="text"
+                                placeholder="Buscar"
+                                onChange={(e) => {
+                                    const value = e.target.value;
+                                    form.setFieldValue("searchFilter", value);
+                                    setSearchFilterData(value);
+                                    console.log(value);
+                                }}
+                            />
+                        )}
+                    </Field>
                 </Form>
-        </Formik>
-        
+            </Formik>
         </>
     );
 };
