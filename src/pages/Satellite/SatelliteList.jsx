@@ -4,35 +4,30 @@ import "../../index.css";
 import Loader from "../../components/Loader/Loader";
 import Swal from "sweetalert2";
 import ModalForm from "../../components/ModalForm/ModalForm";
-import api from '../../utils/api'
-
-
-
+import api from "../../utils/api";
 
 export const SatelliteList = () => {
     const [satellites, setSatellites] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [itemId, setItemId] = useState('')
-
-
+    const [itemId, setItemId] = useState("");
 
     const getAllSatellites = () => {
         api.getSatellites()
             .then((response) => {
-                console.log(response.data)
+                console.log(response.data);
                 setSatellites(response);
                 setIsLoading(false); // <- mover aquí
             })
             .catch((error) => {
-                console.log(error)
+                console.log(error);
                 console.log(`Error: ${error.response.data.message}`);
                 Swal.fire({
                     icon: "error",
                     title: "Oops...",
                     text: `${error.response.data.message}`,
-                    footer: '<a href="#">Contactar a administrador</a>'
-                  });
+                    footer: '<a href="#">Contactar a administrador</a>',
+                });
                 setIsLoading(false); // también en caso de error
             });
     };
@@ -43,7 +38,7 @@ export const SatelliteList = () => {
 
     const refreshList = () => {
         getAllSatellites();
-    }
+    };
 
     const deleteSatellite = async (id) => {
         const result = await Swal.fire({
@@ -58,7 +53,7 @@ export const SatelliteList = () => {
 
         if (result.isConfirmed) {
             try {
-                await api.deleteSatelliteId(id)
+                await api.deleteSatelliteId(id);
                 getAllSatellites(); // Refresca la lista después de confirmar
                 await Swal.fire({
                     title: "¡Eliminado!",
@@ -77,11 +72,11 @@ export const SatelliteList = () => {
     };
 
     const showModal = (id) => {
-        console.log(id)
-        setItemId(id)
+        console.log(id);
+        setItemId(id);
         setIsModalOpen(true);
     };
-    
+
     const handleOk = () => {
         setIsModalOpen(false);
         Swal.fire({
@@ -89,15 +84,13 @@ export const SatelliteList = () => {
             icon: "success",
             title: "Registro actualizado",
             showConfirmButton: false,
-            timer: 1500
+            timer: 1500,
         });
     };
 
     const handleCancel = () => {
         setIsModalOpen(false);
     };
-
-
 
     return (
         <>
@@ -154,7 +147,9 @@ export const SatelliteList = () => {
                                     <td className="button-action">
                                         <button
                                             className="button btn-primary"
-                                            onClick={() => { showModal(satellite._id)}}
+                                            onClick={() => {
+                                                showModal(satellite._id);
+                                            }}
                                         >
                                             Editar
                                         </button>
@@ -174,7 +169,12 @@ export const SatelliteList = () => {
                 )}
             </div>
             {isModalOpen && (
-                <ModalForm isModalOpen={isModalOpen} itemId={itemId} handleOk={handleOk} handleCancel={handleCancel} refreshList={refreshList}
+                <ModalForm
+                    isModalOpen={isModalOpen}
+                    itemId={itemId}
+                    handleOk={handleOk}
+                    handleCancel={handleCancel}
+                    refreshList={refreshList}
                 />
             )}
         </>
