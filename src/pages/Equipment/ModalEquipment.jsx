@@ -11,7 +11,7 @@ const UpdateSchemaEquipo = Yup.object().shape({
   nombre: Yup.string(),
   marca: Yup.string(),
   modelo: Yup.string(),
-  tipoEquipo: Yup.string(),
+  tipoNombre: Yup.string(),
   ip_gestion: Yup.string().matches(ipGestionRegex, "Debe ser una ip válida"),
 })
 
@@ -43,7 +43,7 @@ const ModalEquipment = ({
           nombre: dataEquipos.nombre || "",
           marca: dataEquipos.marca || "",
           modelo: dataEquipos.modelo || "",
-          tipoEquipo: dataEquipos.tipoEquipo || "",
+          tipoNombre: dataEquipos.tipoNombre || "",
           ip_gestion: dataEquipos.ip_gestion || "",
         }}
         validationSchema={UpdateSchemaEquipo}
@@ -154,7 +154,7 @@ const ModalEquipment = ({
                 <div className={stylesEquipment.columns__group}>
                   <div className="form__group">
                     <label
-                      htmlFor="tipoEquipo"
+                      htmlFor="tipoNombre"
                       className="form__group-label"
                     >
                       Tipo equipo
@@ -163,13 +163,13 @@ const ModalEquipment = ({
                         type="text"
                         className="form__group-input"
                         placeholder="Tipo equipo"
-                        name="tipoEquipo"
+                        name="tipoNombre"
                       />
                     </label>
 
-                    {errors.tipoEquipo && touched.tipoEquipo ? (
+                    {errors.tipoNombre && touched.tipoNombre ? (
                       <div className="form__group-error">
-                        {errors.tipoEquipo}
+                        {errors.tipoNombre}
                       </div>
                     ) : null}
                   </div>

@@ -57,7 +57,7 @@ const SearchFilter = () => {
   };
 
   return (
-      <div className="container">
+      <div className="container__result">
         {isLoading ? (
           <Loader message="Cargando y conectando con el servidor..." />
         ) : hasError ? (

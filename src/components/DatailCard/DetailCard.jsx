@@ -31,7 +31,7 @@ const DetailCard = () => {
         navigate(`/diagrama/${id}`);
     };
     const handleBackSubmit = () => {
-        navigate(`/`);
+        navigate(-1);
     };
     return (
         <>

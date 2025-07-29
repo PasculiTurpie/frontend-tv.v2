@@ -43,7 +43,7 @@ const ListEquipment = () => {
   const refreshList = () => {
     getAllEquipos();
   };
-
+  console.log(equipos) 
   const deleteEquipment = async (id) => {
     console.log(id);
     const result = await Swal.fire({
@@ -136,12 +136,13 @@ const ListEquipment = () => {
               </tr>
             </thead>
             <tbody>
-              {equipos.map((equipo) => (
+                {equipos.map((equipo) => (
+                  
                 <tr key={equipo._id} id={equipo._id}>
                   <td>{equipo.nombre}</td>
                   <td>{equipo.marca}</td>
                   <td>{equipo.modelo}</td>
-                  <td>{equipo.tipoEquipo}</td>
+                    <td>{equipo.tipoNombre?.tipoNombre}</td>
                   <td>{equipo.ip_gestion}</td>
                   <td className="button-action">
                     <button
