@@ -8,11 +8,11 @@ import { ipGestionRegex } from "../../utils/regexValidate";
 import stylesEquipment from "./Equipment.module.css";
 
 const UpdateSchemaEquipo = Yup.object().shape({
-  nombre: Yup.string(),
-  marca: Yup.string(),
-  modelo: Yup.string(),
-  tipoNombre: Yup.string(),
-  ip_gestion: Yup.string().matches(ipGestionRegex, "Debe ser una ip válida"),
+  nombre: Yup.string().trim(),
+  marca: Yup.string().trim(),
+  modelo: Yup.string().trim(),
+  tipoNombre: Yup.string().trim(),
+  ip_gestion: Yup.string().trim().matches(ipGestionRegex, "Debe ser una ip válida"),
 })
 
 const ModalEquipment = ({
@@ -43,7 +43,7 @@ const ModalEquipment = ({
           nombre: dataEquipos.nombre || "",
           marca: dataEquipos.marca || "",
           modelo: dataEquipos.modelo || "",
-          tipoNombre: dataEquipos.tipoNombre || "",
+          tipoNombre: dataEquipos?.tipoNombre?.tipoNombre || "",
           ip_gestion: dataEquipos.ip_gestion || "",
         }}
         validationSchema={UpdateSchemaEquipo}
@@ -71,7 +71,7 @@ const ModalEquipment = ({
                 "Error desconocido"
                 }`,
             });
-            console.error(error);
+            console.error("Error al actualizar equipo:", error.response || error.message || error);
           }
         }}
       >
