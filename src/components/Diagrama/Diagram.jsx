@@ -129,6 +129,11 @@ const nodeTypes = {
     custom: CustomNode,
 };
 
+const handleclickCard =(e)=>{
+    console.log(e.target.value)
+
+}
+
 const Diagram = () => {
     const [nodes, setNodes] = useState([]);
     const [edges, setEdges] = useState([]);
@@ -145,11 +150,12 @@ const Diagram = () => {
     return (
         <>
             <div className="container__diagram">
-                <div style={{ width: "85vw", height: "50vh" }}>
+                <div style={{ width: "85vw", height: "50vh" } }>
                     <ReactFlow
                         nodes={nodes}
                         edges={edges}
                         nodeTypes={nodeTypes}
+                        handleclickCard={handleclickCard}
                         fitView
                     >
                         <Background variant={variant} color="grey" gap="20" />

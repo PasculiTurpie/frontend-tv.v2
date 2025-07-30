@@ -168,7 +168,7 @@ const edges = [
 ];
 
 const handleTargetInfo = (e) => {
-    console.log(e.target);
+    console.log(e.target.data);
 };
 const ImageNode = ({ data }) => {
     return (
@@ -240,7 +240,9 @@ const Diagrama = () => {
                 <Controls />
             </ReactFlow>
             <hr />
-            <h1>Detalle</h1>
+            <div>
+                <h2>Detalle Elemento</h2>
+            </div>
         </div>
     );
 };
