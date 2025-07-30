@@ -174,11 +174,7 @@ const ImageNode = ({ data }) => {
     return (
         <>
             <div style={{ textAlign: "center" }}>
-            {
-                setInterval(() =>{
-
-                })
-            }
+            
                 {data.image ? (
                     <img
                         src={data.image}
