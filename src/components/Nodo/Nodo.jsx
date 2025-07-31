@@ -2,21 +2,21 @@ import { Field, Form, Formik } from "formik";
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import api from "../../utils/api";
+import styleNodo from "./Nodo.module.css";
 
 const Nodo = () => {
+    const [dataSignal, setDataSignal] = useState([]);
 
-    const [dataSignal, setDataSignal] = useState([])
-
-    const getAllSignal = () =>{
-        api.getSignal()
-        .then((res)=>{
-            console.log(res.data)
-            setDataSignal(res.data)
-        })
-    }
-    useEffect(()=>{
-getAllSignal()
-    },[])
+    const getAllSignal = () => {
+        api.getSignal().then((res) => {
+            console.log(res.data);
+            setDataSignal(res.data);
+        });
+    };
+    useEffect(() => {
+        getAllSignal();
+    }, []);
+    
     return (
         <>
             <div className="outlet-main">
@@ -35,58 +35,79 @@ getAllSignal()
                 </nav>
                 <Formik>
                     <Form>
-                     <div className="form__group">
-                            <label
-                                htmlFor="nombre"
-                                className="form__group-label"
-                            >
-                                Señal
-                                <br />
-                                <Field
-                                as="select"
-                                    className="form__group-input"
-                                    placeholder="Nombre equipo"
-                                    name="nombre"
-                                >
-                                    <option>--Seleccionar--</option>
-                                    {
-                                        dataSignal?.map((signal)=>(             
-                                            <option key={signal._id} value={signal._id}>{signal.nameChannel.toUpperCase()}</option>
+                        <div className={styleNodo.container}>
+                            <div className={styleNodo.input__group}>
+                                <div className="form__group">
+                                    <label
+                                        htmlFor="signal"
+                                        className="form__group-label"
+                                    >
+                                        Señal
+                                    </label>
+                                    <Field
+                                        as="select"
+                                        className="form__group-input"
+                                        name="signal"
+                                        id="signal"
+                                    >
+                                        <option>--Seleccionar--</option>
+                                        {dataSignal?.map((signal) => (
+                                            <option
+                                                key={signal._id}
+                                                value={signal._id}
+                                            >
+                                                {signal.nameChannel.toUpperCase()}
+                                            </option>
                                         ))}
-
-                                </Field>
-                            </label>
-                            {/* {errors.nombre && touched.nombre && (
-                                                        <div className="form__group-error">{errors.nombre}</div>
-                                                    )} */}
+                                    </Field>
+                                </div>
+                            </div>
+                            <div className={styleNodo.input__group}>
+                                <div className="form__group">
+                                    <label
+                                        htmlFor="nodo"
+                                        className="form__group-label"
+                                    >
+                                        Nodo
+                                    </label>
+                                    <Field
+                                        as="select"
+                                        className="form__group-input"
+                                        name="nodo"
+                                        id="nodo"
+                                    >
+                                        <option value="">
+                                            --Seleccionar--
+                                        </option>
+                                    </Field>
+                                </div>
+                                <div className="form__group">
+                                    <label
+                                        htmlFor="nodo"
+                                        className="form__group-label"
+                                    >
+                                        Nodo
+                                    </label>
+                                    <Field
+                                        as="select"
+                                        className="form__group-input"
+                                        name="nodo"
+                                        id="nodo"
+                                    >
+                                        <option value="">
+                                            --Seleccionar--
+                                        </option>
+                                    </Field>
+                                </div>
+                            </div>
                         </div>
-                    <div className="form__group">
-                            <label
-                                htmlFor="nombre"
-                                className="form__group-label"
-                            >
-                                Nodo
-                                <br />
-                                <Field
-                                as="select"
-                                    className="form__group-input"
-                                    placeholder="Nombre equipo"
-                                    name="nombre"
-                                >
-                                    <option value="">--Seleccionar--</option>
-                                   
-
-                                </Field>
-                            </label>
-                            {/* {errors.nombre && touched.nombre && (
-                                                        <div className="form__group-error">{errors.nombre}</div>
-                                                    )} */}
-                        </div>
-                        <button className="button btn-primary">Crear nodo</button>
-                       
+                        <button className="button btn-primary">
+                            Crear nodo
+                        </button>
                     </Form>
                 </Formik>
             </div>
+            
         </>
     );
 };
