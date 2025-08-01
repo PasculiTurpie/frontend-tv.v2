@@ -51,7 +51,7 @@ const Sidebar = () => {
         <li>
           <Link to="/ird">Encoder Ird</Link>
         </li>
-        <li>
+        {/* <li>
           <Link to="/dcm">Dcm</Link>
         </li>
         <li>
@@ -68,7 +68,7 @@ const Sidebar = () => {
         </li>
         <li>
           <Link to="/router">Router</Link>
-        </li>
+        </li> */}
         <hr />
         <p className="nodo">
           Canal
@@ -84,7 +84,7 @@ const Sidebar = () => {
         </li>
         <hr />
         <p className="nodo">
-          Diagramar
+          Topología de Señal
         </p>
         <li>
           <Link to="/nodo">Nodo</Link>

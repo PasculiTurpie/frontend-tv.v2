@@ -174,7 +174,7 @@ const ChannelList = () => {
                     showModal={showModal}
                     refreshList={refreshList}
                     itemId={itemId}
-                    title="Actualizar channel"
+                    title="Actualizar Señal"
                 />
             )}
         </>
