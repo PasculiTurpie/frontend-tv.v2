@@ -80,7 +80,7 @@ const Channel = () => {
                                 title: "Contacto guardado exitosamente",
                                 icon: "success",
                                 html: `
-          <p><strong>Nombre Switch:</strong> ${values.nameChannel}</p>
+          <p><strong>Nombre:</strong> ${values.nameChannel}</p>
         `,
                             });
                             resetForm();
@@ -262,7 +262,7 @@ const Channel = () => {
                                                 className="form__group-input"
                                                 name="tipoTecnologia"
                                             >
-                                                <option value={"0"}>
+                                                <option value={""}>
                                                     --Seleccionar--
                                                 </option>
                                                 {tipoTechs.map((tipoTech) => {
@@ -302,10 +302,10 @@ const Channel = () => {
                                                 <option value={"0"}>
                                                     --Seleccionar--
                                                 </option>
-                                                <option value={"Santiago"}>
+                                                <option value={"STGO"}>
                                                     Santiago
                                                 </option>
-                                                <option value={"Valdivia"}>
+                                                <option value={"VLDV"}>
                                                     Valdivia
                                                 </option>
                                             </Field>
