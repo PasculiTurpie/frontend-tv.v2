@@ -182,15 +182,21 @@ select {
     border: 1px solid #d6244d;
 }
 .container__modal-component {
-    display: flex;
-    justify-content: center;
-    padding-top: 130px;
-    width: 100%;
-    min-height: calc(100% + 20px);
-    position: absolute;
-    top: 0;
-    left: 0;
-    background-color: #000000b6;
+    position        : fixed;
+    top             : 0;
+    left            : 0;
+    width           : 100vw;
+    min-height      : 100vh;
+    background-color: rgba(0, 0, 0, 0.7);
+    display         : flex;
+    justify-content : center;
+    align-items     : flex-start;
+    padding         : 130px 20px 40px;
+    /* Espacio superior + márgenes laterales para móviles */
+    z-index         : 1000;
+    overflow-y      : auto;
+    box-sizing      : border-box;
+    transition      : opacity 0.3s ease;
 }
 
 .show__modal {
