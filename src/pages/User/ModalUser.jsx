@@ -32,7 +32,7 @@ const EditSchemaUser = Yup.object().shape({
         [Yup.ref("password")],
         "Las contraseñas no coincidir"
     ),
-    rol: Yup.string(),
+    role: Yup.string(),
 });
 
 const ModalUser = ({ itemId, modalOpen, setModalOpen, title, refreshList }) => {
@@ -57,7 +57,7 @@ const ModalUser = ({ itemId, modalOpen, setModalOpen, title, refreshList }) => {
                 password: "",
                 confirmPassword: "",
                 profilePicture: dataUser.profilePicture || "",
-                rol: dataUser.rol || "",
+                role: dataUser.role || "",
             }}
             validationSchema={EditSchemaUser}
             onSubmit={async (values, { resetForm }) => {
@@ -93,7 +93,7 @@ const ModalUser = ({ itemId, modalOpen, setModalOpen, title, refreshList }) => {
                     <Form className="grid-cols-2">
                         <div>
                             <div className="form__group">
-                                <label className="form__group-label">
+                                <label htmlFor="username" className="form__group-label">
                                     Nombre usuario
                                     <br />
                                     <Field
@@ -147,15 +147,15 @@ const ModalUser = ({ itemId, modalOpen, setModalOpen, title, refreshList }) => {
 
                         <div>
                             <div className="form__group">
-                                <label className="form__group-label">
-                                    Rol
+                                <label htmlFor="role" className="form__group-label">
+                                    Role
                                     <br />
                                     <Field
                                         as="select"
                                         className="form__group-input"
-                                        name="rol"
+                                        name="role"
                                     >
-                                        <option value="0">Seleccionar</option>
+                                        <option value={''}>Seleccionar</option>
                                         <option value="admin">admin</option>
                                         <option value="user">user</option>
                                     </Field>
