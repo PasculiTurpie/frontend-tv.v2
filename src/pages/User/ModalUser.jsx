@@ -28,10 +28,15 @@ const EditSchemaUser = Yup.object().shape({
                 );
             }
         ),
-    confirmPassword: Yup.string().oneOf(
-        [Yup.ref("password")],
-        "Las contraseñas no coincidir"
-    ),
+    confirmPassword: Yup.string().when("password", {
+        is: (val) => val && val.length > 0,
+        then: (schema) =>
+            schema
+                .required("Debes confirmar la contraseña")
+                .oneOf([Yup.ref("password")], "Las contraseñas no coinciden"),
+        otherwise: (schema) => schema.nullable(),
+    }),
+
     role: Yup.string(),
 });
 
@@ -160,7 +165,7 @@ const ModalUser = ({ itemId, modalOpen, setModalOpen, title, refreshList }) => {
                                         <option value="user">user</option>
                                     </Field>
                                     <ErrorMessage
-                                        name="rol"
+                                        name="role"
                                         component="div"
                                         className="form__group-error"
                                     />
