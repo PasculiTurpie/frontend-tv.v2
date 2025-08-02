@@ -11,10 +11,12 @@ const ChannelList = () => {
     const [modalOpen, setModalOpen] = useState(false);
     const [itemId, setItemId] = useState("");
 
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 10;
+
     const getAllChannel = () => {
         api.getSignal()
             .then((res) => {
-                console.log(res.data);
                 const sortedChannels = res.data.sort((a, b) =>
                     a.nameChannel.localeCompare(b.nameChannel)
                 );
@@ -23,7 +25,6 @@ const ChannelList = () => {
             })
             .catch((error) => {
                 console.log(error);
-                console.log(`Error: ${error.message}`);
                 Swal.fire({
                     icon: "error",
                     title: "Oops...",
@@ -43,7 +44,6 @@ const ChannelList = () => {
     };
 
     const deleteChannel = async (id) => {
-        console.log(id);
         const result = await Swal.fire({
             title: "¿Estás seguro de eliminar el registro?",
             text: "¡No podrás revertir esto!",
@@ -57,8 +57,7 @@ const ChannelList = () => {
         if (result.isConfirmed) {
             try {
                 await api.deleteSignal(id);
-                console.log(id);
-                refreshList(); // Refresca la lista después de confirmar
+                refreshList();
                 await Swal.fire({
                     title: "¡Eliminado!",
                     text: "El registro ha sido eliminado",
@@ -74,12 +73,12 @@ const ChannelList = () => {
             }
         }
     };
+
     const showModal = (id) => {
-        console.log(id);
         setItemId(id);
         setModalOpen(true);
     };
-    console.log(modalOpen);
+
     const handleOk = () => {
         setModalOpen(false);
         Swal.fire({
@@ -95,6 +94,20 @@ const ChannelList = () => {
         setModalOpen(false);
     };
 
+    // PAGINACIÓN
+    const indexOfLastItem = currentPage * itemsPerPage;
+    const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+    const currentChannels = channels.slice(indexOfFirstItem, indexOfLastItem);
+    const totalPages = Math.ceil(channels.length / itemsPerPage);
+
+    const handlePrevPage = () => {
+        if (currentPage > 1) setCurrentPage(currentPage - 1);
+    };
+
+    const handleNextPage = () => {
+        if (currentPage < totalPages) setCurrentPage(currentPage + 1);
+    };
+
     return (
         <>
             <div className="outlet-main">
@@ -103,15 +116,12 @@ const ChannelList = () => {
                         <li className="breadcrumb-item">
                             <Link to="/channel">Formulario</Link>
                         </li>
-                        <li
-                            className="breadcrumb-item active"
-                            aria-current="page"
-                        >
+                        <li className="breadcrumb-item active" aria-current="page">
                             Listar
                         </li>
                     </ol>
                 </nav>
-                <p className="">
+                <p>
                     <span className="total-list">Total items: </span>
                     {channels.length}
                 </p>
@@ -120,51 +130,67 @@ const ChannelList = () => {
                         <Loader />
                     </div>
                 ) : (
-                    <table className="table">
-                        <thead>
-                            <tr>
-                                <th>Nombre canal</th>
-                                <th>Número canal Norte</th>
-                                <th>Número canal Sur</th>
-                                <th>Tipo de tecnología</th>
-                                <th className="action">Acciones</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {channels.map((channel) => (
-                                <tr key={channel._id} id={channel._id}>
-                                    <td className="text__align">
-                                        {channel.nameChannel}
-                                    </td>
-                                    <td>{channel.numberChannelCn}</td>
-                                    <td>{channel.numberChannelSur}</td>
-                                    <td>
-                                        {channel.tipoTecnologia?.toUpperCase()}
-                                    </td>
-                                    <td className="button-action">
-                                        <button
-                                            className="button btn-primary"
-                                            onClick={() => {
-                                                showModal(channel._id);
-                                            }}
-                                        >
-                                            Editar
-                                        </button>
-                                        <button
-                                            className="button btn-danger"
-                                            onClick={() =>
-                                                deleteChannel(channel._id)
-                                            }
-                                        >
-                                            Eliminar
-                                        </button>
-                                    </td>
+                    <>
+                        <table className="table">
+                            <thead>
+                                <tr>
+                                    <th>Nombre canal</th>
+                                    <th>Número canal Norte</th>
+                                    <th>Número canal Sur</th>
+                                    <th>Tipo de tecnología</th>
+                                    <th className="action">Acciones</th>
                                 </tr>
-                            ))}
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody>
+                                {currentChannels.map((channel) => (
+                                    <tr key={channel._id} id={channel._id}>
+                                        <td className="text__align">{channel.nameChannel}</td>
+                                        <td>{channel.numberChannelCn}</td>
+                                        <td>{channel.numberChannelSur}</td>
+                                        <td>{channel.tipoTecnologia?.toUpperCase()}</td>
+                                        <td className="button-action">
+                                            <button
+                                                className="button btn-primary"
+                                                onClick={() => showModal(channel._id)}
+                                            >
+                                                Editar
+                                            </button>
+                                            <button
+                                                className="button btn-danger"
+                                                onClick={() => deleteChannel(channel._id)}
+                                            >
+                                                Eliminar
+                                            </button>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+
+                        {/* CONTROLES DE PÁGINA */}
+                        <div className="pagination">
+                            <button
+                                className="button btn-secondary"
+                                onClick={handlePrevPage}
+                                disabled={currentPage === 1}
+                            >
+                                Anterior
+                            </button>
+                            <span style={{ margin: "0 10px" }}>
+                                Página {currentPage} de {totalPages}
+                            </span>
+                            <button
+                                className="button btn-secondary"
+                                onClick={handleNextPage}
+                                disabled={currentPage === totalPages}
+                            >
+                                Siguiente
+                            </button>
+                        </div>
+                    </>
                 )}
             </div>
+
             {modalOpen && (
                 <ModalChannel
                     modalOpen={modalOpen}

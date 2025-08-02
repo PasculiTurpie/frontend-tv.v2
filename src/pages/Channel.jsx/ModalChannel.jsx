@@ -222,13 +222,6 @@ const ModalChannel = ({
               <button type="submit" className="button btn-primary">
                 Guardar
               </button>
-              <button
-                type="button"
-                className="button btn-secondary"
-                onClick={() => setModalOpen(false)}
-              >
-                Cancelar
-              </button>
             </div>
           </Form>
         </ModalComponent>
