@@ -80,7 +80,7 @@ const RegisterUser = () => {
                     }
                 }}
             >
-                {({ errors, touched, values }) => {
+                {({ errors, touched, values, setFieldValue }) => {
                     const rules = {
                         minLength: values.password.length >= 8,
                         hasUpperCase: /[A-Z]/.test(values.password),
@@ -127,6 +127,7 @@ const RegisterUser = () => {
                                         type="email"
                                         name="email"
                                         id="email"
+                                        onChange={(e) => setFieldValue("email", e.target.value.toLowerCase())}
                                     />
                                     {errors.email && touched.email && (
                                         <div className="form__group-error">

@@ -10,7 +10,7 @@ import { useNavigate } from "react-router-dom";
 import api from "../../utils/api.js";
 
 const LoginSchema = Yup.object().shape({
-    email: Yup.string().email("Email inválido").required("Campo obligatorio"),
+    email: Yup.string().trim().email("Email inválido").required("Campo obligatorio"),
     password: Yup.string().required("Campo obligatorio"),
 });
 
@@ -74,7 +74,7 @@ const Login = () => {
                         }
                     }}
                 >
-                    {({ errors, touched }) => (
+                    {({ errors, touched, setFieldValue }) => (
                         <Form className="form__add">
                             <h1 className="form__titulo">Login</h1>
                             <div className="form__group">
@@ -90,6 +90,7 @@ const Login = () => {
                                         name="email"
                                         id="email"
                                         autoComplete="on"
+                                        onChange={(e) => setFieldValue("email", e.target.value.toLowerCase())}
                                     />
                                 </label>
                                 {errors.email && touched.email ? (
@@ -115,7 +116,7 @@ const Login = () => {
                                         }
                                         name="password"
                                         id="password"
-                                        autoComplete="on"
+                                        autoComplete="off"
                                     />
                                     <button
                                         type="button"

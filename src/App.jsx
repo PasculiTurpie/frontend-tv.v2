@@ -37,6 +37,7 @@ import ContactoList from "./pages/Contacto/ContactoList";
 import SignalContact from "./pages/SignalContact/SignalContact";
 import ScrollToTop from "./components/ScrollToTop/ScrollToTop";
 import SearchFilter from "./components/SearchFilter/SearchFilter";
+import Profile from "./pages/Profile/Profile";
 
 
 const App = () => {
@@ -48,6 +49,7 @@ const App = () => {
                     <Route index element={<Home />} />
                     <Route path="/login" element={<Login />} />
                     <Route path="/logout" element={<Login />} />
+                    <Route path="/profile" element={<Profile />} />
 
                     <Route
                         path="/satelite"
