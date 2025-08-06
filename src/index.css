@@ -15,7 +15,7 @@ html {
     flex-direction: column;
     margin:0 auto;
     align-items: center;
-    width     : 1024px;
+    width     : 100%;
     min-height: calc(100vh - 274px);
     padding   : 50px 80px;
 }
