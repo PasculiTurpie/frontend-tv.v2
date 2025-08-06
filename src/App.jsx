@@ -1,6 +1,6 @@
 import { Route, Routes } from "react-router-dom";
 import "./App.css";
-import './styles.css'
+import "./styles.css";
 import ProtectedRoute from "./components/ProtectedRoute/ProtectedRoute";
 import Home from "./pages/Home/Home";
 import Layout from "./Layout/Layout";
@@ -38,7 +38,6 @@ import ScrollToTop from "./components/ScrollToTop/ScrollToTop";
 import SearchFilter from "./components/SearchFilter/SearchFilter";
 import Profile from "./pages/Profile/Profile";
 
-
 const App = () => {
     return (
         <>
@@ -47,223 +46,69 @@ const App = () => {
                 <Route path="/" element={<Layout />}>
                     <Route index element={<Home />} />
                     <Route path="/login" element={<Login />} />
-                    <Route path="/logout" element={<Login />} />
-{/*                     <Route path="/profile" element={<Profile />} /> */}
+
+                    {/*                     <Route path="/profile" element={<Profile />} /> */}
                     <Route path="/search" element={<SearchFilter />} />
                     <Route path="/signal/:id" element={<DetailCard />} />
                     <Route path="/diagrama/:id" element={<Diagrama />} />
+                    <Route element={<ProtectedRoute />}>
+                        <Route path="/logout" element={<Login />} />
+                        <Route path="/satelite" element={<SatelliteForm />} />
+                        <Route
+                            path="/listar-satelite"
+                            element={<SatelliteList />}
+                        />
+                        <Route path="/ird" element={<IrdForm />} />
 
-                    <Route
-                        path="/satelite"
-                        element={
-                           /*  <ProtectedRoute> */
-                                <SatelliteForm />
-                            /* </ProtectedRoute> */
-                        }
-                    />
-                    <Route
-                        path="/listar-satelite"
-                        element={
-                           /*  <ProtectedRoute> */
-                                <SatelliteList />
-                           /*  </ProtectedRoute> */
-                        }
-                    />
-                    <Route
-                        path="/ird"
-                        element={
-                            /* <ProtectedRoute> */
-                                <IrdForm />
-                            /* </ProtectedRoute> */
-                        }
-                    />
+                        <Route path="/listar-ird" element={<IrdListar />} />
 
-                    <Route
-                        path="/listar-ird"
-                        element={
-                            /* <ProtectedRoute> */
-                                <IrdListar />
-                            /* </ProtectedRoute> */
-                        }
-                    />
-
-                    <Route
-                        path="/registrar-user"
-                        element={
-                          /*   <ProtectedRoute> */
-                                <RegisterUser />
-                          /*   </ProtectedRoute> */
-                        }
-                    />
-                    <Route
-                        path="/listar-user"
-                        element={
-                         /*    <ProtectedRoute> */
-                                <ListarUsers />
-                        /*     </ProtectedRoute> */
-                        }
-                    />
-                    <Route
-                        path="/dcm-listar"
-                        element={
-                            /*    <ProtectedRoute> */
-                            <ListarDcm />
-                            /*     </ProtectedRoute> */
-                        }
-                    />
-                    <Route
-                        path="/dcm"
-                        element={
-                            /*    <ProtectedRoute> */
-                            <FormDcm />
-                            /*     </ProtectedRoute> */
-                        }
-                    />
-                    <Route
-                        path="/listar-titan"
-                        element={
-                            /*    <ProtectedRoute> */
-                            <ListarEncoderTitan />
-                            /*     </ProtectedRoute> */
-                        }
-                    />
-                    <Route
-                        path="/titan"
-                        element={
-                            /*    <ProtectedRoute> */
-                            <FormEncoderTitan />
-                            /*     </ProtectedRoute> */
-                        }
-                    />
-                    <Route
-                        path="/listar-dcmVmx"
-                        element={
-                            /*    <ProtectedRoute> */
-                            <ListarDcmVmx />
-                            /*     </ProtectedRoute> */
-                        }
-                    />
-                    <Route
-                        path="/dcmVmx"
-                        element={
-                            /*    <ProtectedRoute> */
-                            <FormDcmVmx />
-                            /*     </ProtectedRoute> */
-                        }
-                    />
-                    <Route
-                        path="/rtesVmx"
-                        element={
-                            /*    <ProtectedRoute> */
-                            <RtesVmxForm />
-                            /*     </ProtectedRoute> */
-                        }
-                    />
-                    <Route
-                        path="/rtesVmx-listar"
-                        element={
-                            /*    <ProtectedRoute> */
-                            <RtesVmxListar />
-                            /*     </ProtectedRoute> */
-                        }
-                    />
-                    <Route
-                        path="/switch"
-                        element={
-                            /*    <ProtectedRoute> */
-                            <FormSwitch />
-                            /*     </ProtectedRoute> */
-                        }
-                    />
-                    <Route
-                        path="/switch-listar"
-                        element={
-                            /*    <ProtectedRoute> */
-                            <ListarSwitch />
-                            /*     </ProtectedRoute> */
-                        }
-                    />
-                    <Route
-                        path="/diagram"
-                        element={
-                            /*    <ProtectedRoute> */
-                            <Diagram />
-                            /*     </ProtectedRoute> */
-                        }
-                    />
-                    <Route
-                        path="/nodo"
-                        element={
-                            /*    <ProtectedRoute> */
-                            <Nodo />
-                            /*     </ProtectedRoute> */
-                        }
-                    />
-                    <Route
-                        path="/nodo-listar"
-                        element={
-                            /*    <ProtectedRoute> */
-                            <NodoListar />
-                            /*     </ProtectedRoute> */
-                        }
-                    />
-                    <Route
-                        path="/channel"
-                        element={
-                            /*    <ProtectedRoute> */
-                            <Channel />
-                            /*     </ProtectedRoute> */
-                        }
-                    />
-                    <Route
-                        path="/channel-list"
-                        element={
-                            /*    <ProtectedRoute> */
-                            <ChannelList />
-                            /*     </ProtectedRoute> */
-                        }
-                    />
-                    <Route
-                        path="/equipment"
-                        element={
-                            /*    <ProtectedRoute> */
-                            <Equipment />
-                            /*     </ProtectedRoute> */
-                        }
-                    />
-                    <Route
-                        path="/equipment-list"
-                        element={
-                            /*    <ProtectedRoute> */
-                            <ListEquipment />
-                            /*     </ProtectedRoute> */
-                        }
-                    />
-                    <Route
-                        path="/contact"
-                        element={
-                            /*    <ProtectedRoute> */
-                            <Contacto />
-                            /*     </ProtectedRoute> */
-                        }
-                    />
-                    <Route
-                        path="/contact-list"
-                        element={
-                            /*    <ProtectedRoute> */
-                            <ContactoList />
-                            /*     </ProtectedRoute> */
-                        }
-                    />
-                    <Route
-                        path="/signal-contact"
-                        element={
-                            /*    <ProtectedRoute> */
-                            <SignalContact />
-                            /*     </ProtectedRoute> */
-                        }
-                    />
-                    
+                        <Route
+                            path="/registrar-user"
+                            element={<RegisterUser />}
+                        />
+                        <Route path="/listar-user" element={<ListarUsers />} />
+                        <Route path="/dcm-listar" element={<ListarDcm />} />
+                        <Route path="/dcm" element={<FormDcm />} />
+                        <Route
+                            path="/listar-titan"
+                            element={<ListarEncoderTitan />}
+                        />
+                        <Route path="/titan" element={<FormEncoderTitan />} />
+                        <Route
+                            path="/listar-dcmVmx"
+                            element={<ListarDcmVmx />}
+                        />
+                        <Route path="/dcmVmx" element={<FormDcmVmx />} />
+                        <Route path="/rtesVmx" element={<RtesVmxForm />} />
+                        <Route
+                            path="/rtesVmx-listar"
+                            element={<RtesVmxListar />}
+                        />
+                        <Route path="/switch" element={<FormSwitch />} />
+                        <Route
+                            path="/switch-listar"
+                            element={<ListarSwitch />}
+                        />
+                        <Route path="/diagram" element={<Diagram />} />
+                        <Route path="/nodo" element={<Nodo />} />
+                        <Route path="/nodo-listar" element={<NodoListar />} />
+                        <Route path="/channel" element={<Channel />} />
+                        <Route path="/channel-list" element={<ChannelList />} />
+                        <Route path="/equipment" element={<Equipment />} />
+                        <Route
+                            path="/equipment-list"
+                            element={<ListEquipment />}
+                        />
+                        <Route path="/contact" element={<Contacto />} />
+                        <Route
+                            path="/contact-list"
+                            element={<ContactoList />}
+                        />
+                        <Route
+                            path="/signal-contact"
+                            element={<SignalContact />}
+                        />
+                    </Route>
                 </Route>
                 <Route path="*" element={<NotFound />} />
             </Routes>

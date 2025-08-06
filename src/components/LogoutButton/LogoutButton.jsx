@@ -3,6 +3,7 @@ import { useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import { UserContext } from "../context/UserContext";
 import Swal from "sweetalert2";
+import './LogoutButton.css'
 
 const LogoutButton = () => {
   const { setUser, user, setIsAuth } = useContext(UserContext);
@@ -27,7 +28,7 @@ const LogoutButton = () => {
       });
       setUser({});
       setIsAuth(false);
-      navigate("/login");
+      navigate("/");
     } catch (error) {
       console.error("Error al cerrar sesión", error);
     }

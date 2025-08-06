@@ -208,8 +208,8 @@ const Channel = () => {
                                                 <option value={"Radio"}>
                                                     Radio
                                                 </option>
-                                                <option value={"Televisión"}>
-                                                    Televisión
+                                                <option value={"TV"}>
+                                                    TV
                                                 </option>
                                             </Field>
                                         </label>
