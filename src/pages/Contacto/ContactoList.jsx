@@ -27,7 +27,7 @@ const ContactoList = () => {
                 Swal.fire({
                     icon: "error",
                     title: "Oops...",
-                    text: `${error.message}`,
+                    text: `${error.response.data.message}`,
                     footer: '<a href="#">Contactar a administrador</a>',
                 });
                 setIsLoading(false);

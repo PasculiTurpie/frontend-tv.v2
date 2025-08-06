@@ -6,7 +6,7 @@ class Api {
 
         this._axios = axios.create({
             baseURL: this._url,
-            /* withCredentials: true, */
+            withCredentials: true, // Se envían cookies en cada solicitud
         });
     }
 
@@ -80,7 +80,7 @@ class Api {
         return this._axios.put(`/signal/${id}`, values).then((res) => res.data);
     }
 
-      searchFilter(keyword) {
+    searchFilter(keyword) {
         return this._axios.get(`/search?keyword=${keyword}`).then((res) => res);
     }
 
