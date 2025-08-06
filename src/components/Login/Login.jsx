@@ -27,7 +27,7 @@ const Login = () => {
 
         api.getSignal().then((res) => {
             const dataSignal = res[0];
-            console.log(dataSignal.equipos.satelite._id)
+            console.log(dataSignal?.equipos.satelite._id)
         })
 
 
@@ -50,7 +50,8 @@ const Login = () => {
                                 )
                                 .then((response) => {
                                     console.log(response.data);
-                                    /* setUser(response.data.) */
+                                    setUser(response.data.user)
+                                    setIsAuth(true);
                                     Swal.fire({
                                         position: "top-end",
                                         icon: "success",

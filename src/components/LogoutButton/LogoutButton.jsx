@@ -9,12 +9,12 @@ const LogoutButton = () => {
   const { setUser, user, setIsAuth } = useContext(UserContext);
   const navigate = useNavigate();
 
-  const {email} = user
-
+  // Validar que user exista antes de destructurar email
+  const email = user?.email;
 
   const handleLogout = async () => {
     try {
-      await axios.post("http://localhost:3000/api/v2/logout", {email}, {
+      await axios.post("http://localhost:3000/api/v2/logout", { email }, {
         withCredentials: true,
       });
       console.log('Cerrando')
@@ -26,7 +26,7 @@ const LogoutButton = () => {
         showConfirmButton: false,
         timer: 1500,
       });
-      setUser({});
+      setUser(null);       // mejor null en vez de {}
       setIsAuth(false);
       navigate("/");
     } catch (error) {
@@ -34,7 +34,11 @@ const LogoutButton = () => {
     }
   };
 
-  return <li className='nav__links  nav__links-text' onClick={handleLogout}>Cerrar sesión</li>;
+  return (
+    <li className='nav__links nav__links-text' onClick={handleLogout}>
+      Cerrar sesión
+    </li>
+  );
 };
 
 export default LogoutButton;
