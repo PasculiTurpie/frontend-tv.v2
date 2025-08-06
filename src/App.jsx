@@ -12,7 +12,6 @@ import IrdListar from "./pages/Ird/IrdListar";
 import RegisterUser from "./pages/User/RegisterUser";
 import ListarUsers from "./pages/User/ListarUsers";
 import Login from "./components/Login/Login";
-import AddSignal from "./pages/AddSignal/AddSignal";
 import DetailCard from "./components/DatailCard/DetailCard";
 import Diagrama from "./components/Diagrama/Diagrama";
 import ListarDcm from "./pages/Dcm/ListarDcm";
@@ -49,7 +48,10 @@ const App = () => {
                     <Route index element={<Home />} />
                     <Route path="/login" element={<Login />} />
                     <Route path="/logout" element={<Login />} />
-                    <Route path="/profile" element={<Profile />} />
+{/*                     <Route path="/profile" element={<Profile />} /> */}
+                    <Route path="/search" element={<SearchFilter />} />
+                    <Route path="/signal/:id" element={<DetailCard />} />
+                    <Route path="/diagrama/:id" element={<Diagrama />} />
 
                     <Route
                         path="/satelite"
@@ -261,10 +263,7 @@ const App = () => {
                             /*     </ProtectedRoute> */
                         }
                     />
-                    <Route path="/signal" element={<AddSignal />} />
-                    <Route path="/search" element={<SearchFilter />} />
-                    <Route path="/signal/:id" element={<DetailCard />} />
-                    <Route path="/diagrama/:id" element={<Diagrama />} />
+                    
                 </Route>
                 <Route path="*" element={<NotFound />} />
             </Routes>

@@ -61,7 +61,7 @@ const Login = () => {
                                     setUser(response.data.user);
                                     resetForm();
                                     setIsAuth(true);
-                                    navigate("/");
+                                    navigate("/channel");
                                 });
                         } catch (error) {
                             console.log(error);

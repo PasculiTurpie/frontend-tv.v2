@@ -1,86 +1,174 @@
+/* Contenedor que envuelve todas las cards en grid/flex */
+.card__grid {
+    display        : flex;
+    flex-wrap      : wrap;
+    justify-content: center;
+    /* Centra las cards */
+    gap            : 20px;
+    /* Espacio entre cards */
+    margin-top     : 20px;
+}
+
+/* Tus cards */
+/* Por defecto (pantallas pequeñas), ancho completo (1 columna) */
 .card__container {
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between ;
-    align-items: center;
-    width: 250px;
-    height: 320px;
-    box-shadow: rgba(0, 0, 0, 0.19) 0px 10px 20px, rgba(0, 0, 0, 0.23) 0px 6px 6px;
-    border: 1px solid #4d4a4a69;
-    border-radius: 8px;
-    cursor: pointer;
-    overflow: hidden;
+    display        : flex;
+    flex-direction : column;
+    justify-content: space-between;
+    align-items    : center;
+    width          : 100%;
+    max-width      : 250px;
+    /* Máximo ancho de la card */
+    height         : 320px;
+    box-shadow     : rgba(0, 0, 0, 0.19) 0px 10px 20px,
+        rgba(0, 0, 0, 0.23) 0px 6px 6px;
+    border          : 1px solid #4d4a4a69;
+    border-radius   : 8px;
+    cursor          : pointer;
+    overflow        : hidden;
+    background-color: white;
 }
-.card__container:hover{
-    box-shadow: rgba(0, 0, 0, 0.12) 0px 1px 3px, rgba(0, 0, 0, 0.24) 0px 1px 2px;
+
+/* Hover cards */
+.card__container:hover {
+    box-shadow: rgba(0, 0, 0, 0.12) 0px 1px 3px,
+        rgba(0, 0, 0, 0.24) 0px 1px 2px;
 }
-.card__title{
-    text-align: center;
-    font-size: 16px;
+
+/* Responsividad */
+
+/* 2 columnas en pantallas >= 768px (tablets) */
+@media (min-width: 768px) {
+    .card__container {
+        width: calc(50% - 20px);
+        /* 2 columnas con espacio */
+    }
+}
+
+/* 3 columnas en pantallas >= 1024px (laptops) */
+@media (min-width: 1024px) {
+    .card__container {
+        width: calc(33.33% - 20px);
+    }
+}
+
+/* 4 columnas en pantallas >= 1327px (desktop grande) */
+@media (min-width: 1327px) {
+    .card__container {
+        width: calc(25% - 20px);
+    }
+}
+
+/* Resto de estilos tuyos sin cambios */
+.card__title {
+    text-align : center;
+    font-size  : 16px;
     padding-top: 5px;
 }
+
 .card__logo {
-    width: 100px;
+    width     : 100px;
     object-fit: cover;
 }
-.card__number{
-    display:flex;
-    width: 100%;
-    flex-direction: row;
+
+.card__number {
+    display        : flex;
+    width          : 100%;
+    flex-direction : row;
     justify-content: space-around;
 }
-.card__number-item{
+
+.card__number-item {
     font-size: 16px;
 }
-.card__group-item{
-    width: 100%;
-    background: #375D9D ;
-    color: #fff;
-    overflow: hidden;
+
+.card__group-item {
+    width     : 100%;
+    background: #375d9d;
+    color     : #fff;
+    overflow  : hidden;
 }
-.card__severidad{
-    width: 100%;
-    padding: 20px 0;
-    background: #ec9702;
-    text-align: center;
-    font-weight: bold;
-    color: #fff;
+
+.card__severidad {
+    width        : 100%;
+    padding      : 20px 0;
+    background   : #ec9702;
+    text-align   : center;
+    font-weight  : bold;
+    color        : #fff;
     border-radius: 0 0 8px 8px;
-    overflow: hidden;
-
-
+    overflow     : hidden;
 }
-.error__data{
-    color:red;
-    font-size: 22px;
+
+.error__data {
+    color     : red;
+    font-size : 22px;
     box-sizing: border-box;
-    margin-top:0;
+    margin-top: 0;
     text-align: center;
-    margin-top:50px;
-    
+    margin-top: 50px;
 }
 
 .card__image-wrapper {
-    position: relative;
-    width: 100%;
-    height: auto;
-    min-height: 60px;
-    display: flex;
+    position       : relative;
+    width          : 100%;
+    height         : auto;
+    min-height     : 60px;
+    display        : flex;
     justify-content: center;
-    align-items: center;
+    align-items    : center;
 }
 
 .card__spinner {
-    border: 4px solid rgba(0, 0, 0, 0.1);
-    border-top: 4px solid #3498db;
+    border       : 4px solid rgba(0, 0, 0, 0.1);
+    border-top   : 4px solid #3498db;
     border-radius: 50%;
-    width: 30px;
-    height: 30px;
-    animation: spin 1s linear infinite;
-    z-index: 2;
+    width        : 30px;
+    height       : 30px;
+    animation    : spin 1s linear infinite;
+    z-index      : 2;
 }
 
 @keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+/* ===== Estilos para paginación ===== */
+.pagination {
+    display        : flex;
+    justify-content: center;
+    margin         : 30px 0;
+    gap            : 10px;
+    flex-wrap      : wrap;
+}
+
+.pagination button {
+    background-color: #ddd;
+    border          : none;
+    padding         : 8px 14px;
+    cursor          : pointer;
+    border-radius   : 5px;
+    font-weight     : 600;
+    transition      : background-color 0.2s ease;
+}
+
+.pagination button:hover:not(:disabled) {
+    background-color: #b0b0b0;
+}
+
+.pagination button.active {
+    background-color: #375d9d;
+    color           : white;
+}
+
+.pagination button:disabled {
+    background-color: #eee;
+    color           : #999;
+    cursor          : not-allowed;
 }
