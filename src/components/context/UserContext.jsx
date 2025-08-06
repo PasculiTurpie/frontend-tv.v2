@@ -13,12 +13,10 @@ export const UserProvider = ({ children }) => {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        await api.getUserId(user.id)
-          .then((res) => {
-          console.log(res.data.user )
-          setUser(res.data.user);
-          setIsAuth(true);
-        })
+        const res = await api.getMe(); // NUEVO
+        console.log(res.user);
+        setUser(res.user);
+        setIsAuth(true);
       } catch (error) {
         setUser(null);
         setIsAuth(false);
@@ -29,6 +27,7 @@ export const UserProvider = ({ children }) => {
 
     checkAuth();
   }, []);
+
 
   return (
     <UserContext.Provider value={{ user, setUser, isAuth, setIsAuth, loading }}>
