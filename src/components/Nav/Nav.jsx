@@ -19,7 +19,7 @@ const Nav = () => {
                     <LogoutButton />
                 ) : (
                     <li className="nav__links">
-                        <Link className="nav__links-text" to="/login">
+                        <Link className="nav__links-text" to="/auth/login">
                             Admin
                         </Link>
                     </li>

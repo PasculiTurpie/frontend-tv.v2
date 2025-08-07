@@ -45,14 +45,15 @@ const App = () => {
             <Routes>
                 <Route path="/" element={<Layout />}>
                     <Route index element={<Home />} />
-                    <Route path="/login" element={<Login />} />
+                    <Route path="/auth/login" element={<Login />} />
 
                     {/*                     <Route path="/profile" element={<Profile />} /> */}
                     <Route path="/search" element={<SearchFilter />} />
                     <Route path="/signal/:id" element={<DetailCard />} />
                     <Route path="/diagrama/:id" element={<Diagrama />} />
+                    
                     <Route element={<ProtectedRoute />}>
-                        <Route path="/logout" element={<Login />} />
+                        <Route path="/auth/logout" element={<Login />} />
                         <Route path="/satelite" element={<SatelliteForm />} />
                         <Route
                             path="/listar-satelite"

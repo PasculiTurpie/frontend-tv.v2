@@ -1,15 +1,20 @@
 import React, { useContext } from "react";
-import { Navigate } from "react-router-dom";
+import { Navigate, Outlet } from "react-router-dom";
 import { UserContext } from "../context/UserContext";
+import LoadingSpinner from "../LoadingSpinner/LoadingSpinner";
 
-const ProtectedRoute = ({ children }) => {
-    const { isAuth } = useContext(UserContext);
+const ProtectedRoute = () => {
+  const { isAuth, loading } = useContext(UserContext);
 
-    if (!isAuth) {
-        return <Navigate to="/login" />;
-    }
+  if (loading) {
+    return <LoadingSpinner />; // o spinner
+  }
 
-    return children;
+  if (!isAuth) {
+    return <Navigate to="/auth/login" replace />;
+  }
+
+  return <Outlet />;
 };
 
 export default ProtectedRoute;

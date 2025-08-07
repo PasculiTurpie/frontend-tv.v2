@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { UserContext } from "../context/UserContext";
 import Swal from "sweetalert2";
 import './LogoutButton.css'
+import api from "../../utils/api";
 
 const LogoutButton = () => {
   const { setUser, user, setIsAuth } = useContext(UserContext);
@@ -14,9 +15,7 @@ const LogoutButton = () => {
 
   const handleLogout = async () => {
     try {
-      await axios.post("http://localhost:3000/api/v2/logout", { email }, {
-        withCredentials: true,
-      });
+      await api.logout()
       console.log('Cerrando')
 
       Swal.fire({
@@ -30,6 +29,12 @@ const LogoutButton = () => {
       setIsAuth(false);
       navigate("/");
     } catch (error) {
+      Swal.fire({
+        icon:"error",
+        title:"Error al cerrar sesión",
+        showConfirmButton: false,
+        timer: 1500,
+      })
       console.error("Error al cerrar sesión", error);
     }
   };

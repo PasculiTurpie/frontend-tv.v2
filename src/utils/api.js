@@ -10,6 +10,19 @@ class Api {
         });
     }
 
+    /*LOGIN & LOGOUT */
+
+    login(values){
+        return this._axios.post("/auth/login", values).then((res) => res.data)
+    }
+    logout(){
+        return this._axios.post("/auth/logout").then((res) => res.data)
+    }
+
+    profile(){
+        return this._axios.get("/auth/profile").then((res) => res.data)
+    }
+
     /* Rutas para gestión de usuarios */
 
     createUser(values) {
@@ -17,10 +30,6 @@ class Api {
     }
     updateUserId(id, values) {
         return this._axios.put(`/user/${id}`, values).then((res) => res.data);
-    }
-
-    getMe() {
-        return this._axios.get("/me").then((res) => res.data);
     }
 
     getUserInfo() {

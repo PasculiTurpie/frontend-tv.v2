@@ -1,5 +1,6 @@
 import { createContext, useState, useEffect } from "react";
 import api from "../../utils/api";
+import LoadingSpinner from "../LoadingSpinner/LoadingSpinner";
 
 export const UserContext = createContext();
 
@@ -8,26 +9,27 @@ export const UserProvider = ({ children }) => {
   const [isAuth, setIsAuth] = useState(false);
   const [loading, setLoading] = useState(true); 
 
-  console.log(user)
-
   useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        const res = await api.getMe(); // NUEVO
-        console.log(res.user);
-        setUser(res.user);
-        setIsAuth(true);
-      } catch (error) {
-        setUser(null);
-        setIsAuth(false);
-      } finally {
-        setLoading(false);
-      }
-    };
+  const checkAuth = async () => {
+    try {
+      const res = await api.profile();
+      console.log("Perfil cargado:", res);
+      setUser(res);
+      setIsAuth(true);
+    } catch (error) {
+      console.error("Error autenticando:", error);
+      setUser(null);
+      setIsAuth(false);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    checkAuth();
-  }, []);
-
+  checkAuth();
+}, []);
+if (loading) {
+    return <LoadingSpinner />;
+  }
 
   return (
     <UserContext.Provider value={{ user, setUser, isAuth, setIsAuth, loading }}>

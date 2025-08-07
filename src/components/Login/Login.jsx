@@ -18,18 +18,10 @@ const Login = () => {
     const { user, setUser, setIsAuth } = useContext(UserContext);
     const [showPassword, setShowPassword] = useState(false);
 
-    console.log(user);
 
     const navigate = useNavigate();
 
     const toggleShowPassword = () => setShowPassword(!showPassword);
-
-
-        api.getSignal().then((res) => {
-            const dataSignal = res[0];
-            console.log(dataSignal?.equipos.satelite._id)
-        })
-
 
     return (
         <>
@@ -42,15 +34,10 @@ const Login = () => {
                     validationSchema={LoginSchema}
                     onSubmit={async (values, { resetForm }) => {
                         try {
-                            await axios
-                                .post(
-                                    "http://localhost:3000/api/v2/login",
-                                    values,
-                                    { withCredentials: true }
-                                )
+                            await api.login(values)
                                 .then((response) => {
-                                    console.log(response.data);
-                                    setUser(response.data.user)
+                                    console.log(response.user);
+                                    setUser(response.user)
                                     setIsAuth(true);
                                     Swal.fire({
                                         position: "top-end",
@@ -59,7 +46,7 @@ const Login = () => {
                                         showConfirmButton: false,
                                         timer: 1500,
                                     });
-                                    setUser(response.data.user);
+                                    setUser(response.user);
                                     resetForm();
                                     setIsAuth(true);
                                     navigate("/channel");
