@@ -8,9 +8,10 @@
     /* Espacio entre cards */
     margin-top     : 20px;
 }
+
 .card__layout{
-    display: contents;
-    border: 1px solid red;
+    display: flex;
+    flex-direction: column;
     margin: auto;
 }
 
