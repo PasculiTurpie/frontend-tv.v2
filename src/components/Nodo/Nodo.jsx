@@ -9,7 +9,6 @@ const Nodo = () => {
 
     const getAllSignal = () => {
         api.getSignal().then((res) => {
-            console.log(res.data);
             setDataSignal(res.data);
         });
     };

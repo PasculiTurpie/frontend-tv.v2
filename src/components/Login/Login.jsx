@@ -36,7 +36,6 @@ const Login = () => {
                         try {
                             await api.login(values)
                                 .then((response) => {
-                                    console.log(response.user);
                                     setUser(response.user)
                                     setIsAuth(true);
                                     Swal.fire({
@@ -52,7 +51,6 @@ const Login = () => {
                                     navigate("/channel");
                                 });
                         } catch (error) {
-                            console.log(error);
                             Swal.fire({
                                 icon: "error",
                                 title: "Ups!!",

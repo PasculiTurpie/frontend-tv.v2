@@ -167,9 +167,7 @@ const edges = [
     
 ];
 
-const handleTargetInfo = (e) => {
-    console.log(e.target.data);
-};
+
 const ImageNode = ({ data }) => {
     return (
         <>
@@ -197,9 +195,6 @@ const ImageNode = ({ data }) => {
                     type="target"
                     position={Position.Left}
                     style={{ background: "#555" }}
-                    onConnect={(params) =>
-                        console.log("Conectado desde:", params)
-                    }
                 />
                 {/* Salida */}
                 <Handle
@@ -220,7 +215,7 @@ const nodeTypes = {
 
 const Diagrama = () => {
     const { id } = useParams();
-    console.log(id);
+    
     return (
         <div
             className="container__diagram"

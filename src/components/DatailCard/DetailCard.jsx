@@ -20,12 +20,12 @@ const DetailCard = () => {
     useEffect(() => {
         api.getIdSignal(id).then((response) => {
             setDetailCard(response.data);
-            console.log(response.data);
+            
             setContacts(response.data.contact);
         });
     }, []);
 
-    console.log(contacts);
+    
 
     const handleClickDiagram = () => {
         navigate(`/diagrama/${id}`);

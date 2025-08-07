@@ -16,7 +16,6 @@ const LogoutButton = () => {
   const handleLogout = async () => {
     try {
       await api.logout()
-      console.log('Cerrando')
 
       Swal.fire({
         position: "top-end",

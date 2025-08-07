@@ -26,13 +26,11 @@ const Search = () => {
                 onSubmit={async (values, { resetForm }) => {
                     try {
                         setSearchFilterData(values);
-                        console.log(values);
                         navigate(`/search?keyword=${searchFilterData}`)
                         resetForm();
                     } catch (error) {
                         console.error(error);
                     }
-                    console.log(searchFilterData);
                 }}
             >
                 <Form className="form__search">
@@ -47,7 +45,6 @@ const Search = () => {
                                     const value = e.target.value;
                                     form.setFieldValue("searchFilter", value);
                                     setSearchFilterData(value);
-                                    console.log(value);
                                 }}
                             />
                         )}

@@ -123,14 +123,12 @@ const dataFlow = {
         },
     ],
 };
-console.log(dataFlow);
 
 const nodeTypes = {
     custom: CustomNode,
 };
 
 const handleclickCard =(e)=>{
-    console.log(e.target.value)
 
 }
 
@@ -143,9 +141,7 @@ const Diagram = () => {
         setNodes(dataFlow.nodes);
         setEdges(dataFlow.edges);
     }, []);
-
-    console.log(nodes);
-    console.log(edges);
+    
 
     return (
         <>

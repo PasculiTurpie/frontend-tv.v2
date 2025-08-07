@@ -35,7 +35,6 @@ const Contacto = () => {
                     onSubmit={async (values, { resetForm }) => {
                         try {
                             const response = await api.createContact(values);
-                            console.log(response);
                             Swal.fire({
                                 title: "Contacto guardado exitosamente",
                                 icon: "success",
@@ -43,7 +42,6 @@ const Contacto = () => {
                             });
                             resetForm();
                         } catch (error) {
-                            console.log(error);
                             Swal.fire({
                                 title: "Error",
                                 icon: "error",

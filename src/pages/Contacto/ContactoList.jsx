@@ -14,7 +14,7 @@ const ContactoList = () => {
     const getAllContact = () => {
         api.getContact()
             .then((res) => {
-                console.log(res.data);
+                
                 const sortedContacts = res.data.sort((a, b) =>
                     a.nombreContact.localeCompare(b.nombreContact)
                 );
@@ -22,8 +22,8 @@ const ContactoList = () => {
                 setIsLoading(false);
             })
             .catch((error) => {
-                console.log(error);
-                console.log(`Error: ${error.message}`);
+                
+                
                 Swal.fire({
                     icon: "error",
                     title: "Oops...",
@@ -41,7 +41,7 @@ const ContactoList = () => {
     }, []);
 
     const deleteContact = async (id) => {
-        console.log(id);
+        
         const result = await Swal.fire({
             title: "¿Estás seguro de eliminar el registro?",
             text: "¡No podrás revertir esto!",
@@ -55,7 +55,7 @@ const ContactoList = () => {
         if (result.isConfirmed) {
             try {
                 await api.deleteContact(id);
-                console.log(id);
+                
                 refreshList(); // Refresca la lista después de confirmar
                 await Swal.fire({
                     title: "¡Eliminado!",
@@ -73,11 +73,11 @@ const ContactoList = () => {
         }
     };
     const showModal = (id) => {
-        console.log(id);
+        
         setItemId(id);
         setModalOpen(true);
     };
-    console.log(modalOpen);
+    
     const handleOk = () => {
         setModalOpen(false);
         Swal.fire({

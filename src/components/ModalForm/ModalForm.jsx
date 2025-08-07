@@ -38,7 +38,6 @@ const ModalForm = ({
             });
 
             api.getPolarizations().then((res) => {
-                console.log(res);
                 setPolarizations(res);
             });
         }
