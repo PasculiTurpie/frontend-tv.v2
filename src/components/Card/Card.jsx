@@ -64,8 +64,7 @@ const Card = () => {
     const indexOfLastCard = currentPage * cardsPerPage;
     const indexOfFirstCard = indexOfLastCard - cardsPerPage;
     const currentCards = signalTv.slice(indexOfFirstCard, indexOfLastCard);
-
-    console.log(currentCards)
+    
 
     const paginate = (pageNumber) => setCurrentPage(pageNumber);
     const nextPage = () => setCurrentPage((prev) => Math.min(prev + 1, totalPages));
@@ -74,8 +73,7 @@ const Card = () => {
     const tipoTv = signalTv.filter(currentCard => currentCard.tipoServicio === 'TV').length
     const tipoRadio = signalTv.filter(currentCard => currentCard.tipoServicio === 'Radio').length
     const element = signalTv.filter(current => current.tipoServicio === '')
-
-    console.log(element)
+    
 
     return (
         <>

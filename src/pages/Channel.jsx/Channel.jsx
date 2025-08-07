@@ -24,17 +24,9 @@ const Channel = () => {
 
     const getTipoTech = () => {
         api.getTipoTech().then((res) => {
-            console.log(res.data);
             setTipoTechs(res.data);
         });
     };
-    /* const getContactos = () => {
-    api.getContact()
-      .then((res) => {
-        console.log(res.data)
-        setContactos(res.data)
-    })
-  } */
 
     const refreshList = () => {
         getTipoTech();
@@ -75,7 +67,6 @@ const Channel = () => {
                     onSubmit={async (values, { resetForm }) => {
                         try {
                             const response = await api.createSignal(values);
-                            console.log(response);
                             Swal.fire({
                                 title: "Contacto guardado exitosamente",
                                 icon: "success",
@@ -85,7 +76,6 @@ const Channel = () => {
                             });
                             resetForm();
                         } catch (error) {
-                            console.log(error);
                             Swal.fire({
                                 title: "Error",
                                 icon: "error",

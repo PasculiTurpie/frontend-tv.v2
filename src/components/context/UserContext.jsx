@@ -13,11 +13,9 @@ export const UserProvider = ({ children }) => {
   const checkAuth = async () => {
     try {
       const res = await api.profile();
-      console.log("Perfil cargado:", res);
       setUser(res);
       setIsAuth(true);
     } catch (error) {
-      console.error("Error autenticando:", error);
       setUser(null);
       setIsAuth(false);
     } finally {
