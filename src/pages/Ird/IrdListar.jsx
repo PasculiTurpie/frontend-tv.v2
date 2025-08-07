@@ -14,13 +14,13 @@ const IrdListar = () => {
     const getAllIrds = () => {
         api.getIrd()
             .then((res) => {
-                console.log(res.data);
+                 
                 setIrd(res.data);
                 setIsLoading(false);
             })
             .catch((error) => {
-                console.log(error);
-                console.log(`Error: ${error.message}`);
+                 
+                 
                 Swal.fire({
                     icon: "error",
                     title: "Oops...",
@@ -70,7 +70,7 @@ const IrdListar = () => {
         }
     };
     const showModal = (id) => {
-        console.log(id);
+         
         setItemId(id);
         setModalOpen(true);
     };

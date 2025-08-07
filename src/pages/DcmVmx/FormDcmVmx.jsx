@@ -49,7 +49,7 @@ const FormDcmVmx = () => {
                     onSubmit={async (values, { resetForm }) => {
                         try {
                             const response = await api.createDcmVmx(values);
-                            console.log(response);
+                             
                             Swal.fire({
                                 title: "DCM VMX guardado exitosamente",
                                 icon: "success",
@@ -60,7 +60,7 @@ const FormDcmVmx = () => {
                             });
                             resetForm();
                         } catch (error) {
-                            console.log(error);
+                             
                             Swal.fire({
                                 title: "Error",
                                 icon: "error",

@@ -14,13 +14,13 @@ const ListarDcm = () => {
     const getAllDcm = () => {
         api.getDcm()
             .then((res) => {
-                console.log(res.data);
+                 
                 setDcms(res.data);
                 setIsLoading(false);
             })
             .catch((error) => {
-                console.log(error);
-                console.log(`Error: ${error.message}`);
+                 
+                 
                 Swal.fire({
                     icon: "error",
                     title: "Oops...",
@@ -38,7 +38,7 @@ const ListarDcm = () => {
         getAllDcm();
     };
     const deleteEquipmentDcm = async (id) => {
-        console.log(id);
+         
         const result = await Swal.fire({
             title: "¿Estás seguro de eliminar el registro?",
             text: "¡No podrás revertir esto!",
@@ -52,7 +52,7 @@ const ListarDcm = () => {
         if (result.isConfirmed) {
             try {
                 await api.deleteDcm(id);
-                console.log(id);
+                 
                 refreshList(); // Refresca la lista después de confirmar
                 await Swal.fire({
                     title: "¡Eliminado!",
@@ -70,11 +70,11 @@ const ListarDcm = () => {
         }
     };
     const showModal = (id) => {
-        console.log(id);
+         
         setItemId(id);
         setModalOpen(true);
     };
-    console.log(modalOpen)
+     
     const handleOk = () => {
         setModalOpen(false);
         Swal.fire({

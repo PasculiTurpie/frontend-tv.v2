@@ -16,13 +16,13 @@ const ListarSwitch = () => {
   const getAllSwitches = () => {
     api.getSwitch()
       .then((res) => {
-        console.log(res.data);
+         
         setSwitches(res.data);
         setIsLoading(false);
       })
       .catch((error) => {
-        console.log(error);
-        console.log(`Error: ${error.message}`);
+         
+         
         Swal.fire({
           icon: "error",
           title: "Oops...",
@@ -41,7 +41,7 @@ const ListarSwitch = () => {
   };
 
   const deleteEquipmentSwitch = async (id) => {
-    console.log(id);
+     
     const result = await Swal.fire({
       title: "¿Estás seguro de eliminar el registro?",
       text: "¡No podrás revertir esto!",
@@ -55,7 +55,7 @@ const ListarSwitch = () => {
     if (result.isConfirmed) {
       try {
         await api.deleteSwitch(id);
-        console.log(id);
+         
         refreshList(); // Refresca la lista después de confirmar
         await Swal.fire({
           title: "¡Eliminado!",
@@ -73,11 +73,11 @@ const ListarSwitch = () => {
     }
   };
   const showModal = (id) => {
-    console.log(id);
+     
     setItemId(id);
     setModalOpen(true);
   };
-  console.log(modalOpen)
+   
   const handleOk = () => {
     setModalOpen(false);
     Swal.fire({

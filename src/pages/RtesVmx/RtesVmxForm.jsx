@@ -43,7 +43,7 @@ const RtesVmxForm = () => {
                     onSubmit={async (values, { resetForm }) => {
                         try {
                             const response = await api.createRtesVmx(values);
-                            console.log(response);
+                             
                             Swal.fire({
                                 title: "Rtes Vmx guardado exitosamente",
                                 icon: "success",
@@ -53,7 +53,7 @@ const RtesVmxForm = () => {
                             });
                             resetForm();
                         } catch (error) {
-                            console.log(error);
+                             
                             Swal.fire({
                                 title: "Error",
                                 icon: "error",

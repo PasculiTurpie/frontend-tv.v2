@@ -72,6 +72,6 @@ const dataFlow = {
     ],
 };
 
-console.log(dataFlow);
+ 
 
 export default dataFlow;

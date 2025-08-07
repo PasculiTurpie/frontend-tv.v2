@@ -49,7 +49,7 @@ const FormSwitch = ({
                     onSubmit={async (values, { resetForm }) => {
                         try {
                             const response = await api.createSwitch(values);
-                            console.log(response);
+                             
                             Swal.fire({
                                 title: "Switch guardado exitosamente",
                                 icon: "success",
@@ -60,7 +60,7 @@ const FormSwitch = ({
                             });
                             resetForm();
                         } catch (error) {
-                            console.log(error);
+                             
                             Swal.fire({
                                 title: "Error",
                                 icon: "error",

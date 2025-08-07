@@ -77,7 +77,7 @@ const IrdForm = () => {
                     onSubmit={async (values, { resetForm }) => {
                         try {
                             const response = await api.createIrd(values);
-                            console.log(response);
+                             
                             Swal.fire({
                                 title: "Ird guardado exitosamente",
                                 icon: "success",
@@ -88,7 +88,7 @@ const IrdForm = () => {
                             });
                             resetForm();
                         } catch (error) {
-                            console.log(error);
+                             
                             Swal.fire({
                                 title: "Error",
                                 icon: "error",

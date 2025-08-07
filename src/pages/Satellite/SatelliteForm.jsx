@@ -28,7 +28,7 @@ const SatelliteForm = () => {
     useEffect(() => {
         api.getPolarizations()
             .then((response) => {
-                console.log(response);
+                 
                 setPolarizations(response);
             })
             .catch((error) => {
@@ -36,7 +36,7 @@ const SatelliteForm = () => {
             });
     }, []);
 
-    console.log(polarizations);
+     
     return (
         <>
             <div className="outlet-main">
@@ -66,7 +66,7 @@ const SatelliteForm = () => {
                         try {
                             // Enviar los datos a la API
                             const response = await api.createSatelite(values);
-                            console.log(response);
+                             
                             // Obtener nombre de la polarización
                             const selectedPolarization = polarizations.find(
                                 (p) => p._id === values.satelliteType
@@ -88,7 +88,7 @@ const SatelliteForm = () => {
                                 nameInputRef.current?.focus();
                             });
                         } catch (error) {
-                            console.log(error);
+                             
                             Swal.fire({
                                 title: "Error",
                                 icon: "error",

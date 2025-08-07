@@ -18,7 +18,7 @@ const SignalContact = () => {
 
     const getAllSignal = () => {
         api.getSignal().then((res) => {
-            console.log(res.data)
+             
             const optSignal = res.data.map(signal => {
     const label = signal.nameChannel
         ? `${signal.nameChannel} ${signal.tipoTecnologia ? signal.tipoTecnologia.toUpperCase() : ''}`

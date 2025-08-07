@@ -25,9 +25,9 @@ const ModalSwitch = ({ itemId,
 
   useEffect(() => {
     if (itemId) {
-      console.log(itemId);
+       
       api.getIdSwitch(itemId).then((res) => {
-        console.log(res.data);
+         
         setDataSwitchs(res.data);
       });
     }
@@ -49,7 +49,7 @@ const ModalSwitch = ({ itemId,
         onSubmit={async (values, { resetForm }) => {
           try {
             await api.updateSwitch(itemId, values);
-            console.log(values);
+             
             Swal.fire({
               icon: "success",
               title: "Equipo actualizado",

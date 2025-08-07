@@ -33,9 +33,9 @@ const ModalDcmVmx = ({
 
     useEffect(() => {
         if (itemId) {
-            console.log(itemId);
+             
             api.getIdDcmVmx(itemId).then((res) => {
-                console.log(res.data);
+                 
                 setDataDcmVmx(res.data);
             });
         }
@@ -57,7 +57,7 @@ const ModalDcmVmx = ({
                 onSubmit={async (values, { resetForm }) => {
                     try {
                         await api.updateDcmVmx(itemId, values);
-                        console.log(values);
+                         
                         Swal.fire({
                             icon: "success",
                             title: "Equipo actualizado",

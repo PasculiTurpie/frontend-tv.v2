@@ -31,9 +31,9 @@ const RtesVmxModal = ({
 
     useEffect(() => {
         if (itemId) {
-            console.log(itemId);
+             
             api.getIdRtesVmx(itemId).then((res) => {
-                console.log(res.data);
+                 
                 setDataRtesVmx(res.data);
             });
         }
@@ -54,7 +54,7 @@ const RtesVmxModal = ({
                 onSubmit={async (values, { resetForm }) => {
                     try {
                         await api.updateRtesVmx(itemId, values);
-                        console.log(values);
+                         
                         Swal.fire({
                             icon: "success",
                             title: "Equipo actualizado",

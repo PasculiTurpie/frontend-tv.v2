@@ -59,7 +59,7 @@ const RegisterUser = () => {
                 }}
                 validationSchema={RegisterSchema}
                 onSubmit={async (values, { resetForm }) => {
-                    console.log(values);
+                     
                     try {
                         await api.createUser(values)
                         Swal.fire({
@@ -76,7 +76,7 @@ const RegisterUser = () => {
                             text: `${error.response.data.message}`,
                             footer: `${values.email}`,
                         });
-                        console.log(error.response);
+                         
                     }
                 }}
             >

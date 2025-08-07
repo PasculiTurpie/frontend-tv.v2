@@ -15,12 +15,12 @@ const ListarUsers = () => {
     const getAllUsers = () => {
         api.getUserInfo()
             .then((response) => {
-                console.log(response);
+                 
                 setUsers(response);
                 setIsLoading(false);
             })
             .catch((error) => {
-                console.log(`${error}`);
+                 
                 Swal.fire({
                     icon: "error",
                     title: "Oops...",
@@ -71,7 +71,7 @@ const ListarUsers = () => {
     };
 
     const showModal = (id) => {
-        console.log(id);
+         
         setItemId(id);
         setModalOpen(true);
     };

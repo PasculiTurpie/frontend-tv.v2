@@ -18,13 +18,13 @@ const ListEquipment = () => {
     const getAllEquipos = () => {
         api.getEquipo()
             .then((res) => {
-                console.log(res.data);
+               
                 setEquipos(res.data);
                 setIsLoading(false);
             })
             .catch((error) => {
-                console.log(error);
-                console.log(`Error: ${error.message}`);
+                 
+                 
                 Swal.fire({
                     icon: "error",
                     title: "Oops...",
@@ -41,9 +41,9 @@ const ListEquipment = () => {
     const refreshList = () => {
         getAllEquipos();
     };
-    console.log(equipos);
+     
     const deleteEquipment = async (id) => {
-        console.log(id);
+         
         const result = await Swal.fire({
             title: "¿Estás seguro de eliminar el registro?",
             text: "¡No podrás revertir esto!",
@@ -57,7 +57,7 @@ const ListEquipment = () => {
         if (result.isConfirmed) {
             try {
                 await api.deleteEquipo(id);
-                console.log(id);
+                 
                 refreshList(); // Refresca la lista después de confirmar
                 await Swal.fire({
                     title: "¡Eliminado!",
@@ -75,11 +75,11 @@ const ListEquipment = () => {
         }
     };
     const showModal = (id) => {
-        console.log(id);
+         
         setItemId(id);
         setModalOpen(true);
     };
-    console.log(modalOpen);
+     
     const handleOk = () => {
         setModalOpen(false);
         Swal.fire({

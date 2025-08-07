@@ -6,7 +6,7 @@ const NotFound = () => {
 
     let err = new Error("Objeto no encontrado"); // crea un error estándar con el texto "Objeto no encontrado"
     err.name = "NotFoundError"; // cambia el nombre del error a "NotFoundError"
-    console.log(err.name); // asegúrate de que el nuevo nombre se almacene dentro del objeto error
+      // asegúrate de que el nuevo nombre se almacene dentro del objeto error
 
     return (
         <div className="flex flex-col items-center justify-center min-h-screen bg-black text-white text-center px-4">

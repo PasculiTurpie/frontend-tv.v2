@@ -27,9 +27,9 @@ const ModalContacto = ({
 
     useEffect(() => {
         if (itemId) {
-            console.log(itemId);
+             
             api.getIdContact(itemId).then((res) => {
-                console.log(res.data);
+                 
                 setDataContact(res.data);
             });
         }
@@ -48,7 +48,7 @@ const ModalContacto = ({
                 onSubmit={async (values, { resetForm }) => {
                     try {
                         await api.updateContact(itemId, values);
-                        console.log(values);
+                         
                         Swal.fire({
                             icon: "success",
                             title: "Contacto actualizado",

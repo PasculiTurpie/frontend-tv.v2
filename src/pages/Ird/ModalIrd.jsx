@@ -50,9 +50,9 @@ const ModalIrd = ({ itemId, modalOpen, setModalOpen, title, refreshList }) => {
 
     useEffect(() => {
         if (itemId) {
-            console.log(itemId);
+             
             api.getIdIrd(itemId).then((res) => {
-                console.log(res.data)
+                 
                 setDataIrd(res.data);
             });
         }
@@ -88,7 +88,7 @@ const ModalIrd = ({ itemId, modalOpen, setModalOpen, title, refreshList }) => {
             onSubmit={async (values, { resetForm }) => {
                 try {
                     await api.updateIrd(itemId, values);
-                    console.log(values)
+                     
                     Swal.fire({
                         icon: "success",
                         title: "Equipo actualizado",

@@ -44,7 +44,7 @@ const FormDcm = () => {
                     onSubmit={async (values, { resetForm }) => {
                         try {
                             const response = await api.createDcm(values);
-                            console.log(response);
+                             
                             Swal.fire({
                                 title: "Dcm guardado exitosamente",
                                 icon: "success",
@@ -55,7 +55,7 @@ const FormDcm = () => {
                             });
                             resetForm();
                         } catch (error) {
-                            console.log(error);
+                             
                             Swal.fire({
                                 title: "Error",
                                 icon: "error",

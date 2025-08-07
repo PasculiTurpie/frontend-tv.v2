@@ -51,7 +51,7 @@ const FormEncoderTitan = () => {
                     onSubmit={async (values, { resetForm }) => {
                         try {
                             const response = await api.createTitan(values);
-                            console.log(response);
+                             
                             Swal.fire({
                                 title: "Titan guardado exitosamente",
                                 icon: "success",
@@ -62,7 +62,7 @@ const FormEncoderTitan = () => {
                             });
                             resetForm();
                         } catch (error) {
-                            console.log(error);
+                             
                             Swal.fire({
                                 title: "Error",
                                 icon: "error",

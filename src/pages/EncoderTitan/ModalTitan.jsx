@@ -40,9 +40,9 @@ const ModalTitan = ({
 
     useEffect(() => {
         if (itemId) {
-            console.log(itemId);
+             
             api.getIdTitan(itemId).then((res) => {
-                console.log(res.data);
+                 
                 setDataTitans(res.data);
             });
         }
@@ -63,7 +63,7 @@ const ModalTitan = ({
                 onSubmit={async (values, { resetForm }) => {
                     try {
                         await api.updateTitan(itemId, values);
-                        console.log(values);
+                         
                         Swal.fire({
                             icon: "success",
                             title: "Equipo actualizado",

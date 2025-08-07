@@ -20,9 +20,9 @@ const ModalDcm = ({ itemId, modalOpen, setModalOpen, title, refreshList }) => {
 
     useEffect(() => {
         if (itemId) {
-            console.log(itemId);
+             
             api.getIdDcm(itemId).then((res) => {
-                console.log(res.data);
+                 
                 setDataDcm(res.data);
             });
         }
@@ -43,7 +43,7 @@ const ModalDcm = ({ itemId, modalOpen, setModalOpen, title, refreshList }) => {
                 onSubmit={async (values, { resetForm }) => {
                     try {
                         await api.updateDcm(itemId, values);
-                        console.log(values);
+                         
                         Swal.fire({
                             icon: "success",
                             title: "Equipo actualizado",

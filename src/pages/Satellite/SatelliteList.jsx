@@ -15,13 +15,13 @@ export const SatelliteList = () => {
     const getAllSatellites = () => {
         api.getSatellites()
             .then((response) => {
-                console.log(response.data);
+                 
                 setSatellites(response);
                 setIsLoading(false); // <- mover aquí
             })
             .catch((error) => {
-                console.log(error);
-                console.log(`Error: ${error.response.data.message}`);
+                 
+                 
                 Swal.fire({
                     icon: "error",
                     title: "Oops...",
@@ -72,7 +72,7 @@ export const SatelliteList = () => {
     };
 
     const showModal = (id) => {
-        console.log(id);
+         
         setItemId(id);
         setIsModalOpen(true);
     };
