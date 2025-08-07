@@ -87,7 +87,7 @@ const Card = () => {
                 </p>
             ) : (
                 <div className="card__layout">
-                            <h3>Total de señales: {totalCards}, {tipoTv} TV y {tipoRadio} Radios</h3>
+                            <h3>{totalCards} señales en total, {tipoTv} TV y {tipoRadio} Radios</h3>
 
                     <div className="card__grid">
                         {currentCards.map((signalItem, index) => {

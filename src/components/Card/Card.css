@@ -8,6 +8,11 @@
     /* Espacio entre cards */
     margin-top     : 20px;
 }
+.card__layout{
+    display: contents;
+    border: 1px solid red;
+    margin: auto;
+}
 
 /* Tus cards */
 /* Por defecto (pantallas pequeñas), ancho completo (1 columna) */
