@@ -13,6 +13,12 @@
     flex-direction: column;
     margin: auto;
 }
+.loader__charge{
+    display: flex;
+    width: 100%;
+    height: fit-content;
+    justify-content: center;
+}
 
 
 .card__container {

@@ -78,7 +78,9 @@ const Card = () => {
     return (
         <>
             {isLoading ? (
-                <Loader message="Cargando y conectando con el servidor..." />
+                <div className="loader__charge">
+                    <Loader message="Cargando y conectando con el servidor..." />
+                </div>
             ) : hasError ? (
                 <p className="error__data">
                     No se encuentran datos. Comuníquese con el administrador.
