@@ -7,13 +7,15 @@ const ChannelDiagram = () => {
   const [edges, setEdges] = useState([]);
 
   useEffect(() => {
-    fetch("http://localhost:3000/api/v2/channels")
+    fetch("http://localhost:3000/api/v2/channels/6895a986cf17676e18566d08")
       .then((res) => res.json())
+
       .then((data) => {
-        if (data.length > 0) {
+        console.log(data)
+        if (data) {
           // Tomamos el primer canal para mostrar
-          setNodes(data[0].nodes);
-          setEdges(data[0].edges);
+          setNodes(data.nodes);
+          setEdges(data.edges);
         }
       })
       .catch(console.error);
