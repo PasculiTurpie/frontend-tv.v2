@@ -87,7 +87,7 @@ const Sidebar = () => {
           Topología de Señal
         </p>
         <li>
-          <Link to="/nodo">Nodo</Link>
+          <Link to="/channel-form">Crear topología</Link>
         </li>
         <li>
           <Link to="/channel-editor">Editar</Link>

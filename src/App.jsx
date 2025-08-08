@@ -93,8 +93,8 @@ const App = () => {
                             path="/switch-listar"
                             element={<ListarSwitch />}
                         />
-                        <Route path="/diagram" element={<ChannelDiagram />} />
-                        <Route path="/nodo" element={<ChannelForm />} />
+                        
+                        
                         <Route path="/nodo-listar" element={<NodoListar />} />
                         <Route path="/channel" element={<Channel />} />
                         <Route path="/channel-list" element={<ChannelList />} />
@@ -113,7 +113,9 @@ const App = () => {
                             element={<SignalContact />}
                         />
                     </Route>
-                    <Route path="channel-editor" element={<ChannelEditor />} />
+                    <Route path="/channel-form" element={<ChannelForm />} />
+                    <Route path="/channel-editor" element={<ChannelEditor />} />
+                    <Route path="/diagram" element={<ChannelDiagram />} />
                 </Route>
                 <Route path="*" element={<NotFound />} />
             </Routes>
