@@ -90,7 +90,7 @@ const Sidebar = () => {
           <Link to="/nodo">Nodo</Link>
         </li>
         <li>
-          <Link to="/link">Enlace</Link>
+          <Link to="/channel-editor">Editar</Link>
         </li>
         <li>
           <Link to="/diagram">Diagrama</Link>

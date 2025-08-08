@@ -37,6 +37,9 @@ import SignalContact from "./pages/SignalContact/SignalContact";
 import ScrollToTop from "./components/ScrollToTop/ScrollToTop";
 import SearchFilter from "./components/SearchFilter/SearchFilter";
 import Profile from "./pages/Profile/Profile";
+import ChannelDiagram from "./pages/ChannelDiagram/ChannelDiagram";
+import ChannelForm from "./pages/ChannelDiagram/ChannelForm";
+import ChannelEditor from "./pages/ChannelDiagram/ChannelEditor";
 
 const App = () => {
     return (
@@ -90,8 +93,8 @@ const App = () => {
                             path="/switch-listar"
                             element={<ListarSwitch />}
                         />
-                        <Route path="/diagram" element={<Diagram />} />
-                        <Route path="/nodo" element={<Nodo />} />
+                        <Route path="/diagram" element={<ChannelDiagram />} />
+                        <Route path="/nodo" element={<ChannelForm />} />
                         <Route path="/nodo-listar" element={<NodoListar />} />
                         <Route path="/channel" element={<Channel />} />
                         <Route path="/channel-list" element={<ChannelList />} />
@@ -110,6 +113,7 @@ const App = () => {
                             element={<SignalContact />}
                         />
                     </Route>
+                    <Route path="channel-editor" element={<ChannelEditor />} />
                 </Route>
                 <Route path="*" element={<NotFound />} />
             </Routes>
