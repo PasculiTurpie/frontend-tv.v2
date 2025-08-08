@@ -93,8 +93,8 @@ const dataFlow = {
             type: "step",
             label: "Entrada A",
             labelPosition: "start",
-            style: { stroke: "red" },
             animated: true,
+            style: { stroke: "red" },
             markerEnd: {
                 type: MarkerType.ArrowClosed,
                 width: 20, // Opcional: ancho de la flecha

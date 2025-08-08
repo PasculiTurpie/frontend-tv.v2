@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import ReactFlow from "reactflow";
+import ReactFlow, { Background, Controls } from "reactflow";
 import "reactflow/dist/style.css";
 
 const ChannelDiagram = () => {
@@ -7,7 +7,7 @@ const ChannelDiagram = () => {
   const [edges, setEdges] = useState([]);
 
   useEffect(() => {
-    fetch("http://localhost:3000/api/v2/channels/6895a986cf17676e18566d08")
+    fetch("http://localhost:3000/api/v2/channels/6895bf14594b35926e20d2ea")
       .then((res) => res.json())
 
       .then((data) => {
@@ -22,8 +22,12 @@ const ChannelDiagram = () => {
   }, []);
 
   return (
-    <div style={{ width:600, height: 600 }}>
-      <ReactFlow nodes={nodes} edges={edges} />
+    <div style={{ width:"80%", height: 600 }}>
+      <ReactFlow nodes={nodes} edges={edges} >
+        <Controls />
+          <Background />
+      </ReactFlow>
+      <h2>Detalle</h2>
     </div>
   );
 }
