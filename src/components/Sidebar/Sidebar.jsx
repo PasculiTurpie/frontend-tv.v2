@@ -51,24 +51,6 @@ const Sidebar = () => {
         <li>
           <Link to="/ird">Encoder Ird</Link>
         </li>
-        {/* <li>
-          <Link to="/dcm">Dcm</Link>
-        </li>
-        <li>
-          <Link to="/titan">Encoder Titan</Link>
-        </li>
-        <li>
-          <Link to="/dcmVmx">Dcm Vmx</Link>
-        </li>
-        <li>
-          <Link to="/rtesVmx">Rtes Vmx</Link>
-        </li>
-        <li>
-          <Link to="/switch">Switch</Link>
-        </li>
-        <li>
-          <Link to="/router">Router</Link>
-        </li> */}
         <hr />
         <p className="nodo">
           Canal

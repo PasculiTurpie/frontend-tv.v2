@@ -1,18 +1,21 @@
 import React, { useEffect, useState } from "react";
 import ReactFlow, { Background, Controls } from "reactflow";
 import "reactflow/dist/style.css";
+import api from '../../utils/api'
+import { useParams } from "react-router-dom";
 
 const ChannelDiagram = () => {
   const [nodes, setNodes] = useState([]);
   const [edges, setEdges] = useState([]);
   const [signal, setSignal] = useState({})
+  const { id } = useParams();
+
+  console.log(id)
 
   useEffect(() => {
-    fetch("http://localhost:3000/api/v2/channels/6895bf14594b35926e20d2ea")
-      .then((res) => res.json())
-
+    api.getChannelDiagramById(id)
       .then((data) => {
-        console.log(data)
+        console.log(data.data)
         setSignal(data)
         if (data) {
           // Tomamos el primer canal para mostrar

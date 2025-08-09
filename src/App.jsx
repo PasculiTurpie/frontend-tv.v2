@@ -115,7 +115,7 @@ const App = () => {
                     </Route>
                     <Route path="/channel-form" element={<ChannelForm />} />
                     <Route path="/channel-editor" element={<ChannelEditor />} />
-                    <Route path="/diagram" element={<ChannelDiagram />} />
+                    <Route path="/channels/:id" element={<ChannelDiagram />} />
                 </Route>
                 <Route path="*" element={<NotFound />} />
             </Routes>

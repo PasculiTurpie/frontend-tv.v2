@@ -28,7 +28,8 @@ const DetailCard = () => {
     
 
     const handleClickDiagram = () => {
-        navigate(`/diagrama/${id}`);
+        console.log(id)
+        navigate(`/channels/${id}`);
     };
     const handleBackSubmit = () => {
         navigate(-1);

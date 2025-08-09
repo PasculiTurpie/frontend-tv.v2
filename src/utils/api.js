@@ -12,15 +12,15 @@ class Api {
 
     /*LOGIN & LOGOUT */
 
-    login(values){
-        return this._axios.post("/auth/login", values).then((res) => res.data)
+    login(values) {
+        return this._axios.post("/auth/login", values).then((res) => res.data);
     }
-    logout(){
-        return this._axios.post("/auth/logout").then((res) => res.data)
+    logout() {
+        return this._axios.post("/auth/logout").then((res) => res.data);
     }
 
-    profile(){
-        return this._axios.get("/auth/profile").then((res) => res.data)
+    profile() {
+        return this._axios.get("/auth/profile").then((res) => res.data);
     }
 
     /* Rutas para gestión de usuarios */
@@ -274,7 +274,17 @@ class Api {
     updateTipoTech(id, values) {
         return this._axios.put(`/tecnologia/${id}`, values).then((res) => res);
     }
+
+    /*Rutas para gestión ChannelDiagram*/
+
+    getChannelDiagramById(id) {
+        return this._axios.get(`/channels/${id}`).then((res) => res);
+    }
+    getChannelDiagram() {
+        return this._axios.get(`/channels`).then((res) => res);
+    }
 }
+
 
 const api = new Api("http://localhost:3000/api/v2");
 
