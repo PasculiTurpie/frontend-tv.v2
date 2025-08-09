@@ -15,12 +15,12 @@ const ChannelDiagram = () => {
   useEffect(() => {
     api.getChannelDiagramById(id)
       .then((data) => {
-        console.log(data.data)
-        setSignal(data)
-        if (data) {
+        const result = (data.data)
+        setSignal(result)
+        if (result) {
           // Tomamos el primer canal para mostrar
-          setNodes(data.nodes);
-          setEdges(data.edges);
+          setNodes(result.nodes);
+          setEdges(result.edges);
         }
       })
       .catch(console.error);

@@ -11,6 +11,7 @@ const DetailCard = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const [contacts, setContacts] = useState([]);
+    const [onlyDataChannel, setOnlyDataChannel] = useState([]);
 
     const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -20,17 +21,26 @@ const DetailCard = () => {
     useEffect(() => {
         api.getIdSignal(id).then((response) => {
             setDetailCard(response.data);
-            
             setContacts(response.data.contact);
         });
     }, []);
 
-    
-
     const handleClickDiagram = () => {
-        console.log(id)
-        navigate(`/channels/${id}`);
+        api.getChannelDiagram()
+            .then((res) => {
+                const foundChannel = res.data.find(item => item.signal._id === id);
+
+                if (foundChannel) {
+                    navigate(`/channels/${foundChannel._id}`);
+                } else {
+                    console.warn(`No se encontró un canal con signal._id = ${id}`);
+                }
+            })
+            .catch(err => {
+                console.error("Error obteniendo el diagrama:", err);
+            });
     };
+
     const handleBackSubmit = () => {
         navigate(-1);
     };
@@ -59,21 +69,29 @@ const DetailCard = () => {
                     <div className="card__detail-numbers">
                         <span>
                             <strong>Norte:</strong>{" "}
-                            <span className="card__detail-info">{DetailCard.numberChannelCn}</span>
+                            <span className="card__detail-info">
+                                {DetailCard.numberChannelCn}
+                            </span>
                         </span>
                         <span>
                             <strong>Sur:</strong>{" "}
-                            <span className="card__detail-info">{DetailCard.numberChannelSur}</span>
+                            <span className="card__detail-info">
+                                {DetailCard.numberChannelSur}
+                            </span>
                         </span>
                     </div>
                     <div className="card__detail-numbers">
                         <span>
                             <strong>Tecnología:</strong>{" "}
-                            <span className="card__detail-info">{DetailCard.tipoTecnologia}</span>
+                            <span className="card__detail-info">
+                                {DetailCard.tipoTecnologia}
+                            </span>
                         </span>
                         <span>
                             <strong>Severidad:</strong>{" "}
-                            <span className="card__detail-info">{DetailCard.severidadChannel}</span>
+                            <span className="card__detail-info">
+                                {DetailCard.severidadChannel}
+                            </span>
                         </span>
                     </div>
 

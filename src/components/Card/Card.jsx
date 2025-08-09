@@ -13,13 +13,25 @@ const Card = () => {
     const [hasError, setHasError] = useState(false);
     const [imageLoading, setImageLoading] = useState({});
     const [currentPage, setCurrentPage] = useState(1);
+    
     const cardsPerPage = 12;
+
+    const getChannels = () => {
+        api.getChannelDiagram()
+            .then((res) => {
+                const data = res.data
+                const signalsArray = data.map(item => item.signal);
+            
+        })
+    }
 
     const getAllSignal = async () => {
         try {
-            const response = await api.getSignal();
-            if (response.data.length > 0) {
-                const sortedData = response.data.sort((a, b) => {
+            const res = await api.getChannelDiagram();
+            const data = res.data
+            const signalsArray = data.map(item => item.signal);
+            if (signalsArray.length > 0) {
+                const sortedData = signalsArray.sort((a, b) => {
                     const numA = Number(a.numberChannelSur);
                     const numB = Number(b.numberChannelSur);
                     return numA - numB;
@@ -40,11 +52,14 @@ const Card = () => {
 
     useEffect(() => {
         getAllSignal();
+        getChannels()
     }, []);
 
     const handleClick = (e) => {
         const card = e.target.closest(".card__container");
+        console.log(card?.dataset.id)
         const id = card?.dataset.id;
+        console.log(id)
         if (id) {
             navigate(`/signal/${id}`);
         }

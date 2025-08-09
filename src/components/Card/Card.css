@@ -1,6 +1,7 @@
 
 .card__grid {
     display        : flex;
+    width: 100%;
     flex-wrap      : wrap;
     justify-content: center;
     gap            : 20px;
@@ -9,6 +10,7 @@
 
 .card__layout{
     display: flex;
+    width: 100%;
     align-items: center;
     flex-direction: column;
     margin: auto;
