@@ -31,7 +31,7 @@ const ChannelDiagram = () => {
   }
 
   return (
-    <div style={{ width:"80%", height: 600 }} >
+    <div className="outlet-main" style={{ width:"80%", height: 600 }} >
     <h2>{signal.signal?.nameChannel}</h2>
       <ReactFlow nodes={nodes} edges={edges} onClick={handleClickElements} >
         <Controls />

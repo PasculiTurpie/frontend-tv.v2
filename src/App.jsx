@@ -24,8 +24,6 @@ import RtesVmxListar from "./pages/RtesVmx/RtesVmxListar";
 import RtesVmxForm from "./pages/RtesVmx/RtesVmxForm";
 import FormSwitch from "./pages/Switch/FormSwitch";
 import ListarSwitch from "./pages/Switch/ListarSwitch";
-import Diagram from "./components/Diagrama/Diagram";
-import Nodo from "./components/Nodo/Nodo";
 import NodoListar from "./components/Nodo/NodoListar";
 import Channel from "./pages/Channel.jsx/Channel";
 import ChannelList from "./pages/Channel.jsx/ChannelList";
@@ -36,10 +34,10 @@ import ContactoList from "./pages/Contacto/ContactoList";
 import SignalContact from "./pages/SignalContact/SignalContact";
 import ScrollToTop from "./components/ScrollToTop/ScrollToTop";
 import SearchFilter from "./components/SearchFilter/SearchFilter";
-import Profile from "./pages/Profile/Profile";
 import ChannelDiagram from "./pages/ChannelDiagram/ChannelDiagram";
 import ChannelForm from "./pages/ChannelDiagram/ChannelForm";
 import ChannelEditor from "./pages/ChannelDiagram/ChannelEditor";
+import ChannelListDiagram from "./pages/ChannelDiagram/ChannelListDiagram";
 
 const App = () => {
     return (
@@ -49,8 +47,6 @@ const App = () => {
                 <Route path="/" element={<Layout />}>
                     <Route index element={<Home />} />
                     <Route path="/auth/login" element={<Login />} />
-
-                    {/*                     <Route path="/profile" element={<Profile />} /> */}
                     <Route path="/search" element={<SearchFilter />} />
                     <Route path="/signal/:id" element={<DetailCard />} />
                     <Route path="/diagrama/:id" element={<Diagrama />} />
@@ -93,11 +89,19 @@ const App = () => {
                             path="/switch-listar"
                             element={<ListarSwitch />}
                         />
-                        
+                        <Route path="/channel-form" element={<ChannelForm />} />
+                        <Route path="/channel-editor" element={<ChannelEditor />} />
+                        <Route path="/channels/:id" element={<ChannelDiagram />} />
                         
                         <Route path="/nodo-listar" element={<NodoListar />} />
                         <Route path="/channel" element={<Channel />} />
                         <Route path="/channel-list" element={<ChannelList />} />
+                        <Route path="/channel_diagram-list" element={<ChannelListDiagram />} />
+                        {/* Crear */}
+                        <Route path="/channels/new" element={<ChannelForm />} />
+
+                        {/* Editar */}
+                        <Route path="/channels/:id" element={<ChannelDiagram />} />
                         <Route path="/equipment" element={<Equipment />} />
                         <Route
                             path="/equipment-list"
@@ -113,9 +117,7 @@ const App = () => {
                             element={<SignalContact />}
                         />
                     </Route>
-                    <Route path="/channel-form" element={<ChannelForm />} />
-                    <Route path="/channel-editor" element={<ChannelEditor />} />
-                    <Route path="/channels/:id" element={<ChannelDiagram />} />
+                   
                 </Route>
                 <Route path="*" element={<NotFound />} />
             </Routes>

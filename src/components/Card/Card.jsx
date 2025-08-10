@@ -105,12 +105,12 @@ const Card = () => {
                             <h3>{totalCards} señales en total, {tipoTv} TV y {tipoRadio} Radios</h3>
 
                     <div className="card__grid">
-                        {currentCards.map((signalItem, index) => {
+                        {currentCards.map((signalItem) => {
                             const isImgLoading = imageLoading[signalItem._id];
                             return (
                                 <div
                                     className="card__container"
-                                    key={index}
+                                    key={signalItem._id}
                                     data-id={signalItem._id}
                                     onClick={handleClick}
                                 >

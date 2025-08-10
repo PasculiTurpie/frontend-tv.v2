@@ -1,0 +1,39 @@
+.form__diagram{
+  box-shadow: 0 14px 28px rgba(0, 0, 0, 0.25),
+0 10px 10px rgba(0, 0, 0, 0.22);
+padding:30px;
+}
+.error{
+  color:red;
+  font-weight: none;
+}
+
+.form__group-node{
+  display:grid;
+  grid-template-columns:  repeat(2, 1fr);
+  grid-template-rows: repeat(2, auto);
+  gap:20px;
+  padding:20px 0px;
+}
+.select-width{
+  width: 100%;
+}
+.btn-primary {
+  background-color: #4db89b;
+}
+
+.btn-primary:hover {
+  background-color: #059669;
+}
+.button,
+.ant-btn {
+  padding      : 5px 8px;
+  color        : white;
+  border-radius: 5px;
+  cursor       : pointer;
+  transition   : background-color 0.2s ease-in-out;
+}
+.container__diagram{
+  width: 80%;
+  border:1px solid red;
+}

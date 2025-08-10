@@ -1,186 +1,382 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import { useParams, useNavigate, Link } from "react-router-dom";
+import { Formik, Form, Field, ErrorMessage } from "formik";
+import * as Yup from "yup";
+import Swal from "sweetalert2";
+import axios from "axios";
+import Select from "react-select";
+import "./ChannelDiagram.css";
+import api from "../../utils/api";
+
+const ChannelSchema = Yup.object().shape({
+    signal: Yup.string().required("La señal es obligatoria"),
+    nodeId: Yup.string(),
+    nodeLabel: Yup.string(),
+    nodeX: Yup.number(),
+    nodeY: Yup.number(),
+    edgeId: Yup.string(),
+    source: Yup.string(),
+    target: Yup.string(),
+});
 
 function ChannelForm() {
-  const [signal, setSignal] = useState("");
-  const [nodes, setNodes] = useState([]);
-  const [edges, setEdges] = useState([]);
+    const { id } = useParams();
+    const navigate = useNavigate();
 
-  // Para inputs temporales de nodo y edge
-  const [nodeInput, setNodeInput] = useState({ id: "", label: "", x: "", y: "" });
-  const [edgeInput, setEdgeInput] = useState({ id: "", source: "", target: "", label: "" });
+    const [optionsSignal, setOptionsSignal] = useState([]);
+    const [initialValues, setInitialValues] = useState({
+        signal: "",
+        nodes: [],
+        edges: [],
+        nodeId: "",
+        nodeLabel: "",
+        nodeX: "",
+        nodeY: "",
+        edgeId: "",
+        source: "",
+        target: "",
+        edgeLabel: "",
+    });
 
-  // Agregar nodo al array nodes
-  const addNode = () => {
-    if (!nodeInput.id || !nodeInput.label || nodeInput.x === "" || nodeInput.y === "") {
-      alert("Completa todos los campos del nodo");
-      return;
-    }
-    setNodes((prev) => [
-      ...prev,
-      {
-        id: nodeInput.id,
-        type: "default",
-        position: { x: Number(nodeInput.x), y: Number(nodeInput.y) },
-        data: { label: nodeInput.label },
-      },
-    ]);
-    setNodeInput({ id: "", label: "", x: "", y: "" });
-  };
+    useEffect(() => {
+        // Cargar opciones de señales
+        api.getSignal().then((res) => {
+            const opts = res.data.map((signal) => ({
+                value: signal._id,
+                label: signal.nameChannel
+                    ? `${signal.nameChannel} ${
+                          signal.tipoTecnologia?.toUpperCase() || ""
+                      }`
+                    : "Canal sin nombre",
+            }));
+            setOptionsSignal(opts);
+        });
 
-  // Agregar edge al array edges
-  const addEdge = () => {
-    if (!edgeInput.id || !edgeInput.source || !edgeInput.target) {
-      alert("Completa todos los campos del enlace");
-      return;
-    }
-    setEdges((prev) => [
-      ...prev,
-      {
-        id: edgeInput.id,
-        source: edgeInput.source,
-        target: edgeInput.target,
-        label: edgeInput.label,
-        type: "default",
-      },
-    ]);
-    setEdgeInput({ id: "", source: "", target: "", label: "" });
-  };
+        // Si hay ID, cargar channel para editar
+        if (id) {
+            axios
+                .get(`http://localhost:3000/api/v2/channels/${id}`)
+                .then(({ data }) => {
+                    setInitialValues({
+                        signal: data.signal?._id || "",
+                        nodes: data.nodes || [],
+                        edges: data.edges || [],
+                        nodeId: "",
+                        nodeLabel: "",
+                        nodeX: "",
+                        nodeY: "",
+                        edgeId: "",
+                        source: "",
+                        target: "",
+                        edgeLabel: "",
+                    });
+                })
+                .catch(() => {
+                    Swal.fire("Error", "No se pudo cargar el Channel", "error");
+                });
+        }
+    }, [id]);
 
-  // Enviar el Channel al backend
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!signal) {
-      alert("Ingresa el ID de la señal");
-      return;
-    }
-    if (nodes.length === 0) {
-      alert("Agrega al menos un nodo");
-      return;
-    }
+    return (
+        <div className="outlet-main" style={{ maxWidth: 600, margin: "auto" }}>
+            <nav aria-label="breadcrumb">
+                <ol className="breadcrumb">
+                    <li className="breadcrumb-item">
+                        <Link to="/channel_diagram-list">Listar</Link>
+                    </li>
+                    <li className="breadcrumb-item active" aria-current="page">
+                        Formulario
+                    </li>
+                </ol>
+            </nav>
+            <h2>{id ? "Editar Channel" : "Crear nuevo Channel"}</h2>
+            <Formik
+                enableReinitialize
+                initialValues={initialValues}
+                validationSchema={ChannelSchema}
+                onSubmit={async (values, { resetForm }) => {
+                    if (values.nodes.length === 0) {
+                        Swal.fire(
+                            "Error",
+                            "Debes agregar al menos un nodo",
+                            "error"
+                        );
+                        return;
+                    }
+                    try {
+                        if (id) {
+                            await axios.put(
+                                `http://localhost:3000/api/v2/channels/${id}`,
+                                {
+                                    signal: values.signal,
+                                    nodes: values.nodes,
+                                    edges: values.edges,
+                                }
+                            );
+                            Swal.fire(
+                                "Éxito",
+                                "Channel actualizado correctamente",
+                                "success"
+                            );
+                        } else {
+                            const res = await axios.post(
+                                "http://localhost:3000/api/v2/channels",
+                                {
+                                    signal: values.signal,
+                                    nodes: values.nodes,
+                                    edges: values.edges,
+                                }
+                            );
+                            Swal.fire(
+                                "Éxito",
+                                `Channel creado con ID: ${res.data._id}`,
+                                "success"
+                            );
+                        }
+                        resetForm();
+                        navigate("/channels");
+                    } catch (err) {
+                        Swal.fire(
+                            "Error",
+                            err.response?.data?.error ||
+                                "Error al guardar el Channel",
+                            "error"
+                        );
+                    }
+                }}
+            >
+                {({ values, setFieldValue }) => (
+                    <Form className="form__diagram">
+                        {/* Signal */}
+                        <label className="form__group-label">
+                            Nombre canal
+                        </label>
+                        <Select
+                            className="select-width"
+                            name="signal"
+                            options={optionsSignal}
+                            placeholder="Nombre canal"
+                            value={
+                                optionsSignal.find(
+                                    (opt) => opt.value === values.signal
+                                ) || null
+                            }
+                            onChange={(option) =>
+                                setFieldValue("signal", option.value)
+                            }
+                            isSearchable
+                        />
+                        <ErrorMessage
+                            name="signal"
+                            component="div"
+                            className="error"
+                        />
 
-    try {
-      const response = await fetch("http://localhost:3000/api/v2/channels", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ signal, nodes, edges }),
-      });
+                        <hr />
+                        {/* Nodos */}
+                        <h3>Agregar Nodo</h3>
+                        <div className="form__group-node">
+                            <div>
+                                <Field
+                                    className="form__group-input"
+                                    name="nodeId"
+                                    placeholder="ID Nodo"
+                                />
+                                <ErrorMessage
+                                    name="nodeId"
+                                    component="div"
+                                    className="error"
+                                />
+                            </div>
+                            <div>
+                                <Field
+                                    className="form__group-input"
+                                    name="nodeLabel"
+                                    placeholder="Label"
+                                />
+                                <ErrorMessage
+                                    name="nodeLabel"
+                                    component="div"
+                                    className="error"
+                                />
+                            </div>
+                            <div>
+                                <Field
+                                    className="form__group-input"
+                                    name="nodeX"
+                                    type="number"
+                                    placeholder="Pos X"
+                                />
+                                <ErrorMessage
+                                    name="nodeX"
+                                    component="div"
+                                    className="error"
+                                />
+                            </div>
+                            <div>
+                                <Field
+                                    className="form__group-input"
+                                    name="nodeY"
+                                    type="number"
+                                    placeholder="Pos Y"
+                                />
+                                <ErrorMessage
+                                    name="nodeY"
+                                    component="div"
+                                    className="error"
+                                />
+                            </div>
+                        </div>
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        alert("Error: " + (errorData.error || "Error al crear Channel"));
-        return;
-      }
+                        <button
+                            className="button btn-danger"
+                            type="button"
+                            onClick={() => {
+                                if (
+                                    !values.nodeId ||
+                                    !values.nodeLabel ||
+                                    values.nodeX === "" ||
+                                    values.nodeY === ""
+                                ) {
+                                    Swal.fire(
+                                        "Error",
+                                        "Completa todos los campos del nodo",
+                                        "error"
+                                    );
+                                    return;
+                                }
+                                setFieldValue("nodes", [
+                                    ...values.nodes,
+                                    {
+                                        id: values.nodeId,
+                                        type: "default",
+                                        position: {
+                                            x: Number(values.nodeX),
+                                            y: Number(values.nodeY),
+                                        },
+                                        data: { label: values.nodeLabel },
+                                    },
+                                ]);
+                                setFieldValue("nodeId", "");
+                                setFieldValue("nodeLabel", "");
+                                setFieldValue("nodeX", "");
+                                setFieldValue("nodeY", "");
+                            }}
+                        >
+                            + Agregar Nodo
+                        </button>
 
-      const data = await response.json();
-      alert("Channel creado con ID: " + data._id);
+                        <ul>
+                            {values.nodes.map((n) => (
+                                <li key={n.id}>
+                                    {n.id} - {n.data.label} ({n.position.x},{" "}
+                                    {n.position.y})
+                                </li>
+                            ))}
+                        </ul>
 
-      // Limpiar formulario
-      setSignal("");
-      setNodes([]);
-      setEdges([]);
-    } catch (error) {
-      alert("Error de conexión: " + error.message);
-    }
-  };
+                        <hr />
+                        {/* Edges */}
+                        <h3>Agregar Enlace</h3>
+                        <div className="form__group-node">
+                            <div>
+                                <Field
+                                    className="form__group-input"
+                                    name="edgeId"
+                                    placeholder="ID Edge"
+                                />
+                                <ErrorMessage
+                                    name="edgeId"
+                                    component="div"
+                                    className="error"
+                                />
+                            </div>
+                            <div>
+                                <Field
+                                    className="form__group-input"
+                                    name="source"
+                                    placeholder="Source Node ID"
+                                />
+                                <ErrorMessage
+                                    name="source"
+                                    component="div"
+                                    className="error"
+                                />
+                            </div>
+                            <div>
+                                <Field
+                                    className="form__group-input"
+                                    name="target"
+                                    placeholder="Target Node ID"
+                                />
+                                <ErrorMessage
+                                    name="target"
+                                    component="div"
+                                    className="error"
+                                />
+                            </div>
+                            <div>
+                                <Field
+                                    className="form__group-input"
+                                    name="edgeLabel"
+                                    placeholder="Label (opcional)"
+                                />
+                            </div>
+                        </div>
 
-  return (
-    <div style={{ maxWidth: 600, margin: "auto" }}>
-      <h2>Crear nuevo Channel</h2>
-      <form onSubmit={handleSubmit}>
-        <div>
-          <label>Signal ObjectId:</label>
-          <input
-            type="text"
-            value={signal}
-            onChange={(e) => setSignal(e.target.value)}
-            placeholder="Ej: 64f2a0b56789abc123def456"
-            style={{ width: "100%" }}
-          />
+                        <button
+                            className="button btn-warning"
+                            type="button"
+                            onClick={() => {
+                                if (
+                                    !values.edgeId ||
+                                    !values.source ||
+                                    !values.target
+                                ) {
+                                    Swal.fire(
+                                        "Error",
+                                        "Completa todos los campos del enlace",
+                                        "error"
+                                    );
+                                    return;
+                                }
+                                setFieldValue("edges", [
+                                    ...values.edges,
+                                    {
+                                        id: values.edgeId,
+                                        source: values.source,
+                                        target: values.target,
+                                        label: values.edgeLabel,
+                                        type: "default",
+                                    },
+                                ]);
+                                setFieldValue("edgeId", "");
+                                setFieldValue("source", "");
+                                setFieldValue("target", "");
+                                setFieldValue("edgeLabel", "");
+                            }}
+                        >
+                            + Agregar Enlace
+                        </button>
+
+                        <ul>
+                            {values.edges.map((e) => (
+                                <li key={e.id}>
+                                    {e.id}: {e.source} → {e.target}{" "}
+                                    {e.label ? `(${e.label})` : ""}
+                                </li>
+                            ))}
+                        </ul>
+
+                        <hr />
+                        <button className="button btn-primary" type="submit">
+                            {id ? "Actualizar Channel" : "Crear Channel"}
+                        </button>
+                    </Form>
+                )}
+            </Formik>
         </div>
-
-        <hr />
-        <h3>Agregar Nodo</h3>
-        <input
-          type="text"
-          placeholder="ID Nodo"
-          value={nodeInput.id}
-          onChange={(e) => setNodeInput({ ...nodeInput, id: e.target.value })}
-        />
-        <input
-          type="text"
-          placeholder="Label"
-          value={nodeInput.label}
-          onChange={(e) => setNodeInput({ ...nodeInput, label: e.target.value })}
-        />
-        <input
-          type="number"
-          placeholder="Pos X"
-          value={nodeInput.x}
-          onChange={(e) => setNodeInput({ ...nodeInput, x: e.target.value })}
-          style={{ width: 80 }}
-        />
-        <input
-          type="number"
-          placeholder="Pos Y"
-          value={nodeInput.y}
-          onChange={(e) => setNodeInput({ ...nodeInput, y: e.target.value })}
-          style={{ width: 80 }}
-        />
-        <button type="button" onClick={addNode}>
-          + Agregar Nodo
-        </button>
-
-        <ul>
-          {nodes.map((n) => (
-            <li key={n.id}>
-              {n.id} - {n.data.label} ({n.position.x}, {n.position.y})
-            </li>
-          ))}
-        </ul>
-
-        <hr />
-        <h3>Agregar Enlace (Edge)</h3>
-        <input
-          type="text"
-          placeholder="ID Edge"
-          value={edgeInput.id}
-          onChange={(e) => setEdgeInput({ ...edgeInput, id: e.target.value })}
-        />
-        <input
-          type="text"
-          placeholder="Source Node ID"
-          value={edgeInput.source}
-          onChange={(e) => setEdgeInput({ ...edgeInput, source: e.target.value })}
-        />
-        <input
-          type="text"
-          placeholder="Target Node ID"
-          value={edgeInput.target}
-          onChange={(e) => setEdgeInput({ ...edgeInput, target: e.target.value })}
-        />
-        <input
-          type="text"
-          placeholder="Label (opcional)"
-          value={edgeInput.label}
-          onChange={(e) => setEdgeInput({ ...edgeInput, label: e.target.value })}
-        />
-        <button type="button" onClick={addEdge}>
-          + Agregar Enlace
-        </button>
-
-        <ul>
-          {edges.map((e) => (
-            <li key={e.id}>
-              {e.id}: {e.source} → {e.target} {e.label ? `(${e.label})` : ""}
-            </li>
-          ))}
-        </ul>
-
-        <hr />
-        <button type="submit">Crear Channel</button>
-      </form>
-    </div>
-  );
+    );
 }
 
 export default ChannelForm;
