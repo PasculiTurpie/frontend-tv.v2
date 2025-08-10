@@ -1,12 +1,18 @@
-.sidebar{
-  display: flex;
-  width: 230px;
-  flex-direction: column;
-  row-gap: 3px;
-  padding:20px;
+.sidebar {
+  display         : flex;
+  flex-direction  : column;
+  row-gap         : 3px;
+  padding         : 20px;
   background-color: rgb(236, 236, 236);
-  margin-right: 10px;
+  margin-right    : 10px;
 
+  /* Fuerza el tamaño fijo */
+  width    : 230px;
+  min-width: 230px;
+  max-width: 230px;
+
+  /* Evita que se encoja si usas flex en el contenedor */
+  flex-shrink: 0;
 }
 .profile{
   font-size: 18px;
@@ -20,6 +26,12 @@ a{
 }
 .sidebar__list{
     margin-top: 20px;
+}
+.sidebar__list li a {
+  display      : block;
+  white-space  : nowrap;
+  overflow     : hidden;
+  text-overflow: ellipsis;
 }
 .sidebar__line{
   color: rgb(179, 179, 179);
