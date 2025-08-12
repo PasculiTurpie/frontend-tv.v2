@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+/* import React, { useEffect, useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { Formik, Form, Field, ErrorMessage } from "formik";
 import * as Yup from "yup";
@@ -9,14 +9,7 @@ import "./ChannelDiagram.css";
 import api from "../../utils/api";
 
 const ChannelSchema = Yup.object().shape({
-    signal: Yup.string().required("La señal es obligatoria"),
-    nodeId: Yup.string(),
-    nodeLabel: Yup.string(),
-    nodeX: Yup.number(),
-    nodeY: Yup.number(),
-    edgeId: Yup.string(),
-    source: Yup.string(),
-    target: Yup.string(),
+    signal: Yup.object().nullable().required("La señal es obligatoria"),
 });
 
 function ChannelForm() {
@@ -24,12 +17,15 @@ function ChannelForm() {
     const navigate = useNavigate();
 
     const [optionsSignal, setOptionsSignal] = useState([]);
+    const [tipoNombreOptions, setTipoNombreOptions] = useState([]);
+
     const [initialValues, setInitialValues] = useState({
-        signal: "",
+        signal: null,
         nodes: [],
         edges: [],
         nodeId: "",
         nodeLabel: "",
+        tipoNombre: null,
         nodeX: "",
         nodeY: "",
         edgeId: "",
@@ -38,31 +34,63 @@ function ChannelForm() {
         edgeLabel: "",
     });
 
-    useEffect(() => {
-        // Cargar opciones de señales
-        api.getSignal().then((res) => {
-            const opts = res.data.map((signal) => ({
-                value: signal._id,
-                label: signal.nameChannel
-                    ? `${signal.nameChannel} ${
-                          signal.tipoTecnologia?.toUpperCase() || ""
-                      }`
-                    : "Canal sin nombre",
-            }));
-            setOptionsSignal(opts);
-        });
 
-        // Si hay ID, cargar channel para editar
-        if (id) {
+    useEffect(() => {
+        api
+            .getSignal()
+            .then((res) => {
+                const opts = res.data.map((signal) => ({
+                    value: signal._id,
+                    label: signal.nameChannel
+                        ? `${signal.nameChannel} ${signal.tipoTecnologia?.toUpperCase() || ""}`
+                        : "Canal sin nombre",
+                }));
+                setOptionsSignal(opts);
+            })
+            .catch(() => {
+                Swal.fire("Error", "No se pudieron cargar las señales", "error");
+            });
+    }, []);
+
+    // Carga tipoNombreOptions con ID
+    useEffect(() => {
+        axios
+            .get("http://localhost:3000/api/v2/equipo")
+            .then((res) => {
+                const opciones = res.data.map((eq) => ({
+                    value: eq._id, // ID para identificar
+                    label: eq.tipoNombre, // Nombre visible
+                }));
+                setTipoNombreOptions(opciones);
+            })
+            .catch(() => {
+                Swal.fire("Error", "No se pudieron cargar los equipos", "error");
+            });
+    }, []);
+
+
+    useEffect(() => {
+        if (id && optionsSignal.length > 0 && tipoNombreOptions.length > 0) {
             axios
                 .get(`http://localhost:3000/api/v2/channels/${id}`)
                 .then(({ data }) => {
+                    const selectedSignal =
+                        optionsSignal.find((opt) => opt.value === data.signal?._id) || null;
+
+                    const firstNode = data.nodes?.[0] || null;
+                    const selectedTipoNombre = firstNode
+                        ? tipoNombreOptions.find(
+                            (opt) => opt.value === firstNode.data?.tipoNombreId
+                        ) || null
+                        : null;
+
                     setInitialValues({
-                        signal: data.signal?._id || "",
+                        signal: selectedSignal,
                         nodes: data.nodes || [],
                         edges: data.edges || [],
                         nodeId: "",
                         nodeLabel: "",
+                        tipoNombre: selectedTipoNombre,
                         nodeX: "",
                         nodeY: "",
                         edgeId: "",
@@ -75,7 +103,7 @@ function ChannelForm() {
                     Swal.fire("Error", "No se pudo cargar el Channel", "error");
                 });
         }
-    }, [id]);
+    }, [id, optionsSignal, tipoNombreOptions]);
 
     return (
         <div className="outlet-main" style={{ maxWidth: 600, margin: "auto" }}>
@@ -96,36 +124,26 @@ function ChannelForm() {
                 validationSchema={ChannelSchema}
                 onSubmit={async (values, { resetForm }) => {
                     if (values.nodes.length === 0) {
-                        Swal.fire(
-                            "Error",
-                            "Debes agregar al menos un nodo",
-                            "error"
-                        );
+                        Swal.fire("Error", "Debes agregar al menos un nodo", "error");
                         return;
                     }
                     try {
+                        const sendData = {
+                            signal: values.signal.value, // enviar solo el id
+                            nodes: values.nodes,
+                            edges: values.edges,
+                        };
+
                         if (id) {
                             await axios.put(
                                 `http://localhost:3000/api/v2/channels/${id}`,
-                                {
-                                    signal: values.signal,
-                                    nodes: values.nodes,
-                                    edges: values.edges,
-                                }
+                                sendData
                             );
-                            Swal.fire(
-                                "Éxito",
-                                "Channel actualizado correctamente",
-                                "success"
-                            );
+                            Swal.fire("Éxito", "Channel actualizado correctamente", "success");
                         } else {
                             const res = await axios.post(
                                 "http://localhost:3000/api/v2/channels",
-                                {
-                                    signal: values.signal,
-                                    nodes: values.nodes,
-                                    edges: values.edges,
-                                }
+                                sendData
                             );
                             Swal.fire(
                                 "Éxito",
@@ -134,12 +152,11 @@ function ChannelForm() {
                             );
                         }
                         resetForm();
-                        navigate("/channels");
+                        navigate("/channel_diagram-list");
                     } catch (err) {
                         Swal.fire(
                             "Error",
-                            err.response?.data?.error ||
-                                "Error al guardar el Channel",
+                            err.response?.data?.error || "Error al guardar el Channel",
                             "error"
                         );
                     }
@@ -147,85 +164,58 @@ function ChannelForm() {
             >
                 {({ values, setFieldValue }) => (
                     <Form className="form__diagram">
-                        {/* Signal */}
-                        <label className="form__group-label">
-                            Nombre canal
-                        </label>
+
+                        <label className="form__group-label">Nombre canal</label>
                         <Select
                             className="select-width"
                             name="signal"
                             options={optionsSignal}
                             placeholder="Nombre canal"
-                            value={
-                                optionsSignal.find(
-                                    (opt) => opt.value === values.signal
-                                ) || null
-                            }
-                            onChange={(option) =>
-                                setFieldValue("signal", option.value)
-                            }
+                            value={values.signal}
+                            onChange={(option) => setFieldValue("signal", option)}
                             isSearchable
                         />
-                        <ErrorMessage
-                            name="signal"
-                            component="div"
-                            className="error"
-                        />
+                        <ErrorMessage name="signal" component="div" className="error" />
 
                         <hr />
-                        {/* Nodos */}
+
                         <h3>Agregar Nodo</h3>
                         <div className="form__group-node">
-                            <div>
-                                <Field
-                                    className="form__group-input"
-                                    name="nodeId"
-                                    placeholder="ID Nodo"
-                                />
-                                <ErrorMessage
-                                    name="nodeId"
-                                    component="div"
-                                    className="error"
-                                />
-                            </div>
-                            <div>
-                                <Field
-                                    className="form__group-input"
-                                    name="nodeLabel"
-                                    placeholder="Label"
-                                />
-                                <ErrorMessage
-                                    name="nodeLabel"
-                                    component="div"
-                                    className="error"
+                            <Field
+                                className="form__group-input"
+                                name="nodeId"
+                                placeholder="ID Nodo"
+                            />
+                            <Field
+                                className="form__group-input"
+                                name="nodeLabel"
+                                placeholder="Label"
+                            />
+
+                            <div style={{ minWidth: "200px", marginBottom: "8px" }}>
+                                <label>Nombre del Equipo (tipoNombre)</label>
+                                <Select
+                                    name="tipoNombre"
+                                    options={tipoNombreOptions}
+                                    value={values.tipoNombre}
+                                    onChange={(option) => setFieldValue("tipoNombre", option)}
+                                    placeholder="Selecciona nombre equipo"
+                                    isClearable
                                 />
                             </div>
-                            <div>
-                                <Field
-                                    className="form__group-input"
-                                    name="nodeX"
-                                    type="number"
-                                    placeholder="Pos X"
-                                />
-                                <ErrorMessage
-                                    name="nodeX"
-                                    component="div"
-                                    className="error"
-                                />
-                            </div>
-                            <div>
-                                <Field
-                                    className="form__group-input"
-                                    name="nodeY"
-                                    type="number"
-                                    placeholder="Pos Y"
-                                />
-                                <ErrorMessage
-                                    name="nodeY"
-                                    component="div"
-                                    className="error"
-                                />
-                            </div>
+
+                            <Field
+                                className="form__group-input"
+                                name="nodeX"
+                                type="number"
+                                placeholder="Pos X"
+                            />
+                            <Field
+                                className="form__group-input"
+                                name="nodeY"
+                                type="number"
+                                placeholder="Pos Y"
+                            />
                         </div>
 
                         <button
@@ -235,6 +225,7 @@ function ChannelForm() {
                                 if (
                                     !values.nodeId ||
                                     !values.nodeLabel ||
+                                    !values.tipoNombre ||
                                     values.nodeX === "" ||
                                     values.nodeY === ""
                                 ) {
@@ -249,16 +240,21 @@ function ChannelForm() {
                                     ...values.nodes,
                                     {
                                         id: values.nodeId,
-                                        type: "default",
+                                        type: "customNode",
                                         position: {
                                             x: Number(values.nodeX),
                                             y: Number(values.nodeY),
                                         },
-                                        data: { label: values.nodeLabel },
+                                        data: {
+                                            label: values.nodeLabel,
+                                            tipoNombreId: values.tipoNombre.value, // ID
+                                            tipoNombreLabel: values.tipoNombre.label, // Nombre visible
+                                        },
                                     },
                                 ]);
                                 setFieldValue("nodeId", "");
                                 setFieldValue("nodeLabel", "");
+                                setFieldValue("tipoNombre", null);
                                 setFieldValue("nodeX", "");
                                 setFieldValue("nodeY", "");
                             }}
@@ -269,70 +265,43 @@ function ChannelForm() {
                         <ul>
                             {values.nodes.map((n) => (
                                 <li key={n.id}>
-                                    {n.id} - {n.data.label} ({n.position.x},{" "}
+                                    {n.id} - {n.data.label} ({n.data.tipoNombreLabel}) ({n.position.x},{" "}
                                     {n.position.y})
                                 </li>
                             ))}
                         </ul>
 
                         <hr />
-                        {/* Edges */}
+
                         <h3>Agregar Enlace</h3>
                         <div className="form__group-node">
-                            <div>
-                                <Field
-                                    className="form__group-input"
-                                    name="edgeId"
-                                    placeholder="ID Edge"
-                                />
-                                <ErrorMessage
-                                    name="edgeId"
-                                    component="div"
-                                    className="error"
-                                />
-                            </div>
-                            <div>
-                                <Field
-                                    className="form__group-input"
-                                    name="source"
-                                    placeholder="Source Node ID"
-                                />
-                                <ErrorMessage
-                                    name="source"
-                                    component="div"
-                                    className="error"
-                                />
-                            </div>
-                            <div>
-                                <Field
-                                    className="form__group-input"
-                                    name="target"
-                                    placeholder="Target Node ID"
-                                />
-                                <ErrorMessage
-                                    name="target"
-                                    component="div"
-                                    className="error"
-                                />
-                            </div>
-                            <div>
-                                <Field
-                                    className="form__group-input"
-                                    name="edgeLabel"
-                                    placeholder="Label (opcional)"
-                                />
-                            </div>
+                            <Field
+                                className="form__group-input"
+                                name="edgeId"
+                                placeholder="ID Edge"
+                            />
+                            <Field
+                                className="form__group-input"
+                                name="source"
+                                placeholder="Source Node ID"
+                            />
+                            <Field
+                                className="form__group-input"
+                                name="target"
+                                placeholder="Target Node ID"
+                            />
+                            <Field
+                                className="form__group-input"
+                                name="edgeLabel"
+                                placeholder="Label (opcional)"
+                            />
                         </div>
 
                         <button
                             className="button btn-warning"
                             type="button"
                             onClick={() => {
-                                if (
-                                    !values.edgeId ||
-                                    !values.source ||
-                                    !values.target
-                                ) {
+                                if (!values.edgeId || !values.source || !values.target) {
                                     Swal.fire(
                                         "Error",
                                         "Completa todos los campos del enlace",
@@ -347,7 +316,7 @@ function ChannelForm() {
                                         source: values.source,
                                         target: values.target,
                                         label: values.edgeLabel,
-                                        type: "default",
+                                        type: "smoothstep",
                                     },
                                 ]);
                                 setFieldValue("edgeId", "");
@@ -380,3 +349,14 @@ function ChannelForm() {
 }
 
 export default ChannelForm;
+ */
+
+import React from 'react'
+
+const ChannelForm = () => {
+  return (
+    <div>ChannelForm</div>
+  )
+}
+
+export default ChannelForm

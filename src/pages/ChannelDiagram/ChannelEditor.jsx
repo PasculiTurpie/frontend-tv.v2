@@ -6,14 +6,52 @@ import ReactFlow, {
   useEdgesState,
   addEdge,
   MiniMap,
+  Handle,
+  Position,
 } from "reactflow";
 import Select from "react-select";
 import "reactflow/dist/style.css";
 import Swal from "sweetalert2";
 import axios from "axios";
 import api from "../../utils/api";
-// Si api es tu helper de peticiones, descomenta esto:
-// import api from "../../utils/api";
+import "./ChannelDiagram.css";
+
+// Componente para nodos personalizados
+const CustomNode = ({ data }) => {
+  return (
+    <div
+      style={{
+        padding: "8px 12px",
+        borderRadius: 8,
+        border: "2px solid #555",
+        backgroundColor: data.bgColor || "#ffffff",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        minWidth: 120,
+      }}
+    >
+      <img
+        src={data.icon}
+        alt={data.label}
+        style={{ width: 40, height: 40, marginBottom: 5 }}
+      />
+      <strong>{data.label}</strong>
+      <Handle type="target" position={Position.Top} />
+      <Handle type="source" position={Position.Bottom} />
+    </div>
+  );
+};
+
+// Registro de íconos según tipo de equipo
+const iconsMap = {
+  antena: "https://cdn-icons-png.flaticon.com/512/1048/1048953.png",
+  ird: "https://cdn-icons-png.flaticon.com/512/609/609803.png",
+  encoder: "https://cdn-icons-png.flaticon.com/512/338/338843.png",
+  dcm: "https://cdn-icons-png.flaticon.com/512/1048/1048928.png",
+  switch: "https://cdn-icons-png.flaticon.com/512/3703/3703626.png",
+  default: "https://cdn-icons-png.flaticon.com/512/565/565547.png",
+};
 
 function ChannelEditor() {
   const [channels, setChannels] = useState([]);
@@ -22,37 +60,25 @@ function ChannelEditor() {
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   const [newEdgeLabel, setNewEdgeLabel] = useState("");
-  const [selectedElements, setSelectedElements] = useState(null);
+  const [selectedElements, setSelectedElements] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  const dataSignals = () => {
-    api.getSignal()
-      .then((res) => {
-      console.log(res.data)
-    })
-  }
+  // Tipo de nodo personalizado
+  const nodeTypes = { custom: CustomNode };
 
-  // Cargar señales
   const loadSignals = async () => {
     try {
-      // Si usas api.getSignal():
-      // const res = await api.getSignal();
-
-      // Con axios directamente:
-      const res = await api.getSignal()
-
+      const res = await api.getSignal();
       const options = res.data.map((s) => ({
         value: s._id,
         label: s.nameChannel || "Sin nombre",
       }));
-
       setChannels(options);
     } catch (error) {
       Swal.fire("Error", "No se pudo cargar las señales", "error");
     }
   };
 
-  // Cargar canal por señal
   const loadChannelBySignal = async (signalId) => {
     if (!signalId) {
       setChannelData(null);
@@ -65,7 +91,7 @@ function ChannelEditor() {
       const res = await axios.get(
         `http://localhost:3000/api/v2/channels?signal=${signalId}`
       );
-      const channelsFound = res.data;
+      const channelsFound = Array.isArray(res.data) ? res.data : [];
       if (channelsFound.length > 0) {
         const ch = channelsFound[0];
         setChannelData(ch);
@@ -85,14 +111,12 @@ function ChannelEditor() {
 
   useEffect(() => {
     loadSignals();
-    dataSignals();
   }, []);
 
   useEffect(() => {
     loadChannelBySignal(selectedSignal?.value);
   }, [selectedSignal]);
 
-  // Crear nuevo edge con etiqueta
   const onConnect = useCallback(
     (connection) => {
       if (!connection.source || !connection.target) return;
@@ -104,7 +128,7 @@ function ChannelEditor() {
         type: "smoothstep",
         label: newEdgeLabel,
         animated: true,
-        style:{stroke:'red'}
+        style: { stroke: "red" },
       };
       setEdges((eds) => addEdge(newEdge, eds));
       setNewEdgeLabel("");
@@ -112,56 +136,51 @@ function ChannelEditor() {
     [newEdgeLabel, setEdges]
   );
 
-  // Agregar nodo
-  const addNode = () => {
+  const addNode = (type = "default") => {
     const id = `node-${Date.now()}`;
     const newNode = {
       id,
-      type: "image",
+      type: "custom",
       position: { x: Math.random() * 400, y: Math.random() * 400 },
-      data: { label: `Nodo ${id}` },
+      data: {
+        label: `${type.toUpperCase()} ${id}`,
+        icon: iconsMap[type] || iconsMap.default,
+        bgColor: "#f0f0f0",
+      },
     };
     setNodes((nds) => nds.concat(newNode));
   };
 
-  // Eliminar selección
   const deleteSelected = () => {
     if (!selectedElements || selectedElements.length === 0) {
       Swal.fire("Info", "Selecciona nodos o enlaces para eliminar", "info");
       return;
     }
-
     const selectedNodeIds = selectedElements
       .filter((el) => el.source === undefined)
       .map((node) => node.id);
-
     const selectedEdgeIds = selectedElements
       .filter((el) => el.source !== undefined)
       .map((edge) => edge.id);
-
     setNodes((nds) => nds.filter((node) => !selectedNodeIds.includes(node.id)));
     setEdges((eds) => eds.filter((edge) => !selectedEdgeIds.includes(edge.id)));
-    setSelectedElements(null);
+    setSelectedElements([]);
   };
 
-  // Guardar cambios
   const saveChanges = async () => {
     if (!selectedSignal) {
       Swal.fire("Error", "Debes seleccionar una señal primero", "error");
       return;
     }
-
     if (nodes.length === 0) {
       Swal.fire("Error", "Debe haber al menos un nodo", "error");
       return;
     }
-
     const payload = {
       signal: selectedSignal.value,
       nodes,
       edges,
     };
-
     try {
       let response;
       if (channelData?._id) {
@@ -175,7 +194,6 @@ function ChannelEditor() {
           payload
         );
       }
-
       Swal.fire("Éxito", "Cambios guardados correctamente", "success");
       setChannelData(response.data);
     } catch (error) {
@@ -193,6 +211,7 @@ function ChannelEditor() {
 
       <label style={{ fontWeight: "bold" }}>Selecciona una señal</label>
       <Select
+        className="select-width"
         options={channels}
         value={selectedSignal}
         onChange={setSelectedSignal}
@@ -236,8 +255,9 @@ function ChannelEditor() {
               connectionLineType="smoothstep"
               snapToGrid
               snapGrid={[15, 15]}
-              onSelectionChange={setSelectedElements}
+              onSelectionChange={(els) => setSelectedElements(els || [])}
               multiSelectionKeyCode={null}
+              nodeTypes={nodeTypes}
             >
               <MiniMap />
               <Controls />
@@ -245,49 +265,31 @@ function ChannelEditor() {
             </ReactFlow>
           </div>
 
-          <div style={{ marginTop: 12, display: "flex", gap: 12 }}>
-            <button
-              onClick={addNode}
-              style={{
-                padding: "10px 16px",
-                fontSize: "1rem",
-                backgroundColor: "#28a745",
-                color: "white",
-                border: "none",
-                borderRadius: 4,
-                cursor: "pointer",
-              }}
-            >
-              + Agregar Nodo
+          <div style={{ marginTop: 12, display: "flex", gap: 12, flexWrap: "wrap", border: '1px solid red' }}>
+            <button onClick={() => addNode("antena")} className="btn-green">
+              + Antena
+            </button>
+            <button onClick={() => addNode("ird")} className="btn-green">
+              + IRD
+            </button>
+            <button onClick={() => addNode("encoder")} className="btn-green">
+              + Encoder
+            </button>
+            <button onClick={() => addNode("dcm")} className="btn-green">
+              + DCM
+            </button>
+            <button onClick={() => addNode("switch")} className="btn-green">
+              + Switch
             </button>
 
-            <button
-              onClick={deleteSelected}
-              style={{
-                padding: "10px 16px",
-                fontSize: "1rem",
-                backgroundColor: "#dc3545",
-                color: "white",
-                border: "none",
-                borderRadius: 4,
-                cursor: "pointer",
-              }}
-            >
+            <button onClick={deleteSelected} className="btn-red">
               🗑 Eliminar Seleccionados
             </button>
 
             <button
               onClick={saveChanges}
-              style={{
-                padding: "10px 16px",
-                fontSize: "1rem",
-                backgroundColor: "#007bff",
-                color: "white",
-                border: "none",
-                borderRadius: 4,
-                cursor: "pointer",
-                marginLeft: "auto",
-              }}
+              className="btn-blue"
+              style={{ marginLeft: "auto" }}
             >
               Guardar Cambios
             </button>
