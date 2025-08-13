@@ -104,6 +104,7 @@ const ChannelListDiagram = () => {
         <thead>
           <tr style={{ borderBottom: "2px solid #444" }}>
             <th>Nombre Canal</th>
+            <th>Tecnología</th>
             <th>Nodos</th>
             <th>Enlaces</th>
             <th>Acciones</th>
@@ -121,6 +122,7 @@ const ChannelListDiagram = () => {
               <tr key={channel._id} style={{ borderBottom: "1px solid #ccc" }}>
                 
                 <td>{channel.signal?.nameChannel || "Sin nombre"}</td>
+                <td>{channel.signal?.tipoTecnologia }</td>
                 <td>{channel.nodes?.length || 0}</td>
                 <td>{channel.edges?.length || 0}</td>
                 <td>

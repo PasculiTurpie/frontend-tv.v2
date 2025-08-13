@@ -48,7 +48,7 @@ const Login = () => {
                                     setUser(response.user);
                                     resetForm();
                                     setIsAuth(true);
-                                    navigate("/channel");
+                                    navigate("/channel-form");
                                 });
                         } catch (error) {
                             Swal.fire({

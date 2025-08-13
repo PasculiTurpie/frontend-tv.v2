@@ -35,5 +35,38 @@ padding:30px;
 }
 .container__diagram{
   width: 80%;
-  border:1px solid red;
+
+}
+
+.container__form{
+height: fit-content;
+}
+.select__input{
+  width: 195px;
+  height: 22px;
+}
+.form__input{
+  width: 195px;
+  height: 38px;
+  border:1px solid rgb(214, 212, 212);
+  border-radius: 5px;
+  padding-left: 10px;
+  transition: outline-color 0.3s ease;
+}
+.form__input:focus{
+
+  outline-color: #3484FF;
+}
+.form__group-inputs{
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(auto);
+  gap:10px
+
+}
+.btn-warning:hover{
+  background-color: #e29910;
+}
+.button{
+  width: fit-content;
 }

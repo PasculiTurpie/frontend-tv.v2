@@ -38,6 +38,7 @@ import ChannelDiagram from "./pages/ChannelDiagram/ChannelDiagram";
 import ChannelForm from "./pages/ChannelDiagram/ChannelForm";
 import ChannelEditor from "./pages/ChannelDiagram/ChannelEditor";
 import ChannelListDiagram from "./pages/ChannelDiagram/ChannelListDiagram";
+import Diagram from "./components/Diagrama/Diagram";
 
 const App = () => {
     return (
@@ -117,6 +118,7 @@ const App = () => {
                             element={<SignalContact />}
                         />
                     </Route>
+                    <Route path='/diagram' element={<Diagram />}/>
                    
                 </Route>
                 <Route path="*" element={<NotFound />} />
