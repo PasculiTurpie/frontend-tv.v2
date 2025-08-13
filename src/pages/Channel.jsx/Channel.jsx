@@ -260,7 +260,7 @@ const Channel = () => {
                                                         <option
                                                             key={tipoTech._id}
                                                             value={
-                                                                tipoTech.nombreTipo
+                                                                tipoTech.nombreTipo.toUpperCase()
                                                             }
                                                         >
                                                             {tipoTech.nombreTipo.toUpperCase()}

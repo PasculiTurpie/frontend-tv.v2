@@ -379,7 +379,7 @@ const ChannelForm = () => {
         api.getEquipo().then((res) => {
             console.log(res.data);
             const optEquipos = res.data.map((optEquipo) => ({
-                label: optEquipo.nombre,
+                label: optEquipo.nombre.toUpperCase(),
                 value: optEquipo._id,
             }));
             setOptionSelectEquipo(optEquipos);
@@ -440,18 +440,20 @@ const ChannelForm = () => {
                                 />
                                 <Select
                                     className="select__input"
+                                    name="equipo"
                                     placeholder="Tipo equipo"
                                     isSearchable={isSearchable}
                                     options={optionsSelectEquipo}
                                     onChange={handleSelectedEquipo}
                                     defaultValue={{
-                                        label: "Seleccione a una señal",
+                                        label: "Seleccione a un equipo",
                                         value: "0",
                                     }}
                                 />
                                 <Field
                                     className="form__input"
                                     placeholder="Etiqueta"
+                                    name="label"
                                 />
                                 <Field
                                     className="form__input"
