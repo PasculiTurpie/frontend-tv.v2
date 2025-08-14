@@ -92,7 +92,7 @@ const App = () => {
                         />
                         <Route path="/channel-form" element={<ChannelForm />} />
                         <Route path="/channel-editor" element={<ChannelEditor />} />
-                        <Route path="/channels/:id" element={<ChannelDiagram />} />
+                       
                         
                         <Route path="/nodo-listar" element={<NodoListar />} />
                         <Route path="/channel" element={<Channel />} />
@@ -102,7 +102,7 @@ const App = () => {
                         <Route path="/channels/new" element={<ChannelForm />} />
 
                         {/* Editar */}
-                        <Route path="/channels/:id" element={<ChannelDiagram />} />
+                        
                         <Route path="/equipment" element={<Equipment />} />
                         <Route
                             path="/equipment-list"
@@ -119,6 +119,7 @@ const App = () => {
                         />
                     </Route>
                     <Route path='/diagram' element={<Diagram />}/>
+                    <Route path="/channels/:id" element={<ChannelDiagram />} />
                    
                 </Route>
                 <Route path="*" element={<NotFound />} />
