@@ -26,29 +26,50 @@ const Card = () => {
     }
 
     const getAllSignal = async () => {
-        try {
-            const res = await api.getChannelDiagram();
-            const data = res.data
-            const signalsArray = data.map(item => item.signal);
-            if (signalsArray.length > 0) {
-                const sortedData = signalsArray.sort((a, b) => {
-                    const numA = Number(a.numberChannelSur);
-                    const numB = Number(b.numberChannelSur);
-                    return numA - numB;
-                });
+  setIsLoading(true);
+  try {
+    const res = await api.getChannelDiagram();
 
-                setSignalTv(sortedData);
-                setHasError(false);
-            } else {
-                setHasError(true);
-            }
-        } catch (error) {
-            console.error("Error al obtener las señales:", error);
-            setHasError(true);
-        } finally {
-            setIsLoading(false);
-        }
+    // 1) Asegurar array y extraer 'signal'
+    const raw = Array.isArray(res?.data) ? res.data : [];
+    const signals = raw.map(it => it?.signal ?? null).filter(Boolean);
+
+    // 2) Si no hay señales, marcar error y salir
+    if (signals.length === 0) {
+      setSignalTv([]);
+      setHasError(true);
+      return;
+    }
+
+    // 3) Normalizar números; los inválidos quedan como null
+    const toNum = (v) => {
+      const n = Number(v);
+      return Number.isFinite(n) ? n : null;
     };
+
+    const normalized = signals.map(s => ({
+      ...s,
+      numberChannelSur: toNum(s?.numberChannelSur),
+      numberChannelCn: toNum(s?.numberChannelCn),
+    }));
+
+    // 4) Orden seguro: los que no tienen número van al final
+    const sorted = [...normalized].sort((a, b) => {
+      const an = a.numberChannelSur ?? Number.POSITIVE_INFINITY;
+      const bn = b.numberChannelSur ?? Number.POSITIVE_INFINITY;
+      return an - bn;
+    });
+
+    setSignalTv(sorted);
+    setHasError(false);
+  } catch (error) {
+    console.error("Error al obtener las señales:", error);
+    setHasError(true);
+  } finally {
+    setIsLoading(false);
+  }
+};
+
 
     useEffect(() => {
         getAllSignal();
