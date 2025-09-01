@@ -1,118 +1,156 @@
-import axios from "axios";
 import React, { useEffect, useState } from "react";
-import { useLocation, useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import "./DetailCard.css";
 import api from "../../utils/api";
 import ModalContact from "./ModalContact";
 
 const DetailCard = () => {
     const { id } = useParams();
-    const [DetailCard, setDetailCard] = useState({});
     const navigate = useNavigate();
-    const location = useLocation();
-    const [contacts, setContacts] = useState([]);
-    const [onlyDataChannel, setOnlyDataChannel] = useState([]);
 
+    const [signalDetail, setSignalDetail] = useState(null);
+    const [contacts, setContacts] = useState([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState("");
 
     const openModal = () => setIsModalOpen(true);
     const closeModal = () => setIsModalOpen(false);
 
+    // Cargar detalle de señal por id de la URL
     useEffect(() => {
-        api.getIdSignal(id).then((response) => {
-            setDetailCard(response.data);
-            setContacts(response.data.contact);
-        });
-    }, []);
-
-    const handleClickDiagram = () => {
-        api.getChannelDiagram()
-            .then((res) => {
-                const foundChannel = res.data.find(item => item.signal._id === id);
-
-                if (foundChannel) {
-                    navigate(`/channels/${foundChannel._id}`);
-                } else {
-                    console.warn(`No se encontró un canal con signal._id = ${id}`);
+        let ignore = false;
+        const fetchSignal = async () => {
+            setIsLoading(true);
+            setError("");
+            try {
+                const res = await api.getIdSignal(id);
+                if (!ignore) {
+                    setSignalDetail(res.data || null);
+                    setContacts(res.data?.contact || []);
                 }
-            })
-            .catch(err => {
-                console.error("Error obteniendo el diagrama:", err);
-            });
+            } catch (e) {
+                if (!ignore) {
+                    setError("No se pudo cargar el detalle de la señal.");
+                }
+            } finally {
+                if (!ignore) setIsLoading(false);
+            }
+        };
+        if (id) fetchSignal();
+        return () => {
+            ignore = true;
+        };
+    }, [id]);
+
+    // Ir a diagrama asociado a la signal
+    const handleClickDiagram = async () => {
+        try {
+            // Si tu API ya acepta filtrar por signalId, lo ideal es tener un endpoint como:
+            // GET /api/v2/channels?signal=<id>
+            // y traer directamente el channel (sin buscar en un array).
+            const res = await api.getChannelDiagram(id);
+
+            // Defensa: si devuelve arreglo, buscamos por signal._id === id (string estricto)
+            let foundChannel = null;
+            if (Array.isArray(res.data)) {
+                foundChannel = res.data.find((item) => item?.signal?._id === id);
+            } else if (res.data && res.data.signal?._id === id) {
+                foundChannel = res.data;
+            }
+
+            if (foundChannel?._id) {
+                navigate(`/channels/${foundChannel._id}`);
+            } else {
+                // Aquí puedes redirigir a crear diagrama con el id de la señal preseleccionado si quieres
+                // navigate(`/channels/new?signal=${id}`);
+                alert("No se encontró un diagrama para esta señal.");
+            }
+        } catch (err) {
+            console.error("Error obteniendo el diagrama:", err);
+            alert("No se pudo obtener el diagrama.");
+        }
     };
 
-    const handleBackSubmit = () => {
-        navigate(-1);
-    };
+    const handleBackSubmit = () => navigate(-1);
+
+    if (isLoading) {
+        return (
+            <div className="container__card-detail">
+                <div className="card-detail-container">Cargando…</div>
+            </div>
+        );
+    }
+
+    if (error || !signalDetail) {
+        return (
+            <div className="container__card-detail">
+                <div className="card-detail-container">
+                    <button className="button-back btn-warning" onClick={handleBackSubmit}>
+                        ← Volver
+                    </button>
+                    <p className="error">{error || "No se encontró la señal."}</p>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <>
             <div className="container__card-detail">
                 <div className="card-detail-container">
-                    <button
-                        className="button-back btn-warning"
-                        onClick={handleBackSubmit}
-                    >
+                    <button className="button-back btn-warning" onClick={handleBackSubmit}>
                         ← Volver
                     </button>
 
                     <div className="card-detail-header">
-                        <img
-                            className="card__detail-logo"
-                            src={DetailCard.logoChannel}
-                            alt="Logo Canal"
-                        />
-                        <h3 className="card-detail-title">
-                            {DetailCard.nameChannel}
-                        </h3>
+                        {signalDetail.logoChannel ? (
+                            <img
+                                className="card__detail-logo"
+                                src={signalDetail.logoChannel}
+                                alt={`Logo ${signalDetail.nameChannel || "Canal"}`}
+                            />
+                        ) : (
+                            <div className="card__detail-logo placeholder">Sin logo</div>
+                        )}
+                        <h3 className="card-detail-title">{signalDetail.nameChannel}</h3>
                     </div>
 
                     <div className="card__detail-numbers">
                         <span>
                             <strong>Norte:</strong>{" "}
-                            <span className="card__detail-info">
-                                {DetailCard.numberChannelCn}
-                            </span>
+                            <span className="card__detail-info">{signalDetail.numberChannelCn}</span>
                         </span>
                         <span>
                             <strong>Sur:</strong>{" "}
-                            <span className="card__detail-info">
-                                {DetailCard.numberChannelSur}
-                            </span>
+                            <span className="card__detail-info">{signalDetail.numberChannelSur}</span>
                         </span>
                     </div>
+
                     <div className="card__detail-numbers">
                         <span>
                             <strong>Tecnología:</strong>{" "}
-                            <span className="card__detail-info">
-                                {DetailCard.tipoTecnologia}
-                            </span>
+                            <span className="card__detail-info">{signalDetail.tipoTecnologia}</span>
                         </span>
                         <span>
                             <strong>Severidad:</strong>{" "}
-                            <span className="card__detail-info">
-                                {DetailCard.severidadChannel}
-                            </span>
+                            <span className="card__detail-info">{signalDetail.severidadChannel}</span>
                         </span>
                     </div>
 
                     <div className="card__detail-button">
-                        {DetailCard.contact?.length > 0 && (
-                            <button
-                                className="button btn-success"
-                                onClick={openModal}
-                            >
+                        {Array.isArray(signalDetail.contact) && signalDetail.contact.length > 0 && (
+                            <button className="button btn-success" onClick={openModal}>
                                 Contacto
                             </button>
                         )}
-                        <button
-                            onClick={handleClickDiagram}
-                            className="button btn-primary"
-                        >
+                        <button onClick={handleClickDiagram} className="button btn-primary">
                             Ver mapa
                         </button>
                     </div>
                 </div>
             </div>
+
             <ModalContact isOpen={isModalOpen} onClose={closeModal}>
                 <>
                     <h1 className="modal-contact__title">Contacto proveedor</h1>
@@ -125,14 +163,11 @@ const DetailCard = () => {
                             </tr>
                         </thead>
                         <tbody>
-                            {contacts.map((contact) => (
-                                <tr
-                                    key={contact._id}
-                                    className="modal-contact__row"
-                                >
-                                    <td>{contact.nombreContact}</td>
-                                    <td>{contact.telefono}</td>
-                                    <td>{contact.email}</td>
+                            {contacts.map((contact, idx) => (
+                                <tr key={contact?._id || idx} className="modal-contact__row">
+                                    <td>{contact?.nombreContact || "-"}</td>
+                                    <td>{contact?.telefono || "-"}</td>
+                                    <td>{contact?.email || "-"}</td>
                                 </tr>
                             ))}
                         </tbody>
