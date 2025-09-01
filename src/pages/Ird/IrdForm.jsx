@@ -91,13 +91,13 @@ const IrdForm = () => {
                             (async () => {
                                 try {
                                     await api.createEquipo({
-                                       nombre: values.nombreIrd,
-                                      marca: values.marcaIrd,
-                                      modelo: values.modelIrd,
-                                       tipoNombre: "ird",
+                                        nombre: values.nombreIrd,
+                                        marca: values.marcaIrd,
+                                        modelo: values.modelIrd,
+                                        tipoNombre: "ird",
                                         ip_gestion: values.ipAdminIrd,
-                                       irdRef: ird?._id,
-                                     });
+                                        irdRef: ird?._id,
+                                    });
                                 } catch (bgErr) {
                                     console.warn(
                                         "No se pudo crear Equipo desde IRD:",

@@ -10,9 +10,6 @@ const ChannelForm = () => {
     const [isSearchable, setIsSearchable] = useState(true);
     const [selectedValue, setSelectedValue] = useState(null);
     const [selectedId, setSelectedId] = useState(null);
-    const [optionsSelectIrd, setOptionSelectIrd] = useState([]);
-    const [selectedIrdValue, setSelectedIrdValue] = useState(null);
-    const [selectedIdIrd, setSelectedIdIrd] = useState(null);
     const [optionsSelectEquipo, setOptionSelectEquipo] = useState([]);
     const [selectedEquipoValue, setSelectedEquipoValue] = useState(null);
     const [selectedIdEquipo, setSelectedIdEquipo] = useState(null);
@@ -58,12 +55,6 @@ const ChannelForm = () => {
         setSelectedIdEquipo(e.label);
     };
 
-    const handleSelectedIrd = (e) => {
-        console.log(e.label);
-        console.log(e.value);
-        setSelectedIrdValue(e.value);
-        setSelectedIdIrd(e.label);
-    };
 
     return (
         <>
@@ -103,18 +94,7 @@ const ChannelForm = () => {
                                     placeholder="Id Nodo"
                                     name="id"
                                 />
-                                <Select
-                                    className="select__input"
-                                    name="ird"
-                                    placeholder="Seleccione Ird"
-                                    isSearchable={isSearchable}
-                                    options={optionsSelectIrd}
-                                    onChange={handleSelectedIrd}
-                                    defaultValue={{
-                                        label: "Seleccione Ird",
-                                        value: "0",
-                                    }}
-                                />
+
                                 <Select
                                     className="select__input"
                                     name="equipo"
@@ -132,7 +112,7 @@ const ChannelForm = () => {
                                     placeholder="Etiqueta"
                                     name="label"
                                 />
-                                
+
                                 <Field
                                     className="form__input"
                                     placeholder="Pos X"

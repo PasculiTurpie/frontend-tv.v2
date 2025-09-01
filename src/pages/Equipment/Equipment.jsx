@@ -1,10 +1,12 @@
+// src/pages/Equipment/Equipment.jsx
 import { Field, Form, Formik } from "formik";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { ipGestionRegex } from "../../utils/regexValidate";
 import * as Yup from "yup";
 import Swal from "sweetalert2";
+
 import api from "../../utils/api";
+import { ipGestionRegex } from "../../utils/regexValidate";
 import stylesEquipment from "./Equipment.module.css";
 
 const SchemaEquipos = Yup.object().shape({
@@ -17,6 +19,7 @@ const SchemaEquipos = Yup.object().shape({
     modelo: Yup.string()
         .trim("No debe tener espacios al inicio o al final")
         .required("Campo obligatorio"),
+    // Este valor será el ObjectId del TipoEquipo seleccionado
     tipoNombre: Yup.string().required("Campo obligatorio"),
     ip_gestion: Yup.string()
         .trim("No debe tener espacios al inicio o al final")
@@ -31,22 +34,38 @@ const SchemaTipoEquipos = Yup.object().shape({
 });
 
 const Equipment = () => {
-    const [equipments, setEquipments] = useState([]);
     const [tipoEquipments, setTipoEquipments] = useState([]);
 
-    const dataEquipo = () => {
-        api.getTipoEquipo().then((response) => {
-            setTipoEquipments(response.data);
-        });
-    };
-
-    const refreshList = () => {
-        dataEquipo();
+    const fetchTipos = async () => {
+        try {
+            const { data } = await api.getTipoEquipo();
+            setTipoEquipments(data || []);
+        } catch (e) {
+            console.warn("Error getTipoEquipo:", e?.response?.data || e?.message);
+            setTipoEquipments([]);
+        }
     };
 
     useEffect(() => {
-        refreshList();
+        fetchTipos();
     }, []);
+
+    // 1) Filtra 'ird' del select  2) Dedup (trim+lower)  3) Ordena por nombre
+    const uniqueTipos = useMemo(() => {
+        const filtered = (tipoEquipments || []).filter(
+            (t) => (t?.tipoNombre || "").trim().toLowerCase() !== "ird"
+        );
+
+        const seen = new Map(); // key: normalized name
+        for (const t of filtered) {
+            const key = (t?.tipoNombre || "").trim().toLowerCase();
+            if (key && !seen.has(key)) seen.set(key, t);
+        }
+
+        return Array.from(seen.values()).sort((a, b) =>
+            (a.tipoNombre || "").localeCompare(b.tipoNombre || "", undefined, { sensitivity: "base" })
+        );
+    }, [tipoEquipments]);
 
     return (
         <div className="outlet-main">
@@ -62,7 +81,7 @@ const Equipment = () => {
             </nav>
 
             <div className={stylesEquipment.double__form}>
-                {/* Formulario Equipo */}
+                {/* === Formulario Equipo === */}
                 <Formik
                     initialValues={{
                         nombre: "",
@@ -79,11 +98,12 @@ const Equipment = () => {
                             marca: values.marca.trim(),
                             modelo: values.modelo.trim(),
                             ip_gestion: values.ip_gestion.trim(),
-                            tipoNombre: values.tipoNombre.trim(),
+                            // tipoNombre es el ObjectId del select (no normalizar aquí)
+                            tipoNombre: values.tipoNombre,
                         };
 
                         try {
-                            const response = await api.createEquipo(trimmedValues);
+                            await api.createEquipo(trimmedValues);
                             Swal.fire({
                                 title: "Equipo guardado exitosamente",
                                 icon: "success",
@@ -162,15 +182,11 @@ const Equipment = () => {
                                         <label htmlFor="tipoNombre" className="form__group-label">
                                             Tipo Equipo
                                             <br />
-                                            <Field
-                                                as="select"
-                                                className="form__group-input"
-                                                name="tipoNombre"
-                                            >
+                                            <Field as="select" className="form__group-input" name="tipoNombre">
                                                 <option value="">--Seleccionar--</option>
-                                                {tipoEquipments.map((tipoEquipment) => (
-                                                    <option key={tipoEquipment._id} value={tipoEquipment._id}>
-                                                        {tipoEquipment.tipoNombre.toUpperCase()}
+                                                {uniqueTipos.map((t) => (
+                                                    <option key={t._id} value={t._id}>
+                                                        {(t.tipoNombre || "").toUpperCase()}
                                                     </option>
                                                 ))}
                                             </Field>
@@ -207,26 +223,23 @@ const Equipment = () => {
 
                 <hr />
 
-                {/* Formulario Tipo Equipo */}
+                {/* === Formulario Tipo Equipo === */}
                 <Formik
                     initialValues={{ tipoNombre: "" }}
                     validationSchema={SchemaTipoEquipos}
                     onSubmit={async (values, { resetForm }) => {
-                        const trimmedValues = {
-                            tipoNombre: values.tipoNombre.trim(),
-                        };
+                        // Normaliza para evitar duplicados por mayúsculas/espacios
+                        const normalized = values.tipoNombre.trim().toLowerCase();
 
                         try {
-                            const response = await api.createTipoEquipo(trimmedValues);
+                            await api.createTipoEquipo({ tipoNombre: normalized });
                             Swal.fire({
                                 title: "Tipo de equipo guardado exitosamente",
                                 icon: "success",
-                                html: `
-                  <p><strong>Tipo:</strong> ${trimmedValues.tipoNombre}</p>
-                `,
+                                html: `<p><strong>Tipo:</strong> ${normalized}</p>`,
                             });
                             resetForm();
-                            refreshList();
+                            fetchTipos();
                         } catch (error) {
                             Swal.fire({
                                 title: "Error",
