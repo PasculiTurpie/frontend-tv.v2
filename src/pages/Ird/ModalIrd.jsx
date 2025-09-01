@@ -18,6 +18,7 @@ const UpdateIrdSchema = Yup.object().shape({
         /^172\.19\.\d{1,3}\.\d{1,3}$/,
         "Ingresa una ip válida"
     ),
+    nombreIrd: Yup.string(),
     marcaIrd: Yup.string(),
     modelIrd: Yup.string(),
     versionIrd: Yup.string(),
@@ -63,6 +64,7 @@ const ModalIrd = ({ itemId, modalOpen, setModalOpen, title, refreshList }) => {
         <Formik
             initialValues={{
                 urlIrd: dataIrd.urlIrd || "",
+                nombreIrd:dataIrd.nombreIrd || "",
                 ipAdminIrd: dataIrd.ipAdminIrd || "",
                 marcaIrd: dataIrd.marcaIrd || "",
                 modelIrd: dataIrd.modelIrd || "",
@@ -93,7 +95,7 @@ const ModalIrd = ({ itemId, modalOpen, setModalOpen, title, refreshList }) => {
                         icon: "success",
                         title: "Equipo actualizado",
                         text: "El equipo se ha actualizado exitosamente!",
-                        footer: `<h4>${values.marcaIrd}</h4>
+                        footer: `<h4>${values.nombreIrd}</h4>
                         <h4>${values.modelIrd}</h4>
                         
                         `,
@@ -140,6 +142,26 @@ const ModalIrd = ({ itemId, modalOpen, setModalOpen, title, refreshList }) => {
                                     {errors.urlIrd && touched.urlIrd ? (
                                         <div className="form__group-error">
                                             {errors.urlIrd}
+                                        </div>
+                                    ) : null}
+                                </div>
+                                <div className="form__group">
+                                    <label
+                                        htmlFor="nombreIrd"
+                                        className="form__group-label"
+                                    >
+                                        Nombre Ird
+                                        <br />
+                                        <Field
+                                            type="text"
+                                            className="form__group-input"
+                                            placeholder="Nombre Ird"
+                                            name="nombreIrd"
+                                        />
+                                    </label>
+                                    {errors.nombreIrd && touched.nombreIrd ? (
+                                        <div className="form__group-error">
+                                            {errors.nombreIrd}
                                         </div>
                                     ) : null}
                                 </div>
@@ -226,27 +248,7 @@ const ModalIrd = ({ itemId, modalOpen, setModalOpen, title, refreshList }) => {
                                         </div>
                                     ) : null}
                                 </div>
-                                <div className="form__group">
-                                    <label
-                                        htmlFor="versionIrd"
-                                        className="form__group-label"
-                                    >
-                                        UA
-                                        <br />
-                                        <Field
-                                            type="text"
-                                            className="form__group-input"
-                                            placeholder="Nombre"
-                                            name="uaIrd"
-                                        />
-                                    </label>
-
-                                    {errors.uaIrd && touched.uaIrd ? (
-                                        <div className="form__group-error">
-                                            {errors.uaIrd}
-                                        </div>
-                                    ) : null}
-                                </div>
+                                
                             </div>
                             {/* ########################################## */}
                             <div className={stylesIrd.columns__group}>
@@ -361,6 +363,27 @@ const ModalIrd = ({ itemId, modalOpen, setModalOpen, title, refreshList }) => {
                                     touched.fecReceptorIrd ? (
                                         <div className="form__group-error">
                                             {errors.fecReceptorIrd}
+                                        </div>
+                                    ) : null}
+                                </div>
+                                <div className="form__group">
+                                    <label
+                                        htmlFor="versionIrd"
+                                        className="form__group-label"
+                                    >
+                                        UA
+                                        <br />
+                                        <Field
+                                            type="text"
+                                            className="form__group-input"
+                                            placeholder="Nombre"
+                                            name="uaIrd"
+                                        />
+                                    </label>
+
+                                    {errors.uaIrd && touched.uaIrd ? (
+                                        <div className="form__group-error">
+                                            {errors.uaIrd}
                                         </div>
                                     ) : null}
                                 </div>

@@ -117,7 +117,8 @@ const IrdListar = () => {
                 ) : (
                     <table className="table">
                         <thead>
-                            <tr>
+                                <tr>
+                                    <th>Nombre Ird</th>
                                 <th>Marca Ird</th>
                                 <th>Multicast salida</th>
                                 <th>Ip de gestión</th>
@@ -127,6 +128,7 @@ const IrdListar = () => {
                         <tbody>
                             {ird.map((ird) => (
                                 <tr key={ird._id} id={ird._id}>
+                                    <td>{ird.nombreIrd}</td>
                                     <td>{ird.marcaIrd}</td>
                                     <td>{ird.multicastReceptor}</td>
                                     <td>

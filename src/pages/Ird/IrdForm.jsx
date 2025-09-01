@@ -1,3 +1,4 @@
+// pages/Ird/IrdForm.jsx (o donde tengas el form)
 import { Formik, Field, Form } from "formik";
 import { Link } from "react-router-dom";
 import styles from "./Ird.module.css";
@@ -6,9 +7,11 @@ import Swal from "sweetalert2";
 import api from "../../utils/api";
 import { ipMulticastRegex, ipVideoMulticast } from "../../utils/regexValidate";
 
-
 const IrdSchema = Yup.object().shape({
-    ipAdminIrd: Yup.string().required("Campo obligatorio").matches(/^172\.19\.\d{1,3}\.\d{1,3}$/, "Ingresa una ip válida"),
+    nombreIrd: Yup.string().required("Campo obligatorio"),
+    ipAdminIrd: Yup.string()
+        .required("Campo obligatorio")
+        .matches(/^172\.19\.\d{1,3}\.\d{1,3}$/, "Ingresa una ip válida"),
     marcaIrd: Yup.string().required("Campo obligatorio"),
     modelIrd: Yup.string().required("Campo obligatorio"),
     versionIrd: Yup.string().required("Campo obligatorio"),
@@ -25,11 +28,17 @@ const IrdSchema = Yup.object().shape({
     vctReceptor: Yup.string().required("Campo obligatorio"),
     outputReceptor: Yup.string().required("Campo obligatorio"),
     multicastReceptor: Yup.string()
-        .matches(ipMulticastRegex, 'Debe ser una multicast válida')
-        .required('Campo requerido'),
-    ipVideoMulticast: Yup.string().required("Campo obligatorio").matches(ipVideoMulticast, "Debe ser una ip válida"),
-    locationRow: Yup.string().required("Campo obligatorio").matches(/\d+/,"Ingrese un número"),
-    locationCol: Yup.string().required("Campo obligatorio").matches(/\d+/, "Ingrese un número"),
+        .matches(ipMulticastRegex, "Debe ser una multicast válida")
+        .required("Campo requerido"),
+    ipVideoMulticast: Yup.string()
+        .required("Campo obligatorio")
+        .matches(ipVideoMulticast, "Debe ser una ip válida"),
+    locationRow: Yup.string()
+        .required("Campo obligatorio")
+        .matches(/\d+/, "Ingrese un número"),
+    locationCol: Yup.string()
+        .required("Campo obligatorio")
+        .matches(/\d+/, "Ingrese un número"),
 });
 
 const IrdForm = () => {
@@ -41,16 +50,15 @@ const IrdForm = () => {
                         <li className="breadcrumb-item">
                             <Link to="/listar-ird">Listar</Link>
                         </li>
-                        <li
-                            className="breadcrumb-item active"
-                            aria-current="page"
-                        >
+                        <li className="breadcrumb-item active" aria-current="page">
                             Formulario
                         </li>
                     </ol>
                 </nav>
+
                 <Formik
                     initialValues={{
+                        nombreIrd: "",
                         ipAdminIrd: "",
                         marcaIrd: "",
                         modelIrd: "",
@@ -76,24 +84,56 @@ const IrdForm = () => {
                     enableReinitialize={true}
                     onSubmit={async (values, { resetForm }) => {
                         try {
-                            const response = await api.createIrd(values);
-                             
+                            // 1) Crear IRD
+                            const { data: ird } = await api.createIrd(values);
+
+                            // 2) Crear Equipo EN SEGUNDO PLANO (no bloquea UX)
+                            (async () => {
+                                try {
+                                   /*  await api.createEquipo({
+                                        // Si tu backend espera estos nombres exactos:
+                                        nombreIrd: values.nombreIrd,
+                                        marcaIrd: values.marcaIrd,
+                                        modelIrd: values.modelIrd,
+                                        tipoNombre: "ird",
+                                        ipAdminIrd: values.ipAdminIrd,
+                                        irdRef: ird?._id, // opcional si tu schema lo permite
+                                    }); */
+
+                                    // Si en tu backend los campos son otros, usa este mapeo:
+                                    await api.createEquipo({
+                                       nombre: values.nombreIrd,
+                                      marca: values.marcaIrd,
+                                      modelo: values.modelIrd,
+                                       tipoNombre: "ird",
+                                        ip_gestion: values.ipAdminIrd,
+                                       irdRef: ird?._id,
+                                     });
+                                } catch (bgErr) {
+                                    console.warn(
+                                        "No se pudo crear Equipo desde IRD:",
+                                        bgErr?.response?.data || bgErr
+                                    );
+                                }
+                            })();
+
+                            // 3) Feedback y reset
                             Swal.fire({
                                 title: "Ird guardado exitosamente",
                                 icon: "success",
                                 html: `
-                                            <p><strong>Nombre Ird:</strong> ${values.marcaIrd}</p>
-                                            <p><strong>Modelo:</strong> ${values.modelIrd}</p>
-                                          `,
+                  <p><strong>Nombre IRD:</strong> ${values.nombreIrd}</p>
+                  <p><strong>Marca:</strong> ${values.marcaIrd}</p>
+                  <p><strong>Modelo:</strong> ${values.modelIrd}</p>
+                `,
                             });
                             resetForm();
                         } catch (error) {
-                             
                             Swal.fire({
                                 title: "Error",
                                 icon: "error",
                                 text: `Duplicidad de datos`,
-                                footer: `${error.response.data.message}`,
+                                footer: `${error?.response?.data?.message || error.message}`,
                             });
                         }
                     }}
@@ -105,10 +145,25 @@ const IrdForm = () => {
                             <div className={styles.rows__group}>
                                 <div className={styles.columns__group}>
                                     <div className="form__group">
-                                        <label
-                                            htmlFor="typeReceptor"
-                                            className="form__group-label"
-                                        >
+                                        <label htmlFor="nombreIrd" className="form__group-label">
+                                            Nombre
+                                            <br />
+                                            <Field
+                                                type="text"
+                                                className="form__group-input"
+                                                placeholder="Nombre Ird"
+                                                name="nombreIrd"
+                                            />
+                                        </label>
+                                        {errors.nombreIrd && touched.nombreIrd ? (
+                                            <div className="form__group-error">
+                                                {errors.nombreIrd}
+                                            </div>
+                                        ) : null}
+                                    </div>
+
+                                    <div className="form__group">
+                                        <label htmlFor="marcaIrd" className="form__group-label">
                                             Marca
                                             <br />
                                             <Field
@@ -124,11 +179,9 @@ const IrdForm = () => {
                                             </div>
                                         ) : null}
                                     </div>
+
                                     <div className="form__group">
-                                        <label
-                                            htmlFor="modelIrd"
-                                            className="form__group-label"
-                                        >
+                                        <label htmlFor="modelIrd" className="form__group-label">
                                             Modelo
                                             <br />
                                             <Field
@@ -138,18 +191,15 @@ const IrdForm = () => {
                                                 name="modelIrd"
                                             />
                                         </label>
-
                                         {errors.modelIrd && touched.modelIrd ? (
                                             <div className="form__group-error">
                                                 {errors.modelIrd}
                                             </div>
                                         ) : null}
                                     </div>
+
                                     <div className="form__group">
-                                        <label
-                                            htmlFor="ipAdminIrd"
-                                            className="form__group-label"
-                                        >
+                                        <label htmlFor="ipAdminIrd" className="form__group-label">
                                             Ip administración
                                             <br />
                                             <Field
@@ -159,19 +209,15 @@ const IrdForm = () => {
                                                 name="ipAdminIrd"
                                             />
                                         </label>
-
-                                        {errors.ipAdminIrd &&
-                                        touched.ipAdminIrd ? (
+                                        {errors.ipAdminIrd && touched.ipAdminIrd ? (
                                             <div className="form__group-error">
                                                 {errors.ipAdminIrd}
                                             </div>
                                         ) : null}
                                     </div>
+
                                     <div className="form__group">
-                                        <label
-                                            htmlFor="marcaIrd"
-                                            className="form__group-label"
-                                        >
+                                        <label htmlFor="versionIrd" className="form__group-label">
                                             Versión
                                             <br />
                                             <Field
@@ -181,19 +227,15 @@ const IrdForm = () => {
                                                 name="versionIrd"
                                             />
                                         </label>
-
-                                        {errors.versionIrd &&
-                                        touched.versionIrd ? (
+                                        {errors.versionIrd && touched.versionIrd ? (
                                             <div className="form__group-error">
                                                 {errors.versionIrd}
                                             </div>
                                         ) : null}
                                     </div>
+
                                     <div className="form__group">
-                                        <label
-                                            htmlFor="versionIrd"
-                                            className="form__group-label"
-                                        >
+                                        <label htmlFor="uaIrd" className="form__group-label">
                                             UA
                                             <br />
                                             <Field
@@ -203,7 +245,6 @@ const IrdForm = () => {
                                                 name="uaIrd"
                                             />
                                         </label>
-
                                         {errors.uaIrd && touched.uaIrd ? (
                                             <div className="form__group-error">
                                                 {errors.uaIrd}
@@ -211,13 +252,11 @@ const IrdForm = () => {
                                         ) : null}
                                     </div>
                                 </div>
+
                                 {/* ########################################## */}
                                 <div className={styles.columns__group}>
                                     <div className="form__group">
-                                        <label
-                                            htmlFor="uaIrd"
-                                            className="form__group-label"
-                                        >
+                                        <label htmlFor="tidReceptor" className="form__group-label">
                                             TID
                                             <br />
                                             <Field
@@ -227,9 +266,7 @@ const IrdForm = () => {
                                                 name="tidReceptor"
                                             />
                                         </label>
-
-                                        {errors.tidReceptor &&
-                                        touched.tidReceptor ? (
+                                        {errors.tidReceptor && touched.tidReceptor ? (
                                             <div className="form__group-error">
                                                 {errors.tidReceptor}
                                             </div>
@@ -238,7 +275,7 @@ const IrdForm = () => {
 
                                     <div className="form__group">
                                         <label
-                                            htmlFor="tidReceptor"
+                                            htmlFor="typeReceptor"
                                             className="form__group-label"
                                         >
                                             Tipo receptor
@@ -250,9 +287,7 @@ const IrdForm = () => {
                                                 name="typeReceptor"
                                             />
                                         </label>
-
-                                        {errors.typeReceptor &&
-                                        touched.typeReceptor ? (
+                                        {errors.typeReceptor && touched.typeReceptor ? (
                                             <div className="form__group-error">
                                                 {errors.typeReceptor}
                                             </div>
@@ -260,10 +295,7 @@ const IrdForm = () => {
                                     </div>
 
                                     <div className="form__group">
-                                        <label
-                                            htmlFor="feqReceptor"
-                                            className="form__group-label"
-                                        >
+                                        <label htmlFor="feqReceptor" className="form__group-label">
                                             Frecuencia
                                             <br />
                                             <Field
@@ -273,9 +305,7 @@ const IrdForm = () => {
                                                 name="feqReceptor"
                                             />
                                         </label>
-
-                                        {errors.feqReceptor &&
-                                        touched.feqReceptor ? (
+                                        {errors.feqReceptor && touched.feqReceptor ? (
                                             <div className="form__group-error">
                                                 {errors.feqReceptor}
                                             </div>
@@ -296,9 +326,7 @@ const IrdForm = () => {
                                                 name="symbolRateIrd"
                                             />
                                         </label>
-
-                                        {errors.symbolRateIrd &&
-                                        touched.symbolRateIrd ? (
+                                        {errors.symbolRateIrd && touched.symbolRateIrd ? (
                                             <div className="form__group-error">
                                                 {errors.symbolRateIrd}
                                             </div>
@@ -319,17 +347,15 @@ const IrdForm = () => {
                                                 name="fecReceptorIrd"
                                             />
                                         </label>
-
-                                        {errors.fecReceptorIrd &&
-                                        touched.fecReceptorIrd ? (
+                                        {errors.fecReceptorIrd && touched.fecReceptorIrd ? (
                                             <div className="form__group-error">
                                                 {errors.fecReceptorIrd}
                                             </div>
                                         ) : null}
                                     </div>
                                 </div>
-                                {/* ###################################### */}
 
+                                {/* ###################################### */}
                                 <div className={styles.columns__group}>
                                     <div className="form__group">
                                         <label
@@ -345,9 +371,8 @@ const IrdForm = () => {
                                                 name="modulationReceptorIrd"
                                             />
                                         </label>
-
                                         {errors.modulationReceptorIrd &&
-                                        touched.modulationReceptorIrd ? (
+                                            touched.modulationReceptorIrd ? (
                                             <div className="form__group-error">
                                                 {errors.modulationReceptorIrd}
                                             </div>
@@ -355,10 +380,7 @@ const IrdForm = () => {
                                     </div>
 
                                     <div className="form__group">
-                                        <label
-                                            htmlFor="rellOfReceptor"
-                                            className="form__group-label"
-                                        >
+                                        <label htmlFor="rellOfReceptor" className="form__group-label">
                                             Roll Of
                                             <br />
                                             <Field
@@ -368,9 +390,7 @@ const IrdForm = () => {
                                                 name="rellOfReceptor"
                                             />
                                         </label>
-
-                                        {errors.rellOfReceptor &&
-                                        touched.rellOfReceptor ? (
+                                        {errors.rellOfReceptor && touched.rellOfReceptor ? (
                                             <div className="form__group-error">
                                                 {errors.rellOfReceptor}
                                             </div>
@@ -378,10 +398,7 @@ const IrdForm = () => {
                                     </div>
 
                                     <div className="form__group">
-                                        <label
-                                            htmlFor="nidReceptor"
-                                            className="form__group-label"
-                                        >
+                                        <label htmlFor="nidReceptor" className="form__group-label">
                                             Nid
                                             <br />
                                             <Field
@@ -391,9 +408,7 @@ const IrdForm = () => {
                                                 name="nidReceptor"
                                             />
                                         </label>
-
-                                        {errors.nidReceptor &&
-                                        touched.nidReceptor ? (
+                                        {errors.nidReceptor && touched.nidReceptor ? (
                                             <div className="form__group-error">
                                                 {errors.nidReceptor}
                                             </div>
@@ -414,9 +429,7 @@ const IrdForm = () => {
                                                 name="cvirtualReceptor"
                                             />
                                         </label>
-
-                                        {errors.cvirtualReceptor &&
-                                        touched.cvirtualReceptor ? (
+                                        {errors.cvirtualReceptor && touched.cvirtualReceptor ? (
                                             <div className="form__group-error">
                                                 {errors.cvirtualReceptor}
                                             </div>
@@ -424,10 +437,7 @@ const IrdForm = () => {
                                     </div>
 
                                     <div className="form__group">
-                                        <label
-                                            htmlFor="vctReceptor"
-                                            className="form__group-label"
-                                        >
+                                        <label htmlFor="vctReceptor" className="form__group-label">
                                             VCT
                                             <br />
                                             <Field
@@ -437,9 +447,7 @@ const IrdForm = () => {
                                                 name="vctReceptor"
                                             />
                                         </label>
-
-                                        {errors.vctReceptor &&
-                                        touched.vctReceptor ? (
+                                        {errors.vctReceptor && touched.vctReceptor ? (
                                             <div className="form__group-error">
                                                 {errors.vctReceptor}
                                             </div>
@@ -450,10 +458,7 @@ const IrdForm = () => {
                                 {/* ###################################### */}
                                 <div className={styles.columns__group}>
                                     <div className="form__group">
-                                        <label
-                                            htmlFor="outputReceptor"
-                                            className="form__group-label"
-                                        >
+                                        <label htmlFor="outputReceptor" className="form__group-label">
                                             Salida receptor
                                             <br />
                                             <Field
@@ -463,9 +468,7 @@ const IrdForm = () => {
                                                 name="outputReceptor"
                                             />
                                         </label>
-
-                                        {errors.outputReceptor &&
-                                        touched.outputReceptor ? (
+                                        {errors.outputReceptor && touched.outputReceptor ? (
                                             <div className="form__group-error">
                                                 {errors.outputReceptor}
                                             </div>
@@ -486,9 +489,7 @@ const IrdForm = () => {
                                                 name="multicastReceptor"
                                             />
                                         </label>
-
-                                        {errors.multicastReceptor &&
-                                        touched.multicastReceptor ? (
+                                        {errors.multicastReceptor && touched.multicastReceptor ? (
                                             <div className="form__group-error">
                                                 {errors.multicastReceptor}
                                             </div>
@@ -496,10 +497,7 @@ const IrdForm = () => {
                                     </div>
 
                                     <div className="form__group">
-                                        <label
-                                            htmlFor="ipVideoMulticast"
-                                            className="form__group-label"
-                                        >
+                                        <label htmlFor="ipVideoMulticast" className="form__group-label">
                                             Ip Video Multicast
                                             <br />
                                             <Field
@@ -509,9 +507,7 @@ const IrdForm = () => {
                                                 name="ipVideoMulticast"
                                             />
                                         </label>
-
-                                        {errors.ipVideoMulticast &&
-                                        touched.ipVideoMulticast ? (
+                                        {errors.ipVideoMulticast && touched.ipVideoMulticast ? (
                                             <div className="form__group-error">
                                                 {errors.ipVideoMulticast}
                                             </div>
@@ -519,10 +515,7 @@ const IrdForm = () => {
                                     </div>
 
                                     <div className="form__group">
-                                        <label
-                                            htmlFor="locationRow"
-                                            className="form__group-label"
-                                        >
+                                        <label htmlFor="locationRow" className="form__group-label">
                                             Fila
                                             <br />
                                             <Field
@@ -532,9 +525,7 @@ const IrdForm = () => {
                                                 name="locationRow"
                                             />
                                         </label>
-
-                                        {errors.locationRow &&
-                                        touched.locationRow ? (
+                                        {errors.locationRow && touched.locationRow ? (
                                             <div className="form__group-error">
                                                 {errors.locationRow}
                                             </div>
@@ -542,10 +533,7 @@ const IrdForm = () => {
                                     </div>
 
                                     <div className="form__group">
-                                        <label
-                                            htmlFor="locationCol"
-                                            className="form__group-label"
-                                        >
+                                        <label htmlFor="locationCol" className="form__group-label">
                                             Bastidor
                                             <br />
                                             <Field
@@ -555,9 +543,7 @@ const IrdForm = () => {
                                                 name="locationCol"
                                             />
                                         </label>
-
-                                        {errors.locationCol &&
-                                        touched.locationCol ? (
+                                        {errors.locationCol && touched.locationCol ? (
                                             <div className="form__group-error">
                                                 {errors.locationCol}
                                             </div>
@@ -566,10 +552,7 @@ const IrdForm = () => {
                                 </div>
                             </div>
 
-                            <button
-                                type="submit"
-                                className={`${styles.button} btn-primary`}
-                            >
+                            <button type="submit" className={`${styles.button} btn-primary`}>
                                 Enviar
                             </button>
                         </Form>
