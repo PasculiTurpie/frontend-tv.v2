@@ -90,17 +90,6 @@ const IrdForm = () => {
                             // 2) Crear Equipo EN SEGUNDO PLANO (no bloquea UX)
                             (async () => {
                                 try {
-                                   /*  await api.createEquipo({
-                                        // Si tu backend espera estos nombres exactos:
-                                        nombreIrd: values.nombreIrd,
-                                        marcaIrd: values.marcaIrd,
-                                        modelIrd: values.modelIrd,
-                                        tipoNombre: "ird",
-                                        ipAdminIrd: values.ipAdminIrd,
-                                        irdRef: ird?._id, // opcional si tu schema lo permite
-                                    }); */
-
-                                    // Si en tu backend los campos son otros, usa este mapeo:
                                     await api.createEquipo({
                                        nombre: values.nombreIrd,
                                       marca: values.marcaIrd,
