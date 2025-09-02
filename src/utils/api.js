@@ -276,6 +276,9 @@ class Api {
     }
 
     /*Rutas para gestión ChannelDiagram*/
+    createChannelDiagram(payload) {
+        return this._axios.post(`/channels`, payload).then((res) => res.data);
+    }
 
     getChannelDiagramById(id) {
         return this._axios.get(`/channels/${id}`).then((res) => res);
