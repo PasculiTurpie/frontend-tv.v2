@@ -374,7 +374,7 @@ const ChannelForm = () => {
                                             source: values.source.trim(),
                                             target: values.target.trim(),
                                             label: values.edgeLabel?.trim() || values.edgeId.trim(),
-                                            type: "default",
+                                            type: "smoothstep",
                                         };
 
                                         if (draftEdges.some((e) => e.id === edge.id)) {
