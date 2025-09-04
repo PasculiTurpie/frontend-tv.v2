@@ -4,6 +4,7 @@ import "reactflow/dist/style.css";
 import api from "../../utils/api";
 import { useParams } from "react-router-dom";
 import CustomNode from "./CustomNode";
+import CustomDirectionalEdge from "./CustomDirectionalEdge";
 
 const ChannelDiagram = () => {
   const [nodes, setNodes] = useState([]);
@@ -11,7 +12,8 @@ const ChannelDiagram = () => {
   const [signal, setSignal] = useState({});
   const { id } = useParams();
 
-  const nodeTypes = { customNode: CustomNode };
+  const nodeTypes = { custom: CustomNode };
+  const edgeTypes = { directional: CustomDirectionalEdge };
 
   useEffect(() => {
     api
@@ -60,6 +62,7 @@ const ChannelDiagram = () => {
         edges={edges}
         onClick={handleClickElements}
         nodeTypes={nodeTypes}
+        edgeTypes={edgeTypes}
         fitView
       >
         <Controls />

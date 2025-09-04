@@ -1,50 +1,59 @@
 import React from "react";
 import { Handle, Position } from "reactflow";
 
-const imagenes = {
-  antena: "/img/antena.png",
-  ird: "/img/ird.png",
-  encoder: "/img/encoder.png",
-  switch: "/img/switch.png",
-};
+const handleDot = { background: "transparent" }; // sin punto visible
+const pct = (v) => ({ top: `${v}%` });
 
-export default function CustomNode({ data }) {
-  const imgSrc = imagenes[data.tipoEquipo] || "/img/default.png";
-
+const CustomNode = ({ data }) => {
   return (
-    <div style={{ textAlign: "center", padding: 5 }}>
-      <img
-        src={imgSrc}
-        alt={data.tipoEquipo || "equipo"}
-        style={{ width: 40, height: 40 }}
-      />
-      <div>{data.label}</div>
+    <div
+      title={data?.tooltip || data?.description || data?.label}
+      style={{
+        padding: 10,
+        border: "1px solid #444",
+        borderRadius: 10,
+        background: "#fff",
+        width: 160,
+        position: "relative",
+      }}
+    >
+      <div style={{ fontWeight: "bold", textAlign: "center" }}>
+        {data?.label}
+      </div>
 
-      {/* Handles para conexiones */}
-      <Handle
-        type="source"
-        position={Position.Top}
-        id="top"
-        style={{ background: "#555" }}
-      />
-      <Handle
-        type="source"
-        position={Position.Right}
-        id="right"
-        style={{ background: "#555" }}
-      />
+      {/* ====== ENTRADAS (targets) ====== */}
+      {/* in-left (30%): para ENLACE DE IDA */}
       <Handle
         type="target"
         position={Position.Left}
-        id="left"
-        style={{ background: "#555" }}
+        id="in-left"
+        style={{ left: 0, ...pct(30), ...handleDot }}
       />
+      {/* in-right (70%): para ENLACE DE VUELTA */}
       <Handle
         type="target"
-        position={Position.Bottom}
-        id="bottom"
-        style={{ background: "#555" }}
+        position={Position.Right}
+        id="in-right"
+        style={{ right: 0, ...pct(70), ...handleDot }}
+      />
+
+      {/* ====== SALIDAS (sources) ====== */}
+      {/* out-left (70%): para ENLACE DE VUELTA */}
+      <Handle
+        type="source"
+        position={Position.Left}
+        id="out-left"
+        style={{ left: 0, ...pct(70), ...handleDot }}
+      />
+      {/* out-right (30%): para ENLACE DE IDA */}
+      <Handle
+        type="source"
+        position={Position.Right}
+        id="out-right"
+        style={{ right: 0, ...pct(30), ...handleDot }}
       />
     </div>
   );
-}
+};
+
+export default CustomNode;

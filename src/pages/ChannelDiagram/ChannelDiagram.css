@@ -51,7 +51,11 @@ height: fit-content;
   border:1px solid rgb(214, 212, 212);
   border-radius: 5px;
   padding-left: 10px;
+
   transition: outline-color 0.3s ease;
+}
+.form__input-special{
+  margin-top:15px
 }
 .form__input:focus{
 
@@ -60,7 +64,7 @@ height: fit-content;
 .form__group-inputs{
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  grid-template-columns: repeat(auto);
+  grid-template-rows: repeat(auto);
   gap:10px
 
 }

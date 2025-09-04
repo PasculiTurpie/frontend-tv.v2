@@ -5,24 +5,34 @@ import api from "../../utils/api";
 import Select from "react-select";
 import Swal from "sweetalert2";
 
+// Fallback numérico para ArrowClosed (React Flow MarkerType.ArrowClosed = 1)
+const ARROW_CLOSED = { type: 1 };
+
 const ChannelForm = () => {
     const [optionsSelectChannel, setOptionSelectChannel] = useState([]);
     const [isSearchable, setIsSearchable] = useState(true);
 
-    const [selectedValue, setSelectedValue] = useState(null); // channelId
-    const [selectedId, setSelectedId] = useState(null); // channel label
+    const [selectedValue, setSelectedValue] = useState(null); // id señal
+    const [selectedId, setSelectedId] = useState(null); // label señal
 
     const [optionsSelectEquipo, setOptionSelectEquipo] = useState([]);
-    const [selectedEquipoValue, setSelectedEquipoValue] = useState(null); // equipoId
-    const [selectedIdEquipo, setSelectedIdEquipo] = useState(null); // equipo label
+    const [selectedEquipoValue, setSelectedEquipoValue] = useState(null); // id equipo
+    const [selectedIdEquipo, setSelectedIdEquipo] = useState(null); // label equipo
 
-    // Arrays en memoria para ir acumulando NODOS y ENLACES
+    // Acumuladores en memoria
     const [draftNodes, setDraftNodes] = useState([]);
     const [draftEdges, setDraftEdges] = useState([]);
 
     // Selects dinámicos para edges
     const [edgeSourceSel, setEdgeSourceSel] = useState(null);
     const [edgeTargetSel, setEdgeTargetSel] = useState(null);
+
+    // Dirección del enlace
+    const edgeDirOptions = [
+        { value: "ida", label: "Ida (source → target)" },
+        { value: "vuelta", label: "Vuelta (target ← source)" },
+    ];
+    const [edgeDirection, setEdgeDirection] = useState(edgeDirOptions[0]);
 
     useEffect(() => {
         api.getSignal().then((res) => {
@@ -52,7 +62,7 @@ const ChannelForm = () => {
         setSelectedIdEquipo(e.label);
     };
 
-    // Opciones para los selects de Source/Target basadas en nodos agregados
+    // Opciones para selects Source/Target basadas en nodos agregados
     const edgeNodeOptions = useMemo(
         () =>
             draftNodes.map((n) => ({
@@ -97,7 +107,7 @@ const ChannelForm = () => {
                         target: "",
                         edgeLabel: "",
                     }}
-                    onSubmit={async (values, { resetForm }) => {
+                    onSubmit={async () => {
                         try {
                             if (!selectedValue) {
                                 Swal.fire({
@@ -117,17 +127,17 @@ const ChannelForm = () => {
                                 return;
                             }
 
-                            // ===== Normalización de nodos/edges para el backend =====
+                            // Normaliza NODOS
                             const normalizedNodes = draftNodes.map((n) => ({
                                 id: n.id,
-                                type: n.type || "default",
-                                // muchos backends prefieren equipo como campo directo:
-                                equipo: n.data?.equipoId,           // ObjectId del equipo
-                                label: n.data?.label,               // útil si tu API guarda label fuera de data
+                                type: n.type || "custom", // usa tu CustomNode
+                                equipo: n.data?.equipoId,
+                                label: n.data?.label,
                                 data: {
                                     label: n.data?.label || n.id,
                                     equipoId: n.data?.equipoId,
                                     equipoNombre: n.data?.equipoNombre,
+                                    tooltip: n.data?.tooltip,
                                 },
                                 position: {
                                     x: Number.isFinite(+n.position?.x) ? +n.position.x : 0,
@@ -135,15 +145,21 @@ const ChannelForm = () => {
                                 },
                             }));
 
+                            // Normaliza EDGES
                             const normalizedEdges = draftEdges.map((e) => ({
                                 id: e.id,
                                 source: e.source,
                                 target: e.target,
+                                sourceHandle: e.sourceHandle,
+                                targetHandle: e.targetHandle,
                                 label: e.label,
-                                type: e.type || "default",
+                                type: e.type || "directional", // renderiza tu CustomDirectionalEdge
+                                style: e.style,
+                                markerEnd: e.markerEnd,
+                                markerStart: e.markerStart,
+                                data: { ...(e.data || {}) },
                             }));
 
-                            // ===== Payload con alias del id de la señal (ajusta al tuyo) =====
                             const payload = {
                                 signal: selectedValue,
                                 channel: selectedValue,
@@ -171,16 +187,11 @@ const ChannelForm = () => {
                             setDraftEdges([]);
                             setEdgeSourceSel(null);
                             setEdgeTargetSel(null);
-                            // resetForm(); // descomenta si quieres limpiar también los inputs
+                            setEdgeDirection(edgeDirOptions[0]);
                         } catch (e) {
                             const data = e?.response?.data;
-                            console.warn("Create flow 400 payload/error:", {
-                                payload: {
-                                    // imprime solo un resumen para debug
-                                    signal: "…",
-                                    nodesCount: draftNodes.length,
-                                    edgesCount: draftEdges.length,
-                                },
+                            console.warn("Create flow error:", {
+                                serverStatus: e?.response?.status,
                                 serverData: data,
                             });
                             Swal.fire({
@@ -245,7 +256,7 @@ const ChannelForm = () => {
 
                                         const node = {
                                             id: values.id.trim(),
-                                            type: "default",
+                                            type: "custom", // usa tu CustomNode
                                             data: {
                                                 label: values.label?.trim() || values.id.trim(),
                                                 equipoId: selectedEquipoValue,
@@ -333,6 +344,15 @@ const ChannelForm = () => {
                                         }
                                     />
 
+                                    {/* Dirección del enlace (color, flecha y handles) */}
+                                    <Select
+                                        className="select__input"
+                                        options={edgeDirOptions}
+                                        value={edgeDirection}
+                                        onChange={(opt) => setEdgeDirection(opt)}
+                                        placeholder="Dirección"
+                                    />
+
                                     <Field className="form__input" placeholder="Etiqueta enlace" name="edgeLabel" />
                                 </div>
 
@@ -340,17 +360,19 @@ const ChannelForm = () => {
                                     className="button btn-warning"
                                     type="button"
                                     onClick={() => {
-                                        if (!values.edgeId?.trim()) {
-                                            return Swal.fire({ icon: "warning", title: "Id Enlace requerido" });
-                                        }
-                                        if (!values.source?.trim() || !values.target?.trim()) {
+                                        const id = values.edgeId?.trim();
+                                        const src = values.source?.trim();
+                                        const tgt = values.target?.trim();
+
+                                        if (!id) return Swal.fire({ icon: "warning", title: "Id Enlace requerido" });
+                                        if (!src || !tgt) {
                                             return Swal.fire({
                                                 icon: "warning",
                                                 title: "Source y Target requeridos",
                                                 text: "Debes seleccionar los nodos a conectar.",
                                             });
                                         }
-                                        if (values.source.trim() === values.target.trim()) {
+                                        if (src === tgt) {
                                             return Swal.fire({
                                                 icon: "warning",
                                                 title: "Enlace inválido",
@@ -358,9 +380,9 @@ const ChannelForm = () => {
                                             });
                                         }
 
-                                        // Chequeo extra: que existan en draftNodes
-                                        const hasSource = draftNodes.some((n) => n.id === values.source.trim());
-                                        const hasTarget = draftNodes.some((n) => n.id === values.target.trim());
+                                        // Verifica que existan
+                                        const hasSource = draftNodes.some((n) => n.id === src);
+                                        const hasTarget = draftNodes.some((n) => n.id === tgt);
                                         if (!hasSource || !hasTarget) {
                                             return Swal.fire({
                                                 icon: "warning",
@@ -369,12 +391,28 @@ const ChannelForm = () => {
                                             });
                                         }
 
+                                        // Color + handles según dirección (y evita traslape visual)
+                                        const dir = edgeDirection.value; // 'ida' | 'vuelta'
+                                        const color = dir === "vuelta" ? "green" : "red";
+                                        const handleByDir =
+                                            dir === "vuelta"
+                                                ? { sourceHandle: "out-left", targetHandle: "in-right" } // vuelta
+                                                : { sourceHandle: "out-right", targetHandle: "in-left" }; // ida
+
                                         const edge = {
-                                            id: values.edgeId.trim(),
-                                            source: values.source.trim(),
-                                            target: values.target.trim(),
-                                            label: values.edgeLabel?.trim() || values.edgeId.trim(),
-                                            type: "smoothstep",
+                                            id,
+                                            source: src,
+                                            target: tgt,
+                                            sourceHandle: handleByDir.sourceHandle,
+                                            targetHandle: handleByDir.targetHandle,
+                                            label: values.edgeLabel?.trim() || id,
+                                            type: "directional", // lo renderiza CustomDirectionalEdge (smoothstep)
+                                            style: { stroke: color, strokeWidth: 2 },
+                                            markerEnd: { ...ARROW_CLOSED }, // flecha al final
+                                            data: {
+                                                direction: dir,
+                                                label: values.edgeLabel?.trim() || id,
+                                            },
                                         };
 
                                         if (draftEdges.some((e) => e.id === edge.id)) {
@@ -394,6 +432,7 @@ const ChannelForm = () => {
                                         setFieldValue("edgeLabel", "");
                                         setEdgeSourceSel(null);
                                         setEdgeTargetSel(null);
+                                        setEdgeDirection(edgeDirOptions[0]);
                                     }}
                                 >
                                     + Agregar enlace
@@ -406,7 +445,8 @@ const ChannelForm = () => {
                                         <ul style={{ marginTop: 6 }}>
                                             {draftEdges.map((e) => (
                                                 <li key={e.id}>
-                                                    <code>{e.id}</code> — {e.source} → {e.target} — {e.label}
+                                                    <code>{e.id}</code> — {e.source} ({e.sourceHandle}) → {e.target} ({e.targetHandle}) —{" "}
+                                                    {e.label} — <span style={{ color: e.style?.stroke }}>{e.data?.direction}</span>
                                                 </li>
                                             ))}
                                         </ul>
