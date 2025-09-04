@@ -1,8 +1,8 @@
 import React from "react";
 import { Handle, Position } from "reactflow";
 
-const handleDot = { background: "transparent" }; // sin punto visible
-const pct = (v) => ({ top: `${v}%` });
+const dot = { background: "transparent" };
+const pctTop = (p) => ({ top: `${p}%` });
 
 const CustomNode = ({ data }) => {
   return (
@@ -13,45 +13,30 @@ const CustomNode = ({ data }) => {
         border: "1px solid #444",
         borderRadius: 10,
         background: "#fff",
-        width: 160,
+        width: 170,
         position: "relative",
+        textAlign: "center",
       }}
     >
-      <div style={{ fontWeight: "bold", textAlign: "center" }}>
-        {data?.label}
-      </div>
+      <div style={{ fontWeight: "bold" }}>{data?.label}</div>
 
-      {/* ====== ENTRADAS (targets) ====== */}
-      {/* in-left (30%): para ENLACE DE IDA */}
-      <Handle
-        type="target"
-        position={Position.Left}
-        id="in-left"
-        style={{ left: 0, ...pct(30), ...handleDot }}
-      />
-      {/* in-right (70%): para ENLACE DE VUELTA */}
-      <Handle
-        type="target"
-        position={Position.Right}
-        id="in-right"
-        style={{ right: 0, ...pct(70), ...handleDot }}
-      />
+      {/* ====== TOP (2) ====== */}
+      <Handle id="in-top-1" type="target" position={Position.Top} style={{ ...dot, left: "35%" }} />
+      <Handle id="in-top-2" type="target" position={Position.Top} style={{ ...dot, left: "65%" }} />
+      <Handle id="out-top-1" type="source" position={Position.Top} style={{ ...dot, left: "35%" }} />
+      <Handle id="out-top-2" type="source" position={Position.Top} style={{ ...dot, left: "65%" }} />
 
-      {/* ====== SALIDAS (sources) ====== */}
-      {/* out-left (70%): para ENLACE DE VUELTA */}
-      <Handle
-        type="source"
-        position={Position.Left}
-        id="out-left"
-        style={{ left: 0, ...pct(70), ...handleDot }}
-      />
-      {/* out-right (30%): para ENLACE DE IDA */}
-      <Handle
-        type="source"
-        position={Position.Right}
-        id="out-right"
-        style={{ right: 0, ...pct(30), ...handleDot }}
-      />
+      {/* ====== BOTTOM (2) ====== */}
+      <Handle id="in-bottom-1" type="target" position={Position.Bottom} style={{ ...dot, left: "35%" }} />
+      <Handle id="in-bottom-2" type="target" position={Position.Bottom} style={{ ...dot, left: "65%" }} />
+      <Handle id="out-bottom-1" type="source" position={Position.Bottom} style={{ ...dot, left: "35%" }} />
+      <Handle id="out-bottom-2" type="source" position={Position.Bottom} style={{ ...dot, left: "65%" }} />
+
+      {/* ====== LEFT/RIGHT (por compatibilidad con casos no verticales) ====== */}
+      <Handle id="in-left" type="target" position={Position.Left} style={{ ...dot, ...pctTop(50) }} />
+      <Handle id="in-right" type="target" position={Position.Right} style={{ ...dot, ...pctTop(50) }} />
+      <Handle id="out-left" type="source" position={Position.Left} style={{ ...dot, ...pctTop(50) }} />
+      <Handle id="out-right" type="source" position={Position.Right} style={{ ...dot, ...pctTop(50) }} />
     </div>
   );
 };

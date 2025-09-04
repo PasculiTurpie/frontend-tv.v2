@@ -1,3 +1,4 @@
+// ChannelForm.jsx
 import { Field, Formik, Form } from "formik";
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
@@ -5,8 +6,60 @@ import api from "../../utils/api";
 import Select from "react-select";
 import Swal from "sweetalert2";
 
-// Fallback numérico para ArrowClosed (React Flow MarkerType.ArrowClosed = 1)
+// Fallback numérico para MarkerType.ArrowClosed (React Flow = 1)
 const ARROW_CLOSED = { type: 1 };
+
+// Tolerancia para considerar "misma X" (alineación vertical)
+const SAME_X_EPS = 8;
+
+/** Devuelve handles según geometría (vertical) y dirección ('ida'|'vuelta').
+ *  - Si están alineados en X: usa TOP/BOTTOM dobles para separar ida/vuelta
+ *  - Caso contrario: usa RIGHT/LEFT (ida) y LEFT/RIGHT (vuelta)
+ */
+function pickHandlesByGeometry(srcNode, tgtNode, direction /* 'ida' | 'vuelta' */) {
+    const sx = Number(srcNode?.position?.x ?? 0);
+    const sy = Number(srcNode?.position?.y ?? 0);
+    const tx = Number(tgtNode?.position?.x ?? 0);
+    const ty = Number(tgtNode?.position?.y ?? 0);
+
+    const sameX = Math.abs(sx - tx) <= SAME_X_EPS;
+
+    // Caso vertical (misma X, distinta Y)
+    if (sameX && sy !== ty) {
+        const srcIsUpper = sy < ty; // source por encima del target
+
+        if (direction === "ida") {
+            // Ida usa pista 1
+            if (srcIsUpper) {
+                // source arriba: bottom-1 -> top-1
+                return { sourceHandle: "out-bottom-1", targetHandle: "in-top-1" };
+            } else {
+                // source abajo: top-1 -> bottom-1
+                return { sourceHandle: "out-top-1", targetHandle: "in-bottom-1" };
+            }
+        } else {
+            // Vuelta usa pista 2
+            if (srcIsUpper) {
+                return { sourceHandle: "out-bottom-2", targetHandle: "in-top-2" };
+            } else {
+                return { sourceHandle: "out-top-2", targetHandle: "in-bottom-2" };
+            }
+        }
+    }
+
+    // No vertical: lados para no cruzar (ida y vuelta separadas)
+    if (direction === "ida") {
+        return { sourceHandle: "out-right", targetHandle: "in-left" };
+    } else {
+        return { sourceHandle: "out-left", targetHandle: "in-right" };
+    }
+}
+
+// Helper: número o default
+const toNumberOr = (val, def = 0) => {
+    const n = Number(val);
+    return Number.isFinite(n) ? n : def;
+};
 
 const ChannelForm = () => {
     const [optionsSelectChannel, setOptionSelectChannel] = useState([]);
@@ -72,12 +125,6 @@ const ChannelForm = () => {
         [draftNodes]
     );
 
-    // Helper: número o default
-    const toNumberOr = (val, def = 0) => {
-        const n = Number(val);
-        return Number.isFinite(n) ? n : def;
-    };
-
     return (
         <>
             <div className="outlet-main">
@@ -127,10 +174,10 @@ const ChannelForm = () => {
                                 return;
                             }
 
-                            // Normaliza NODOS
+                            // Normaliza NODOS (usa CustomNode en el canvas: type 'custom')
                             const normalizedNodes = draftNodes.map((n) => ({
                                 id: n.id,
-                                type: n.type || "custom", // usa tu CustomNode
+                                type: n.type || "custom",
                                 equipo: n.data?.equipoId,
                                 label: n.data?.label,
                                 data: {
@@ -145,7 +192,7 @@ const ChannelForm = () => {
                                 },
                             }));
 
-                            // Normaliza EDGES
+                            // Normaliza EDGES (usa CustomDirectionalEdge en el canvas: type 'directional')
                             const normalizedEdges = draftEdges.map((e) => ({
                                 id: e.id,
                                 source: e.source,
@@ -153,7 +200,7 @@ const ChannelForm = () => {
                                 sourceHandle: e.sourceHandle,
                                 targetHandle: e.targetHandle,
                                 label: e.label,
-                                type: e.type || "directional", // renderiza tu CustomDirectionalEdge
+                                type: e.type || "directional",
                                 style: e.style,
                                 markerEnd: e.markerEnd,
                                 markerStart: e.markerStart,
@@ -256,7 +303,7 @@ const ChannelForm = () => {
 
                                         const node = {
                                             id: values.id.trim(),
-                                            type: "custom", // usa tu CustomNode
+                                            type: "custom", // se renderiza con CustomNode
                                             data: {
                                                 label: values.label?.trim() || values.id.trim(),
                                                 equipoId: selectedEquipoValue,
@@ -353,7 +400,7 @@ const ChannelForm = () => {
                                         placeholder="Dirección"
                                     />
 
-                                    <Field className="form__input" placeholder="Etiqueta enlace" name="edgeLabel" />
+                                    <Field className="form__input form__input-special" placeholder="Etiqueta enlace" name="edgeLabel" />
                                 </div>
 
                                 <button
@@ -381,9 +428,9 @@ const ChannelForm = () => {
                                         }
 
                                         // Verifica que existan
-                                        const hasSource = draftNodes.some((n) => n.id === src);
-                                        const hasTarget = draftNodes.some((n) => n.id === tgt);
-                                        if (!hasSource || !hasTarget) {
+                                        const srcNode = draftNodes.find((n) => n.id === src);
+                                        const tgtNode = draftNodes.find((n) => n.id === tgt);
+                                        if (!srcNode || !tgtNode) {
                                             return Swal.fire({
                                                 icon: "warning",
                                                 title: "Nodos no encontrados",
@@ -391,13 +438,10 @@ const ChannelForm = () => {
                                             });
                                         }
 
-                                        // Color + handles según dirección (y evita traslape visual)
+                                        // Color + handles según dirección y geometría
                                         const dir = edgeDirection.value; // 'ida' | 'vuelta'
                                         const color = dir === "vuelta" ? "green" : "red";
-                                        const handleByDir =
-                                            dir === "vuelta"
-                                                ? { sourceHandle: "out-left", targetHandle: "in-right" } // vuelta
-                                                : { sourceHandle: "out-right", targetHandle: "in-left" }; // ida
+                                        const handleByDir = pickHandlesByGeometry(srcNode, tgtNode, dir);
 
                                         const edge = {
                                             id,
@@ -415,6 +459,7 @@ const ChannelForm = () => {
                                             },
                                         };
 
+                                        // Evitar duplicado por id
                                         if (draftEdges.some((e) => e.id === edge.id)) {
                                             return Swal.fire({
                                                 icon: "warning",
