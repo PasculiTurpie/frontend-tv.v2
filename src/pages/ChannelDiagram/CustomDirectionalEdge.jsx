@@ -51,9 +51,9 @@ const CustomDirectionalEdge = (props) => {
             style={{
               position: "absolute",
               transform: `translate(-50%, -50%) translate(${labelX}px, ${labelY}px)`,
-              fontSize: 12,
-              fontWeight: 600,
-              color: style?.stroke || "#333",
+              fontSize: 14,
+              fontWeight: 700,
+              color: "#000000",
               pointerEvents: "none",
               whiteSpace: "nowrap",
             }}
