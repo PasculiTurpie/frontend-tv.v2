@@ -20,19 +20,19 @@ const CustomNode = ({ data }) => {
     >
       <div style={{ fontWeight: "bold" }}>{data?.label}</div>
 
-      {/* ====== TOP (2) ====== */}
+      {/* TOP (2) */}
       <Handle id="in-top-1" type="target" position={Position.Top} style={{ ...dot, left: "35%" }} />
       <Handle id="in-top-2" type="target" position={Position.Top} style={{ ...dot, left: "65%" }} />
       <Handle id="out-top-1" type="source" position={Position.Top} style={{ ...dot, left: "35%" }} />
       <Handle id="out-top-2" type="source" position={Position.Top} style={{ ...dot, left: "65%" }} />
 
-      {/* ====== BOTTOM (2) ====== */}
+      {/* BOTTOM (2) */}
       <Handle id="in-bottom-1" type="target" position={Position.Bottom} style={{ ...dot, left: "35%" }} />
       <Handle id="in-bottom-2" type="target" position={Position.Bottom} style={{ ...dot, left: "65%" }} />
       <Handle id="out-bottom-1" type="source" position={Position.Bottom} style={{ ...dot, left: "35%" }} />
       <Handle id="out-bottom-2" type="source" position={Position.Bottom} style={{ ...dot, left: "65%" }} />
 
-      {/* ====== LEFT/RIGHT (por compatibilidad con casos no verticales) ====== */}
+      {/* LEFT/RIGHT */}
       <Handle id="in-left" type="target" position={Position.Left} style={{ ...dot, ...pctTop(50) }} />
       <Handle id="in-right" type="target" position={Position.Right} style={{ ...dot, ...pctTop(50) }} />
       <Handle id="out-left" type="source" position={Position.Left} style={{ ...dot, ...pctTop(50) }} />

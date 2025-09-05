@@ -63,7 +63,7 @@ const toNumberOr = (val, def = 0) => {
 
 const ChannelForm = () => {
     const [optionsSelectChannel, setOptionSelectChannel] = useState([]);
-    const [isSearchable, setIsSearchable] = useState(true);
+    const [isSearchable] = useState(true);
 
     const [selectedValue, setSelectedValue] = useState(null); // id señal
     const [selectedId, setSelectedId] = useState(null); // label señal
@@ -98,10 +98,11 @@ const ChannelForm = () => {
 
         api.getEquipo().then((res) => {
             const optEquipos = res.data.map((optEquipo) => ({
-                label: optEquipo.nombre.toUpperCase(),
+                label: optEquipo.nombre?.toUpperCase?.() || optEquipo.nombre,
                 value: optEquipo._id,
             }));
             setOptionSelectEquipo(optEquipos);
+            // (Opción id-únicamente) -> NO usamos equiposMap aquí.
         });
     }, []);
 
@@ -178,11 +179,11 @@ const ChannelForm = () => {
                             const normalizedNodes = draftNodes.map((n) => ({
                                 id: n.id,
                                 type: n.type || "custom",
-                                equipo: n.data?.equipoId,
+                                equipo: n.data?.equipoId, // si tu backend lo espera a nivel raíz
                                 label: n.data?.label,
                                 data: {
                                     label: n.data?.label || n.id,
-                                    equipoId: n.data?.equipoId,
+                                    equipoId: n.data?.equipoId,       // ← solo id (opción id-únicamente)
                                     equipoNombre: n.data?.equipoNombre,
                                     tooltip: n.data?.tooltip,
                                 },
@@ -306,8 +307,8 @@ const ChannelForm = () => {
                                             type: "custom", // se renderiza con CustomNode
                                             data: {
                                                 label: values.label?.trim() || values.id.trim(),
-                                                equipoId: selectedEquipoValue,
-                                                equipoNombre: selectedIdEquipo,
+                                                equipoId: selectedEquipoValue,   // ← SOLO id
+                                                equipoNombre: selectedIdEquipo,  // opcional para vista previa
                                             },
                                             position: {
                                                 x: toNumberOr(values.posX, 0),
@@ -400,7 +401,11 @@ const ChannelForm = () => {
                                         placeholder="Dirección"
                                     />
 
-                                    <Field className="form__input form__input-special" placeholder="Etiqueta enlace" name="edgeLabel" />
+                                    <Field
+                                        className="form__input form__input-special"
+                                        placeholder="Etiqueta enlace"
+                                        name="edgeLabel"
+                                    />
                                 </div>
 
                                 <button
@@ -490,8 +495,8 @@ const ChannelForm = () => {
                                         <ul style={{ marginTop: 6 }}>
                                             {draftEdges.map((e) => (
                                                 <li key={e.id}>
-                                                    <code>{e.id}</code> — {e.source} ({e.sourceHandle}) → {e.target} ({e.targetHandle}) —{" "}
-                                                    {e.label} — <span style={{ color: e.style?.stroke }}>{e.data?.direction}</span>
+                                                    <code>{e.id}</code> — {e.source} ({e.sourceHandle}) → {e.target} ({e.targetHandle}) — {e.label} —{" "}
+                                                    <span style={{ color: e.style?.stroke }}>{e.data?.direction}</span>
                                                 </li>
                                             ))}
                                         </ul>
