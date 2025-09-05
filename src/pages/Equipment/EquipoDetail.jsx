@@ -1,4 +1,5 @@
 import PropTypes from "prop-types";
+import { Link } from "react-router-dom";
 
 const Safe = (v) => (v == null || v === "" ? "—" : String(v));
 
@@ -52,7 +53,21 @@ export default function EquipoDetail({
             <div><strong>Marca:</strong> {Safe(equipo?.marca).toLocaleUpperCase()}</div>
             <div><strong>Modelo:</strong> {Safe(equipo?.modelo.toLocaleUpperCase())}</div>
             <div><strong>Tipo:</strong> {Safe(tipo).toLocaleUpperCase()}</div>
-            <div><strong>IP Gestión:</strong> {Safe(equipo?.ip_gestion)}</div>
+            <div>
+              <strong>IP Gestión:</strong>{" "}
+              {equipo?.ip_gestion ? (
+                <Link
+                  to={`http://${equipo.ip_gestion}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{ color: "#2563eb", textDecoration: "underline" }}
+                >
+                  {equipo.ip_gestion}
+                </Link>
+              ) : (
+                "—"
+              )}
+            </div>
             <div><strong>Creado:</strong> {equipo?.createdAt ? new Date(equipo.createdAt).toLocaleString() : "—"}</div>
             <div><strong>Actualizado:</strong> {equipo?.updatedAt ? new Date(equipo.updatedAt).toLocaleString() : "—"}</div>
           </div>
