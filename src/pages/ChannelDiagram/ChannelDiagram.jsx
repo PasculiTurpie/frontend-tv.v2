@@ -228,7 +228,7 @@ const ChannelDiagram = () => {
             onNodeClick={handleNodeClick}
             fitView
             fitViewOptions={{ padding: 0.2 }}
-            style={{ width: "100%", height: "100%", background: "#E6E6FA" }}
+            style={{ width: "100%", height: "100%", background: "#DCDCDC" }}
             proOptions={{ hideAttribution: true }}
           >
             <Controls />
