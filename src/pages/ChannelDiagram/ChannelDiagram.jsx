@@ -306,21 +306,28 @@ const ChannelDiagram = () => {
 
   const handleNodeClick = useCallback((evt, node) => {
     const equipoObj =
-      node?.data?.equipo ??      // 1) data.equipo embebido
-      node?.equipo ??            // 2) por si el backend lo puso a nivel raíz del nodo
+      node?.data?.equipo ??   // equipo embebido en el nodo (populate)
+      node?.equipo ??         // fallback si backend lo puso a nivel raíz
       null;
 
     if (equipoObj && typeof equipoObj === "object") {
-      // Usar directamente el equipo embebido (ya con satelliteRef/irdRef populate)
-      setEquipo(equipoObj);
-      setEquipoError(null);
-      // Limpia secundarios y deja que los useEffects de IRD/SAT se encarguen:
+      // Limpia paneles secundarios (se volverán a poblar por los useEffect)
       setIrd(null); setIrdError(null); setLoadingIrd(false);
       setSat(null); setSatError(null); setLoadingSat(false);
+
+      // Fuerza NUEVA referencia aunque sea el mismo equipo (para re-disparar efectos)
+      setEquipo(prev => {
+        const prevId = toIdString(prev?._id);
+        const nextId = toIdString(equipoObj?._id);
+        // Si es el mismo id, clonar para cambiar la referencia
+        if (prevId === nextId) return { ...equipoObj };
+        // Si es otro equipo, set directo (ya es nueva ref)
+        return equipoObj;
+      });
       return;
     }
 
-    // Si no vino embebido, recién ahí busca por id:
+    // Si no vino embebido, buscamos por id
     const raw =
       node?.data?.equipoId ??
       node?.data?.equipo?._id ??
@@ -329,6 +336,7 @@ const ChannelDiagram = () => {
     const idStr = toIdString(raw);
     fetchEquipo(idStr);
   }, [fetchEquipo]);
+
 
 
   return (
