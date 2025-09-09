@@ -12,10 +12,7 @@ const ARROW_CLOSED = { type: 1 };
 // Tolerancia para considerar "misma X" (alineación vertical)
 const SAME_X_EPS = 8;
 
-/** Devuelve handles según geometría (vertical) y dirección ('ida'|'vuelta').
- *  - Si están alineados en X: usa TOP/BOTTOM dobles para separar ida/vuelta
- *  - Caso contrario: usa RIGHT/LEFT (ida) y LEFT/RIGHT (vuelta)
- */
+/** Helpers de geometría para elegir handles según dirección y alineación */
 function pickHandlesByGeometry(srcNode, tgtNode, direction /* 'ida' | 'vuelta' */) {
     const sx = Number(srcNode?.position?.x ?? 0);
     const sy = Number(srcNode?.position?.y ?? 0);
@@ -27,7 +24,6 @@ function pickHandlesByGeometry(srcNode, tgtNode, direction /* 'ida' | 'vuelta' *
     // Caso vertical (misma X, distinta Y)
     if (sameX && sy !== ty) {
         const srcIsUpper = sy < ty; // source por encima del target
-
         if (direction === "ida") {
             // Ida usa pista 1
             if (srcIsUpper) {
@@ -61,6 +57,20 @@ const toNumberOr = (val, def = 0) => {
     return Number.isFinite(n) ? n : def;
 };
 
+// Normaliza tipoNombre del equipo (puede venir como string o como objeto { tipoNombre })
+const tipoToKey = (tipoNombre) => {
+    const raw =
+        (typeof tipoNombre === "object" && tipoNombre?.tipoNombre) ||
+        (typeof tipoNombre === "string" && tipoNombre) ||
+        "";
+    const key = String(raw).trim().toLowerCase();
+
+    // Sinónimos / normalizaciones simples
+    if (["satélite", "satelite"].includes(key)) return "satelite";
+    if (["switch", "switches", "sw"].includes(key)) return "switch";
+    return key; // "ird", etc.
+};
+
 const ChannelForm = () => {
     const [optionsSelectChannel, setOptionSelectChannel] = useState([]);
     const [isSearchable] = useState(true);
@@ -68,6 +78,7 @@ const ChannelForm = () => {
     const [selectedValue, setSelectedValue] = useState(null); // id señal
     const [selectedId, setSelectedId] = useState(null); // label señal
 
+    // Para react-select agrupado: [{label, options:[...]}]
     const [optionsSelectEquipo, setOptionSelectEquipo] = useState([]);
     const [selectedEquipoValue, setSelectedEquipoValue] = useState(null); // id equipo
     const [selectedIdEquipo, setSelectedIdEquipo] = useState(null); // label equipo
@@ -88,6 +99,7 @@ const ChannelForm = () => {
     const [edgeDirection, setEdgeDirection] = useState(edgeDirOptions[0]);
 
     useEffect(() => {
+        // Señales
         api.getSignal().then((res) => {
             const opts = res.data.map((opt) => ({
                 label: `${opt.nameChannel} - ${opt.tipoTecnologia}`,
@@ -96,13 +108,50 @@ const ChannelForm = () => {
             setOptionSelectChannel(opts);
         });
 
+        // Equipos (agrupar por tipo: Satélite / IRD / Switch / Otros)
         api.getEquipo().then((res) => {
-            const optEquipos = res.data.map((optEquipo) => ({
-                label: optEquipo.nombre?.toUpperCase?.() || optEquipo.nombre,
-                value: optEquipo._id,
-            }));
-            setOptionSelectEquipo(optEquipos);
-            // (Opción id-únicamente) -> NO usamos equiposMap aquí.
+            const arr = res.data || [];
+
+            const satelites = [];
+            const irds = [];
+            const switches = [];
+            const otros = [];
+
+            for (const eq of arr) {
+                const key = tipoToKey(eq?.tipoNombre); // 'satelite' | 'ird' | 'switch' | ...
+                const option = {
+                    label: (eq?.nombre?.toUpperCase?.() || eq?.nombre || "").trim(),
+                    value: eq?._id,
+                };
+
+                if (key === "satelite") {
+                    satelites.push(option);
+                } else if (key === "ird") {
+                    irds.push(option);
+                } else if (key === "switch") {
+                    switches.push(option);
+                } else {
+                    otros.push(option);
+                }
+            }
+
+            // Orden alfabético por label
+            const byLabel = (a, b) =>
+                a.label.localeCompare(b.label, "es", { sensitivity: "base" });
+            satelites.sort(byLabel);
+            irds.sort(byLabel);
+            switches.sort(byLabel);
+            otros.sort(byLabel);
+
+            // Estructura agrupada para react-select
+            const grouped = [
+                { label: "Satélites", options: satelites },
+                { label: "IRD", options: irds },
+                { label: "Switches", options: switches },
+                { label: "Otros equipos", options: otros },
+            ].filter((g) => g.options.length > 0);
+
+            setOptionSelectEquipo(grouped);
         });
     }, []);
 
@@ -183,7 +232,7 @@ const ChannelForm = () => {
                                 label: n.data?.label,
                                 data: {
                                     label: n.data?.label || n.id,
-                                    equipoId: n.data?.equipoId,       // ← solo id (opción id-únicamente)
+                                    equipoId: n.data?.equipoId, // ← sólo id (opción id-únicamente)
                                     equipoNombre: n.data?.equipoNombre,
                                     tooltip: n.data?.tooltip,
                                 },
@@ -276,12 +325,13 @@ const ChannelForm = () => {
                                 <div className="form__group-inputs">
                                     <Field className="form__input" placeholder="Id Nodo" name="id" />
 
+                                    {/* Select de EQUIPO agrupado: Satélites / IRD / Switches / Otros */}
                                     <Select
                                         className="select__input"
                                         name="equipo"
-                                        placeholder="Tipo equipo"
+                                        placeholder="Equipos"
                                         isSearchable={isSearchable}
-                                        options={optionsSelectEquipo}
+                                        options={optionsSelectEquipo} // [{label, options:[{label,value}]}]
                                         onChange={handleSelectedEquipo}
                                     />
 
@@ -307,8 +357,8 @@ const ChannelForm = () => {
                                             type: "custom", // se renderiza con CustomNode
                                             data: {
                                                 label: values.label?.trim() || values.id.trim(),
-                                                equipoId: selectedEquipoValue,   // ← SOLO id
-                                                equipoNombre: selectedIdEquipo,  // opcional para vista previa
+                                                equipoId: selectedEquipoValue, // SOLO id
+                                                equipoNombre: selectedIdEquipo, // opcional para preview
                                             },
                                             position: {
                                                 x: toNumberOr(values.posX, 0),
