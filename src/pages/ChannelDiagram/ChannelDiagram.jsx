@@ -1,3 +1,4 @@
+// src/pages/ChannelDiagram/ChannelDiagram.jsx
 import React, { useCallback, useEffect, useState } from "react";
 import ReactFlow, { Background, Controls } from "reactflow";
 import "reactflow/dist/style.css";
@@ -7,21 +8,31 @@ import CustomNode from "./CustomNode";
 import CustomDirectionalEdge from "./CustomDirectionalEdge";
 import EquipoDetail from "../Equipment/EquipoDetail";
 import EquipoIrd from "../Equipment/EquipoIrd";
+import EquipoSatellite from "../Equipment/EquipoSatellite";
 
 const nodeTypes = { custom: CustomNode };
 const edgeTypes = { directional: CustomDirectionalEdge };
 
+// util: number safe
 const nn = (v) => {
   const n = Number(v);
   return Number.isFinite(n) ? n : 0;
 };
-
+// util: id safe
 const toIdString = (raw) => {
   if (!raw) return null;
   if (typeof raw === "string") return raw;
   if (typeof raw === "object") return raw._id || null;
   return null;
 };
+// util: normaliza nombres para comparación (minúsculas, sin acentos, trim)
+const norm = (v) =>
+  (v || "")
+    .toString()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim();
 
 const ChannelDiagram = () => {
   const { id } = useParams();
@@ -35,10 +46,15 @@ const ChannelDiagram = () => {
   const [loadingEquipo, setLoadingEquipo] = useState(false);
   const [equipoError, setEquipoError] = useState(null);
 
-  // Panel detalle IRD (cuando equipo.tipoNombre === "ird" y hay irdRef)
+  // Panel detalle IRD
   const [ird, setIrd] = useState(null);
   const [loadingIrd, setLoadingIrd] = useState(false);
   const [irdError, setIrdError] = useState(null);
+
+  // Panel detalle SAT
+  const [sat, setSat] = useState(null);
+  const [loadingSat, setLoadingSat] = useState(false);
+  const [satError, setSatError] = useState(null);
 
   // Cargar diagrama
   useEffect(() => {
@@ -58,13 +74,12 @@ const ChannelDiagram = () => {
           const label = baseData.label ?? n.label ?? String(n.id ?? i + 1);
 
           const rawEquipoId =
-            baseData.equipoId ??
-            n.equipoId ??
-            n.equipo ??
-            null;
+            baseData.equipoId ?? n.equipoId ?? n.equipo ?? null;
 
+          // dentro del map de normalizedNodes
           const embedEquipo =
             baseData.equipo ??
+            n.equipo ??           // <--- añade esto
             n.equipoObject ??
             null;
 
@@ -83,7 +98,7 @@ const ChannelDiagram = () => {
           };
         });
 
-        // fallback (todo 0,0)
+        // fallback (todo 0,0): distribuye para ver algo
         if (
           normalizedNodes.length &&
           normalizedNodes.every((n) => n.position.x === 0 && n.position.y === 0)
@@ -144,8 +159,15 @@ const ChannelDiagram = () => {
       setLoadingEquipo(true);
       setEquipoError(null);
       setEquipo(null);
-      setIrd(null);      // limpiar IRD al iniciar nueva carga de equipo
+
+      // limpiar secundarios al iniciar nueva carga
+      setIrd(null);
       setIrdError(null);
+      setLoadingIrd(false);
+      setSat(null);
+      setSatError(null);
+      setLoadingSat(false);
+
       const res = await api.getIdEquipo(encodeURIComponent(idStr));
       setEquipo(res?.data || null);
     } catch (err) {
@@ -158,58 +180,156 @@ const ChannelDiagram = () => {
     }
   }, []);
 
-  // Si el equipo es tipo "ird" y tiene irdRef, traer IRD
+  // Si el equipo es tipo "ird" y tiene irdRef → usar populate si viene objeto, o pedir por id
   useEffect(() => {
-    const tipo =
+    const tipo = norm(
       typeof equipo?.tipoNombre === "object"
         ? equipo?.tipoNombre?.tipoNombre
-        : equipo?.tipoNombre;
+        : equipo?.tipoNombre
+    );
 
-    const irdId =
-      typeof equipo?.irdRef === "object"
-        ? equipo?.irdRef?._id
-        : equipo?.irdRef;
-
-    if (equipo && tipo === "ird" && irdId) {
-      (async () => {
-        try {
-          setLoadingIrd(true);
-          setIrdError(null);
-          setIrd(null);
-          const res = await api.getIdIrd(encodeURIComponent(irdId));
-          setIrd(res?.data || null);
-        } catch (err) {
-          setIrd(null);
-          setIrdError(
-            err?.response?.data?.message || err.message || "Error al cargar IRD"
-          );
-        } finally {
-          setLoadingIrd(false);
-        }
-      })();
-    } else {
-      // si no es IRD o no tiene irdRef, limpia estado de IRD
+    // Sin equipo seleccionado
+    if (!equipo) {
       setIrd(null);
       setIrdError(null);
       setLoadingIrd(false);
+      return;
     }
+
+    // Si NO es IRD
+    if (tipo !== "ird") {
+      setIrd(null);
+      setIrdError(null);
+      setLoadingIrd(false);
+      return;
+    }
+
+    // Es IRD, ver si irdRef ya viene poblado
+    if (equipo?.irdRef && typeof equipo.irdRef === "object") {
+      setIrd(equipo.irdRef);
+      setIrdError(null);
+      setLoadingIrd(false);
+      return;
+    }
+
+    // irdRef es id → pedirlo
+    const irdId =
+      typeof equipo?.irdRef === "string" ? equipo.irdRef : toIdString(equipo?.irdRef);
+
+    if (!irdId) {
+      setIrd(null);
+      setIrdError("Equipo IRD sin irdRef");
+      setLoadingIrd(false);
+      return;
+    }
+
+    (async () => {
+      try {
+        setLoadingIrd(true);
+        setIrdError(null);
+        setIrd(null);
+        const res = await api.getIdIrd(encodeURIComponent(irdId));
+        setIrd(res?.data || null);
+      } catch (err) {
+        setIrd(null);
+        setIrdError(
+          err?.response?.data?.message || err.message || "Error al cargar IRD"
+        );
+      } finally {
+        setLoadingIrd(false);
+      }
+    })();
   }, [equipo]);
 
-  // Click en nodo → resolver id equipo y cargar
-  const handleNodeClick = useCallback(
-    (evt, node) => {
-      const raw =
-        node?.data?.equipoId ??
-        node?.data?.equipo?._id ??
-        node?.data?.equipo ??
-        node?.equipo ??
-        null;
+  // Si el equipo es tipo "satelite" y tiene satelliteRef → usar populate si viene objeto, o pedir por id
+  useEffect(() => {
+    const tipo = norm(
+      typeof equipo?.tipoNombre === "object"
+        ? equipo?.tipoNombre?.tipoNombre
+        : equipo?.tipoNombre
+    );
 
-      const idStr = toIdString(raw);
-      fetchEquipo(idStr);
-    },
-    [fetchEquipo]
-  );
+    if (!equipo) {
+      setSat(null);
+      setSatError(null);
+      setLoadingSat(false);
+      return;
+    }
+
+    if (tipo !== "satelite") {
+      setSat(null);
+      setSatError(null);
+      setLoadingSat(false);
+      return;
+    }
+
+    // ya viene poblado (con .satelliteType si aplicaste populate anidado)
+    if (equipo?.satelliteRef && typeof equipo.satelliteRef === "object") {
+      setSat(equipo.satelliteRef);
+      setSatError(null);
+      setLoadingSat(false);
+      return;
+    }
+
+    // es id → pedir a API
+    const satId =
+      typeof equipo?.satelliteRef === "string"
+        ? equipo.satelliteRef
+        : toIdString(equipo?.satelliteRef);
+
+    if (!satId) {
+      setSat(null);
+      setSatError("Equipo satélite sin satelliteRef");
+      setLoadingSat(false);
+      return;
+    }
+
+    (async () => {
+      try {
+        setLoadingSat(true);
+        setSatError(null);
+        setSat(null);
+        const res = await api.getSatelliteId(encodeURIComponent(satId));
+        setSat(res?.data || null);
+      } catch (err) {
+        setSat(null);
+        setSatError(
+          err?.response?.data?.message ||
+          err.message ||
+          "Error al cargar Satélite"
+        );
+      } finally {
+        setLoadingSat(false);
+      }
+    })();
+  }, [equipo]);
+
+  const handleNodeClick = useCallback((evt, node) => {
+    const equipoObj =
+      node?.data?.equipo ??      // 1) data.equipo embebido
+      node?.equipo ??            // 2) por si el backend lo puso a nivel raíz del nodo
+      null;
+
+    if (equipoObj && typeof equipoObj === "object") {
+      // Usar directamente el equipo embebido (ya con satelliteRef/irdRef populate)
+      setEquipo(equipoObj);
+      setEquipoError(null);
+      // Limpia secundarios y deja que los useEffects de IRD/SAT se encarguen:
+      setIrd(null); setIrdError(null); setLoadingIrd(false);
+      setSat(null); setSatError(null); setLoadingSat(false);
+      return;
+    }
+
+    // Si no vino embebido, recién ahí busca por id:
+    const raw =
+      node?.data?.equipoId ??
+      node?.data?.equipo?._id ??
+      node?.equipo ?? null;
+
+    const idStr = toIdString(raw);
+    fetchEquipo(idStr);
+  }, [fetchEquipo]);
+
 
   return (
     <div
@@ -292,28 +412,47 @@ const ChannelDiagram = () => {
       >
         <h2 style={{ marginTop: 0, marginBottom: 8 }}>Detalle</h2>
 
-        {/* Si el equipo es IRD y hay irdRef → muestra IRD, si no → detalle Equipo */}
         {(() => {
-          const tipo =
+          const tipo = norm(
             typeof equipo?.tipoNombre === "object"
               ? equipo?.tipoNombre?.tipoNombre
-              : equipo?.tipoNombre;
+              : equipo?.tipoNombre
+          );
 
           const isIrd = tipo === "ird";
           const hasIrdRef =
             (typeof equipo?.irdRef === "object" && equipo?.irdRef?._id) ||
             typeof equipo?.irdRef === "string";
 
+          const isSat = tipo === "satelite" || tipo === "satellite"; // por si tuvieras esa variante
+          const hasSatRef =
+            (typeof equipo?.satelliteRef === "object" &&
+              equipo?.satelliteRef?._id) ||
+            typeof equipo?.satelliteRef === "string";
+
+          // Prioridad: satélite → IRD → equipo genérico
+          if (isSat && hasSatRef) {
+            return (
+              <EquipoSatellite
+                title="Detalle Satélite"
+                satellite={sat}
+                loading={loadingSat || loadingEquipo}
+                error={satError || equipoError}
+              />
+            );
+          }
+
           if (isIrd && hasIrdRef) {
             return (
               <EquipoIrd
                 title="Detalle IRD"
                 ird={ird}
-                loading={loadingIrd || loadingEquipo} // si equipo aún carga, bloquea
+                loading={loadingIrd || loadingEquipo}
                 error={irdError || equipoError}
               />
             );
           }
+
           return (
             <EquipoDetail
               title="Detalle de Equipo"

@@ -145,7 +145,7 @@ const DetailCard = () => {
                             </button>
                         )}
                         <button onClick={handleClickDiagram} className="button btn-primary">
-                            Ver mapa
+                            Diagrama
                         </button>
                     </div>
                 </div>
