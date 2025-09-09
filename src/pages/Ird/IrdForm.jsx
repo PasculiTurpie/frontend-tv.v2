@@ -1,4 +1,4 @@
-// pages/Ird/IrdForm.jsx (o donde tengas el form)
+// pages/Ird/IrdForm.jsx
 import { Formik, Field, Form } from "formik";
 import { Link } from "react-router-dom";
 import styles from "./Ird.module.css";
@@ -7,6 +7,7 @@ import Swal from "sweetalert2";
 import api from "../../utils/api";
 import { ipMulticastRegex, ipVideoMulticast } from "../../utils/regexValidate";
 
+// ------------------------ VALIDACIONES ------------------------
 const IrdSchema = Yup.object().shape({
     nombreIrd: Yup.string().required("Campo obligatorio"),
     ipAdminIrd: Yup.string()
@@ -41,7 +42,71 @@ const IrdSchema = Yup.object().shape({
         .matches(/\d+/, "Ingrese un número"),
 });
 
+// ------------------------ COMPONENTE ------------------------
+import { useEffect, useMemo, useState } from "react";
+
 const IrdForm = () => {
+    const [tipoMap, setTipoMap] = useState({}); // { 'ird': ObjectId, ... }
+    const [loadingTipos, setLoadingTipos] = useState(false);
+
+    // Carga inicial de tipos de equipo y construye un mapa por nombre (lowercase)
+    useEffect(() => {
+        let mounted = true;
+        (async () => {
+            try {
+                setLoadingTipos(true);
+                const res = await api.getTipoEquipo(); // devuelve { data: [...] }
+                const arr = res?.data || [];
+                const map = {};
+                for (const t of arr) {
+                    if (t?.tipoNombre && t?._id) {
+                        map[String(t.tipoNombre).toLowerCase()] = t._id;
+                    }
+                }
+                if (mounted) setTipoMap(map);
+            } catch (err) {
+                console.warn("No se pudo cargar TipoEquipo:", err?.response?.data || err);
+            } finally {
+                if (mounted) setLoadingTipos(false);
+            }
+        })();
+        return () => {
+            mounted = false;
+        };
+    }, []);
+
+    // Asegura que exista el tipo 'ird' y devuelve su ObjectId
+    const ensureTipoId = async (name = "ird") => {
+        const key = String(name).toLowerCase();
+        if (tipoMap[key]) return tipoMap[key];
+
+        // Si no existe, intentamos crearlo
+        try {
+            const created = await api.createTipoEquipo({ tipoNombre: name });
+            const id = created?._id;
+            if (id) {
+                setTipoMap((prev) => ({ ...prev, [key]: id }));
+                return id;
+            }
+        } catch (e) {
+            // Si falla crear, reintenta refrescar el listado por si existe
+            try {
+                const res = await api.getTipoEquipo();
+                const arr = res?.data || [];
+                const found = arr.find(
+                    (t) => String(t?.tipoNombre).toLowerCase() === key
+                );
+                if (found?._id) {
+                    setTipoMap((prev) => ({ ...prev, [key]: found._id }));
+                    return found._id;
+                }
+            } catch (e2) {
+                // no-op
+            }
+            throw new Error("No existe ni se pudo crear el TipoEquipo 'ird'.");
+        }
+    };
+
     return (
         <>
             <div className="outlet-main">
@@ -83,37 +148,58 @@ const IrdForm = () => {
                     validationSchema={IrdSchema}
                     enableReinitialize={true}
                     onSubmit={async (values, { resetForm }) => {
+                        if (loadingTipos) {
+                            Swal.fire({
+                                icon: "info",
+                                title: "Cargando tipos de equipo…",
+                                text: "Espera un momento e intenta nuevamente.",
+                            });
+                            return;
+                        }
+
                         try {
                             // 1) Crear IRD
-                            const { data: ird } = await api.createIrd(values);
+                            const ird = await api.createIrd(values); // devuelve el objeto IRD creado
+                            const irdId = ird?._id;
 
-                            // 2) Crear Equipo EN SEGUNDO PLANO (no bloquea UX)
-                            (async () => {
-                                try {
-                                    await api.createEquipo({
-                                        nombre: values.nombreIrd,
-                                        marca: values.marcaIrd,
-                                        modelo: values.modelIrd,
-                                        tipoNombre: "ird",
-                                        ip_gestion: values.ipAdminIrd,
-                                        irdRef: ird?._id,
-                                    });
-                                } catch (bgErr) {
-                                    console.warn(
-                                        "No se pudo crear Equipo desde IRD:",
-                                        bgErr?.response?.data || bgErr
-                                    );
-                                }
-                            })();
+                            // 2) Conseguir ObjectId del tipo 'ird'
+                            const tipoIrdId = await ensureTipoId("ird");
 
-                            // 3) Feedback y reset
+                            // 3) Crear Equipo asociado (referenciando IRD)
+                            let equipoOk = true;
+                            let equipoMsg = "";
+                            try {
+                                await api.createEquipo({
+                                    nombre: values.nombreIrd,
+                                    marca: values.marcaIrd,
+                                    modelo: values.modelIrd,
+                                    tipoNombre: tipoIrdId, // OBLIGATORIO: ObjectId del tipo
+                                    ip_gestion: values.ipAdminIrd,
+                                    irdRef: irdId, // si tu schema de Equipo lo contempla
+                                });
+                                equipoMsg = "Equipo creado correctamente.";
+                            } catch (bgErr) {
+                                equipoOk = false;
+                                equipoMsg =
+                                    bgErr?.response?.data?.message ||
+                                    "No se pudo crear Equipo desde IRD.";
+                                console.warn("No se pudo crear Equipo:", bgErr?.response?.data || bgErr);
+                            }
+
+                            // 4) Feedback y reset
                             Swal.fire({
-                                title: "Ird guardado exitosamente",
+                                title: "IRD guardado",
                                 icon: "success",
                                 html: `
-                  <p><strong>Nombre IRD:</strong> ${values.nombreIrd}</p>
-                  <p><strong>Marca:</strong> ${values.marcaIrd}</p>
-                  <p><strong>Modelo:</strong> ${values.modelIrd}</p>
+                  <div style="text-align:left">
+                    <div><b>Nombre IRD:</b> ${values.nombreIrd}</div>
+                    <div><b>Marca:</b> ${values.marcaIrd}</div>
+                    <div><b>Modelo:</b> ${values.modelIrd}</div>
+                    <div><b>IP Gestión:</b> ${values.ipAdminIrd}</div>
+                    <hr/>
+                    <div><b>Equipo:</b> ${equipoOk ? "Creado" : "No creado"}</div>
+                    <div style="color:${equipoOk ? "#065f46" : "#991b1b"}">${equipoMsg}</div>
+                  </div>
                 `,
                             });
                             resetForm();
@@ -121,7 +207,7 @@ const IrdForm = () => {
                             Swal.fire({
                                 title: "Error",
                                 icon: "error",
-                                text: `Duplicidad de datos`,
+                                text: `No se pudo crear el IRD`,
                                 footer: `${error?.response?.data?.message || error.message}`,
                             });
                         }
@@ -129,7 +215,7 @@ const IrdForm = () => {
                 >
                     {({ errors, touched }) => (
                         <Form className="form__add">
-                            <h1 className="form__titulo">Ingresa un Ird</h1>
+                            <h1 className="form__titulo">Ingresa un IRD</h1>
 
                             <div className={styles.rows__group}>
                                 <div className={styles.columns__group}>
@@ -140,7 +226,7 @@ const IrdForm = () => {
                                             <Field
                                                 type="text"
                                                 className="form__group-input"
-                                                placeholder="Nombre Ird"
+                                                placeholder="Nombre IRD"
                                                 name="nombreIrd"
                                             />
                                         </label>
@@ -158,7 +244,7 @@ const IrdForm = () => {
                                             <Field
                                                 type="text"
                                                 className="form__group-input"
-                                                placeholder="Nombre"
+                                                placeholder="Marca"
                                                 name="marcaIrd"
                                             />
                                         </label>
@@ -176,7 +262,7 @@ const IrdForm = () => {
                                             <Field
                                                 type="text"
                                                 className="form__group-input"
-                                                placeholder="Nombre"
+                                                placeholder="Modelo"
                                                 name="modelIrd"
                                             />
                                         </label>
@@ -189,12 +275,12 @@ const IrdForm = () => {
 
                                     <div className="form__group">
                                         <label htmlFor="ipAdminIrd" className="form__group-label">
-                                            Ip administración
+                                            IP administración
                                             <br />
                                             <Field
                                                 type="text"
                                                 className="form__group-input"
-                                                placeholder="Nombre"
+                                                placeholder="172.19.x.x"
                                                 name="ipAdminIrd"
                                             />
                                         </label>
@@ -212,7 +298,7 @@ const IrdForm = () => {
                                             <Field
                                                 type="text"
                                                 className="form__group-input"
-                                                placeholder="Nombre"
+                                                placeholder="Versión"
                                                 name="versionIrd"
                                             />
                                         </label>
@@ -230,7 +316,7 @@ const IrdForm = () => {
                                             <Field
                                                 type="text"
                                                 className="form__group-input"
-                                                placeholder="Nombre"
+                                                placeholder="UA"
                                                 name="uaIrd"
                                             />
                                         </label>
@@ -251,7 +337,7 @@ const IrdForm = () => {
                                             <Field
                                                 type="text"
                                                 className="form__group-input"
-                                                placeholder="Nombre"
+                                                placeholder="TID"
                                                 name="tidReceptor"
                                             />
                                         </label>
@@ -263,16 +349,13 @@ const IrdForm = () => {
                                     </div>
 
                                     <div className="form__group">
-                                        <label
-                                            htmlFor="typeReceptor"
-                                            className="form__group-label"
-                                        >
+                                        <label htmlFor="typeReceptor" className="form__group-label">
                                             Tipo receptor
                                             <br />
                                             <Field
                                                 type="text"
                                                 className="form__group-input"
-                                                placeholder="Nombre"
+                                                placeholder="Tipo"
                                                 name="typeReceptor"
                                             />
                                         </label>
@@ -290,7 +373,7 @@ const IrdForm = () => {
                                             <Field
                                                 type="text"
                                                 className="form__group-input"
-                                                placeholder="Nombre"
+                                                placeholder="Frecuencia"
                                                 name="feqReceptor"
                                             />
                                         </label>
@@ -302,16 +385,13 @@ const IrdForm = () => {
                                     </div>
 
                                     <div className="form__group">
-                                        <label
-                                            htmlFor="symbolRateIrd"
-                                            className="form__group-label"
-                                        >
+                                        <label htmlFor="symbolRateIrd" className="form__group-label">
                                             Symbol Rate
                                             <br />
                                             <Field
                                                 type="text"
                                                 className="form__group-input"
-                                                placeholder="Nombre"
+                                                placeholder="Symbol Rate"
                                                 name="symbolRateIrd"
                                             />
                                         </label>
@@ -323,16 +403,13 @@ const IrdForm = () => {
                                     </div>
 
                                     <div className="form__group">
-                                        <label
-                                            htmlFor="fecReceptorIrd"
-                                            className="form__group-label"
-                                        >
+                                        <label htmlFor="fecReceptorIrd" className="form__group-label">
                                             FEC
                                             <br />
                                             <Field
                                                 type="text"
                                                 className="form__group-input"
-                                                placeholder="Nombre"
+                                                placeholder="FEC"
                                                 name="fecReceptorIrd"
                                             />
                                         </label>
@@ -347,16 +424,13 @@ const IrdForm = () => {
                                 {/* ###################################### */}
                                 <div className={styles.columns__group}>
                                     <div className="form__group">
-                                        <label
-                                            htmlFor="modulationReceptorIrd"
-                                            className="form__group-label"
-                                        >
+                                        <label htmlFor="modulationReceptorIrd" className="form__group-label">
                                             Modulación
                                             <br />
                                             <Field
                                                 type="text"
                                                 className="form__group-input"
-                                                placeholder="Nombre"
+                                                placeholder="Modulación"
                                                 name="modulationReceptorIrd"
                                             />
                                         </label>
@@ -370,12 +444,12 @@ const IrdForm = () => {
 
                                     <div className="form__group">
                                         <label htmlFor="rellOfReceptor" className="form__group-label">
-                                            Roll Of
+                                            Roll Off
                                             <br />
                                             <Field
                                                 type="text"
                                                 className="form__group-input"
-                                                placeholder="Nombre"
+                                                placeholder="Roll Off"
                                                 name="rellOfReceptor"
                                             />
                                         </label>
@@ -388,12 +462,12 @@ const IrdForm = () => {
 
                                     <div className="form__group">
                                         <label htmlFor="nidReceptor" className="form__group-label">
-                                            Nid
+                                            NID
                                             <br />
                                             <Field
                                                 type="text"
                                                 className="form__group-input"
-                                                placeholder="Nombre"
+                                                placeholder="NID"
                                                 name="nidReceptor"
                                             />
                                         </label>
@@ -405,16 +479,13 @@ const IrdForm = () => {
                                     </div>
 
                                     <div className="form__group">
-                                        <label
-                                            htmlFor="cvirtualReceptor"
-                                            className="form__group-label"
-                                        >
+                                        <label htmlFor="cvirtualReceptor" className="form__group-label">
                                             Canal Virtual
                                             <br />
                                             <Field
                                                 type="text"
                                                 className="form__group-input"
-                                                placeholder="Nombre"
+                                                placeholder="Canal Virtual"
                                                 name="cvirtualReceptor"
                                             />
                                         </label>
@@ -432,7 +503,7 @@ const IrdForm = () => {
                                             <Field
                                                 type="text"
                                                 className="form__group-input"
-                                                placeholder="Nombre"
+                                                placeholder="VCT"
                                                 name="vctReceptor"
                                             />
                                         </label>
@@ -453,7 +524,7 @@ const IrdForm = () => {
                                             <Field
                                                 type="text"
                                                 className="form__group-input"
-                                                placeholder="Nombre"
+                                                placeholder="Salida"
                                                 name="outputReceptor"
                                             />
                                         </label>
@@ -465,16 +536,13 @@ const IrdForm = () => {
                                     </div>
 
                                     <div className="form__group">
-                                        <label
-                                            htmlFor="multicastReceptor"
-                                            className="form__group-label"
-                                        >
+                                        <label htmlFor="multicastReceptor" className="form__group-label">
                                             Multicast Receptor
                                             <br />
                                             <Field
                                                 type="text"
                                                 className="form__group-input"
-                                                placeholder="Nombre"
+                                                placeholder="Multicast"
                                                 name="multicastReceptor"
                                             />
                                         </label>
@@ -492,7 +560,7 @@ const IrdForm = () => {
                                             <Field
                                                 type="text"
                                                 className="form__group-input"
-                                                placeholder="Nombre"
+                                                placeholder="IP Video"
                                                 name="ipVideoMulticast"
                                             />
                                         </label>
@@ -510,7 +578,7 @@ const IrdForm = () => {
                                             <Field
                                                 type="text"
                                                 className="form__group-input"
-                                                placeholder="Nombre"
+                                                placeholder="Fila"
                                                 name="locationRow"
                                             />
                                         </label>
@@ -528,7 +596,7 @@ const IrdForm = () => {
                                             <Field
                                                 type="text"
                                                 className="form__group-input"
-                                                placeholder="Nombre"
+                                                placeholder="Bastidor"
                                                 name="locationCol"
                                             />
                                         </label>

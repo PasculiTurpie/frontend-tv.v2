@@ -1,4 +1,3 @@
-// src/pages/ChannelDiagram/ChannelDiagram.jsx
 import React, { useCallback, useEffect, useState } from "react";
 import ReactFlow, { Background, Controls } from "reactflow";
 import "reactflow/dist/style.css";
@@ -7,6 +6,7 @@ import { useParams } from "react-router-dom";
 import CustomNode from "./CustomNode";
 import CustomDirectionalEdge from "./CustomDirectionalEdge";
 import EquipoDetail from "../Equipment/EquipoDetail";
+import EquipoIrd from "../Equipment/EquipoIrd";
 
 const nodeTypes = { custom: CustomNode };
 const edgeTypes = { directional: CustomDirectionalEdge };
@@ -30,11 +30,17 @@ const ChannelDiagram = () => {
   const [nodes, setNodes] = useState([]);
   const [edges, setEdges] = useState([]);
 
-  const [selectedEquipoId, setSelectedEquipoId] = useState(null);
+  // Panel detalle equipo
   const [equipo, setEquipo] = useState(null);
   const [loadingEquipo, setLoadingEquipo] = useState(false);
   const [equipoError, setEquipoError] = useState(null);
 
+  // Panel detalle IRD (cuando equipo.tipoNombre === "ird" y hay irdRef)
+  const [ird, setIrd] = useState(null);
+  const [loadingIrd, setLoadingIrd] = useState(false);
+  const [irdError, setIrdError] = useState(null);
+
+  // Cargar diagrama
   useEffect(() => {
     let mounted = true;
 
@@ -51,16 +57,15 @@ const ChannelDiagram = () => {
           const baseData = n.data || {};
           const label = baseData.label ?? n.label ?? String(n.id ?? i + 1);
 
-          // ← NEW: inyecta equipoId / equipo al data, vengan donde vengan
           const rawEquipoId =
             baseData.equipoId ??
             n.equipoId ??
-            n.equipo ?? // a veces guardan el id en 'equipo'
+            n.equipo ??
             null;
 
           const embedEquipo =
             baseData.equipo ??
-            n.equipoObject ?? // por si el backend embebe el objeto en otra prop
+            n.equipoObject ??
             null;
 
           const equipoId = toIdString(rawEquipoId);
@@ -78,7 +83,7 @@ const ChannelDiagram = () => {
           };
         });
 
-        // fallback si todo vino (0,0)
+        // fallback (todo 0,0)
         if (
           normalizedNodes.length &&
           normalizedNodes.every((n) => n.position.x === 0 && n.position.y === 0)
@@ -127,6 +132,7 @@ const ChannelDiagram = () => {
     };
   }, [id]);
 
+  // Fetch equipo por id
   const fetchEquipo = useCallback(async (equipoId) => {
     const idStr = toIdString(equipoId);
     if (!idStr) {
@@ -138,6 +144,8 @@ const ChannelDiagram = () => {
       setLoadingEquipo(true);
       setEquipoError(null);
       setEquipo(null);
+      setIrd(null);      // limpiar IRD al iniciar nueva carga de equipo
+      setIrdError(null);
       const res = await api.getIdEquipo(encodeURIComponent(idStr));
       setEquipo(res?.data || null);
     } catch (err) {
@@ -150,20 +158,54 @@ const ChannelDiagram = () => {
     }
   }, []);
 
+  // Si el equipo es tipo "ird" y tiene irdRef, traer IRD
+  useEffect(() => {
+    const tipo =
+      typeof equipo?.tipoNombre === "object"
+        ? equipo?.tipoNombre?.tipoNombre
+        : equipo?.tipoNombre;
+
+    const irdId =
+      typeof equipo?.irdRef === "object"
+        ? equipo?.irdRef?._id
+        : equipo?.irdRef;
+
+    if (equipo && tipo === "ird" && irdId) {
+      (async () => {
+        try {
+          setLoadingIrd(true);
+          setIrdError(null);
+          setIrd(null);
+          const res = await api.getIdIrd(encodeURIComponent(irdId));
+          setIrd(res?.data || null);
+        } catch (err) {
+          setIrd(null);
+          setIrdError(
+            err?.response?.data?.message || err.message || "Error al cargar IRD"
+          );
+        } finally {
+          setLoadingIrd(false);
+        }
+      })();
+    } else {
+      // si no es IRD o no tiene irdRef, limpia estado de IRD
+      setIrd(null);
+      setIrdError(null);
+      setLoadingIrd(false);
+    }
+  }, [equipo]);
+
+  // Click en nodo → resolver id equipo y cargar
   const handleNodeClick = useCallback(
     (evt, node) => {
-      // log para verificar qué viene en el nodo
-      // console.log("CLICK NODE:", node);
-
       const raw =
         node?.data?.equipoId ??
         node?.data?.equipo?._id ??
         node?.data?.equipo ??
-        node?.equipo ?? // último fallback si alguien lo guardó al nivel raíz
+        node?.equipo ??
         null;
 
       const idStr = toIdString(raw);
-      setSelectedEquipoId(idStr);
       fetchEquipo(idStr);
     },
     [fetchEquipo]
@@ -174,7 +216,7 @@ const ChannelDiagram = () => {
       className="outlet-main"
       style={{
         display: "grid",
-        gridTemplateColumns: "minmax(0, 1fr) 360px",
+        gridTemplateColumns: "minmax(0, 1fr) 380px",
         gap: 16,
         width: "100%",
         minHeight: "70vh",
@@ -249,12 +291,38 @@ const ChannelDiagram = () => {
         }}
       >
         <h2 style={{ marginTop: 0, marginBottom: 8 }}>Detalle</h2>
-        <EquipoDetail
-          title="Detalle de Equipo"
-          equipo={equipo}
-          loading={loadingEquipo}
-          error={equipoError}
-        />
+
+        {/* Si el equipo es IRD y hay irdRef → muestra IRD, si no → detalle Equipo */}
+        {(() => {
+          const tipo =
+            typeof equipo?.tipoNombre === "object"
+              ? equipo?.tipoNombre?.tipoNombre
+              : equipo?.tipoNombre;
+
+          const isIrd = tipo === "ird";
+          const hasIrdRef =
+            (typeof equipo?.irdRef === "object" && equipo?.irdRef?._id) ||
+            typeof equipo?.irdRef === "string";
+
+          if (isIrd && hasIrdRef) {
+            return (
+              <EquipoIrd
+                title="Detalle IRD"
+                ird={ird}
+                loading={loadingIrd || loadingEquipo} // si equipo aún carga, bloquea
+                error={irdError || equipoError}
+              />
+            );
+          }
+          return (
+            <EquipoDetail
+              title="Detalle de Equipo"
+              equipo={equipo}
+              loading={loadingEquipo}
+              error={equipoError}
+            />
+          );
+        })()}
       </div>
     </div>
   );
