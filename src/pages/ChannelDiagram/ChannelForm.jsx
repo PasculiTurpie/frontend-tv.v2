@@ -68,6 +68,7 @@ const tipoToKey = (tipoNombre) => {
     // Sinónimos / normalizaciones simples
     if (["satélite", "satelite"].includes(key)) return "satelite";
     if (["switch", "switches", "sw"].includes(key)) return "switch";
+    if (["router", "routers", "rt", "rtr"].includes(key)) return "router";
     return key; // "ird", etc.
 };
 
@@ -108,17 +109,18 @@ const ChannelForm = () => {
             setOptionSelectChannel(opts);
         });
 
-        // Equipos (agrupar por tipo: Satélite / IRD / Switch / Otros)
+        // Equipos (agrupar por tipo: Satélite / IRD / Switch / Router / Otros)
         api.getEquipo().then((res) => {
             const arr = res.data || [];
 
             const satelites = [];
             const irds = [];
             const switches = [];
+            const routers = [];
             const otros = [];
 
             for (const eq of arr) {
-                const key = tipoToKey(eq?.tipoNombre); // 'satelite' | 'ird' | 'switch' | ...
+                const key = tipoToKey(eq?.tipoNombre); // 'satelite' | 'ird' | 'switch' | 'router' | ...
                 const option = {
                     label: (eq?.nombre?.toUpperCase?.() || eq?.nombre || "").trim(),
                     value: eq?._id,
@@ -130,17 +132,19 @@ const ChannelForm = () => {
                     irds.push(option);
                 } else if (key === "switch") {
                     switches.push(option);
+                } else if (key === "router") {
+                    routers.push(option);
                 } else {
                     otros.push(option);
                 }
             }
 
             // Orden alfabético por label
-            const byLabel = (a, b) =>
-                a.label.localeCompare(b.label, "es", { sensitivity: "base" });
+            const byLabel = (a, b) => a.label.localeCompare(b.label, "es", { sensitivity: "base" });
             satelites.sort(byLabel);
             irds.sort(byLabel);
             switches.sort(byLabel);
+            routers.sort(byLabel);
             otros.sort(byLabel);
 
             // Estructura agrupada para react-select
@@ -148,6 +152,7 @@ const ChannelForm = () => {
                 { label: "Satélites", options: satelites },
                 { label: "IRD", options: irds },
                 { label: "Switches", options: switches },
+                { label: "Routers", options: routers },
                 { label: "Otros equipos", options: otros },
             ].filter((g) => g.options.length > 0);
 
@@ -325,7 +330,7 @@ const ChannelForm = () => {
                                 <div className="form__group-inputs">
                                     <Field className="form__input" placeholder="Id Nodo" name="id" />
 
-                                    {/* Select de EQUIPO agrupado: Satélites / IRD / Switches / Otros */}
+                                    {/* Select de EQUIPO agrupado: Satélites / IRD / Switches / Routers / Otros */}
                                     <Select
                                         className="select__input"
                                         name="equipo"
@@ -505,7 +510,7 @@ const ChannelForm = () => {
                                             sourceHandle: handleByDir.sourceHandle,
                                             targetHandle: handleByDir.targetHandle,
                                             label: values.edgeLabel?.trim() || id,
-                                            type: "directional", // lo renderiza CustomDirectionalEdge (smoothstep)
+                                            type: "directional", // tu edge custom
                                             style: { stroke: color, strokeWidth: 2 },
                                             markerEnd: { ...ARROW_CLOSED }, // flecha al final
                                             data: {

@@ -2,9 +2,9 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
+import api from "../../utils/api";
 
-
-const PAGE_SIZE = 5;
+const PAGE_SIZE = 10;
 
 const ChannelListDiagram = () => {
   const [channels, setChannels] = useState([]);
@@ -15,8 +15,8 @@ const ChannelListDiagram = () => {
   const navigate = useNavigate();
 
   const fetchChannels = () => {
-    axios
-      .get("http://localhost:3000/api/v2/channels")
+    api
+      .getChannelDiagram()
       .then((res) => {
         setChannels(res.data);
         setFilteredChannels(res.data);
