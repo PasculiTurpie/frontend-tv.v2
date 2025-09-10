@@ -134,11 +134,11 @@ const ListEquipment = () => {
                         <tbody>
                             {equipos.map((equipo) => (
                                 <tr key={equipo._id} id={equipo._id}>
-                                    <td>{equipo.nombre}</td>
-                                    <td>{equipo.marca}</td>
-                                    <td>{equipo.modelo}</td>
+                                    <td>{equipo.nombre.toUpperCase()}</td>
+                                    <td>{equipo.marca.toUpperCase()}</td>
+                                    <td>{equipo.modelo.toUpperCase()}</td>
                                     <td>
-                                        {equipo.tipoNombre?.tipoNombre ||
+                                        {equipo.tipoNombre?.tipoNombre.toUpperCase() ||
                                             "Sin tipo"}
                                     </td>
 
