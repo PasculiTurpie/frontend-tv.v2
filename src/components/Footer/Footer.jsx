@@ -6,7 +6,7 @@ const Footer = () => {
   return (
     <div className="footer">
       <p className='footer__paragraph'>
-        &copy; {year} Desarrollado por Jorge R. Sepúlveda Turpie - Para el área de Operaciones Televisión.
+        &copy; {year} Desarrollado por Jorge R. Sepúlveda Turpie - Cristián Escobar Chanqueo | Para el área de Operaciones Televisión.
       </p>
     </div>
   )
