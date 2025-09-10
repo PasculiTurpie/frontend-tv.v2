@@ -1,6 +1,11 @@
-// src/pages/ChannelDiagram/ChannelDiagram.jsx
-import React, { useCallback, useEffect, useState } from "react";
-import ReactFlow, { Background, Controls } from "reactflow";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import ReactFlow, {
+  Background,
+  Controls,
+  addEdge,
+  useEdgesState,
+  useNodesState,
+} from "reactflow";
 import "reactflow/dist/style.css";
 import api from "../../utils/api";
 import { useParams } from "react-router-dom";
@@ -13,19 +18,17 @@ import EquipoSatellite from "../Equipment/EquipoSatellite";
 const nodeTypes = { custom: CustomNode };
 const edgeTypes = { directional: CustomDirectionalEdge };
 
-// util: number safe
+// utils
 const nn = (v) => {
   const n = Number(v);
   return Number.isFinite(n) ? n : 0;
 };
-// util: id safe
 const toIdString = (raw) => {
   if (!raw) return null;
   if (typeof raw === "string") return raw;
   if (typeof raw === "object") return raw._id || null;
   return null;
 };
-// util: normaliza nombres para comparación (minúsculas, sin acentos, trim)
 const norm = (v) =>
   (v || "")
     .toString()
@@ -34,27 +37,41 @@ const norm = (v) =>
     .toLowerCase()
     .trim();
 
+// Debounce helper
+const useDebouncedSaver = (fn, delay = 600) => {
+  const tRef = useRef(null);
+  const save = useCallback(
+    (...args) => {
+      if (tRef.current) clearTimeout(tRef.current);
+      tRef.current = setTimeout(() => {
+        fn(...args);
+      }, delay);
+    },
+    [fn, delay]
+  );
+  useEffect(() => () => tRef.current && clearTimeout(tRef.current), []);
+  return save;
+};
+
 const ChannelDiagram = () => {
   const { id } = useParams();
 
   const [signal, setSignal] = useState({});
-  const [nodes, setNodes] = useState([]);
-  const [edges, setEdges] = useState([]);
-
-  // Panel detalle equipo
   const [equipo, setEquipo] = useState(null);
   const [loadingEquipo, setLoadingEquipo] = useState(false);
   const [equipoError, setEquipoError] = useState(null);
 
-  // Panel detalle IRD
   const [ird, setIrd] = useState(null);
   const [loadingIrd, setLoadingIrd] = useState(false);
   const [irdError, setIrdError] = useState(null);
 
-  // Panel detalle SAT
   const [sat, setSat] = useState(null);
   const [loadingSat, setLoadingSat] = useState(false);
   const [satError, setSatError] = useState(null);
+
+  // React Flow state hooks (permiten onNodesChange/onEdgesChange)
+  const [nodes, setNodes, onNodesChange] = useNodesState([]);
+  const [edges, setEdges, onEdgesChange] = useEdgesState([]);
 
   // Cargar diagrama
   useEffect(() => {
@@ -67,22 +84,17 @@ const ChannelDiagram = () => {
         const result = res.data || {};
         setSignal(result);
 
-        // ---------- NODOS ----------
+        // Nodos
         const rawNodes = Array.isArray(result.nodes) ? result.nodes : [];
         let normalizedNodes = rawNodes.map((n, i) => {
           const baseData = n.data || {};
           const label = baseData.label ?? n.label ?? String(n.id ?? i + 1);
-
-          const rawEquipoId =
-            baseData.equipoId ?? n.equipoId ?? n.equipo ?? null;
-
-          // dentro del map de normalizedNodes
+          const rawEquipoId = baseData.equipoId ?? n.equipoId ?? n.equipo ?? null;
           const embedEquipo =
             baseData.equipo ??
-            n.equipo ??           // <--- añade esto
+            n.equipo ??
             n.equipoObject ??
             null;
-
           const equipoId = toIdString(rawEquipoId);
 
           return {
@@ -98,7 +110,7 @@ const ChannelDiagram = () => {
           };
         });
 
-        // fallback (todo 0,0): distribuye para ver algo
+        // Si todo estaba en (0,0), distribuye para ver algo
         if (
           normalizedNodes.length &&
           normalizedNodes.every((n) => n.position.x === 0 && n.position.y === 0)
@@ -109,7 +121,7 @@ const ChannelDiagram = () => {
           }));
         }
 
-        // ---------- EDGES ----------
+        // Edges
         const rawEdges = Array.isArray(result.edges) ? result.edges : [];
         const normalizedEdges = rawEdges
           .map((e, i) => ({
@@ -145,9 +157,73 @@ const ChannelDiagram = () => {
     return () => {
       mounted = false;
     };
-  }, [id]);
+  }, [id, setNodes, setEdges]);
 
-  // Fetch equipo por id
+  // Guardado (debounced) de nodes/edges
+  const doSave = useCallback(
+    async (n, e) => {
+      try {
+        await api.updateChannelFlow(id, {
+          nodes: n.map((node) => ({
+            id: node.id,
+            type: node.type || "custom",
+            data: node.data || {},
+            position: node.position || { x: 0, y: 0 },
+            label: node.data?.label || node.label,
+            equipo: node.data?.equipoId || node.equipo,
+          })),
+          edges: e.map((ed) => ({
+            id: ed.id,
+            source: ed.source,
+            target: ed.target,
+            sourceHandle: ed.sourceHandle,
+            targetHandle: ed.targetHandle,
+            label: ed.label,
+            type: ed.type || "directional",
+            style: ed.style,
+            markerEnd: ed.markerEnd,
+            data: ed.data || {}, // 👈 incluye labelPos
+          })),
+        });
+      } catch (err) {
+        console.warn("No se pudo guardar el flujo:", err?.response?.data || err);
+      }
+    },
+    [id]
+  );
+
+  const requestSave = useDebouncedSaver(doSave, 600);
+
+  // Disparar guardado cuando cambia nodes/edges (drag nodos, drag label, reconexiones)
+  const first = useRef(true);
+  useEffect(() => {
+    if (first.current) {
+      first.current = false;
+      return;
+    }
+    requestSave(nodes, edges);
+  }, [nodes, edges, requestSave]);
+
+  // Reconexión / creación de edges
+  const onConnect = useCallback(
+    (connection) => {
+      setEdges((eds) =>
+        addEdge(
+          {
+            ...connection,
+            type: "directional",
+            animated: true,
+            style: { stroke: "#000", strokeWidth: 2 },
+            data: { label: `${connection.source}→${connection.target}` },
+          },
+          eds
+        )
+      );
+    },
+    [setEdges]
+  );
+
+  // Click nodo → mostrar panel
   const fetchEquipo = useCallback(async (equipoId) => {
     const idStr = toIdString(equipoId);
     if (!idStr) {
@@ -159,14 +235,9 @@ const ChannelDiagram = () => {
       setLoadingEquipo(true);
       setEquipoError(null);
       setEquipo(null);
-
-      // limpiar secundarios al iniciar nueva carga
-      setIrd(null);
-      setIrdError(null);
-      setLoadingIrd(false);
-      setSat(null);
-      setSatError(null);
-      setLoadingSat(false);
+      // limpiar secundarios
+      setIrd(null); setIrdError(null); setLoadingIrd(false);
+      setSat(null); setSatError(null); setLoadingSat(false);
 
       const res = await api.getIdEquipo(encodeURIComponent(idStr));
       setEquipo(res?.data || null);
@@ -180,49 +251,50 @@ const ChannelDiagram = () => {
     }
   }, []);
 
-  // Si el equipo es tipo "ird" y tiene irdRef → usar populate si viene objeto, o pedir por id
+  const handleNodeClick = useCallback(
+    (evt, node) => {
+      const equipoObj =
+        node?.data?.equipo ??
+        node?.equipo ??
+        null;
+
+      if (equipoObj && typeof equipoObj === "object") {
+        setIrd(null); setIrdError(null); setLoadingIrd(false);
+        setSat(null); setSatError(null); setLoadingSat(false);
+        setEquipo({ ...equipoObj }); // fuerza nueva ref
+        return;
+      }
+
+      const raw =
+        node?.data?.equipoId ??
+        node?.data?.equipo?._id ??
+        node?.equipo ?? null;
+
+      const idStr = toIdString(raw);
+      fetchEquipo(idStr);
+    },
+    [fetchEquipo]
+  );
+
+  // Auto-carga IRD si corresponde
   useEffect(() => {
     const tipo = norm(
-      typeof equipo?.tipoNombre === "object"
-        ? equipo?.tipoNombre?.tipoNombre
-        : equipo?.tipoNombre
+      typeof equipo?.tipoNombre === "object" ? equipo?.tipoNombre?.tipoNombre : equipo?.tipoNombre
     );
-
-    // Sin equipo seleccionado
-    if (!equipo) {
-      setIrd(null);
-      setIrdError(null);
-      setLoadingIrd(false);
+    if (!equipo || tipo !== "ird") {
+      setIrd(null); setIrdError(null); setLoadingIrd(false);
       return;
     }
-
-    // Si NO es IRD
-    if (tipo !== "ird") {
-      setIrd(null);
-      setIrdError(null);
-      setLoadingIrd(false);
-      return;
-    }
-
-    // Es IRD, ver si irdRef ya viene poblado
     if (equipo?.irdRef && typeof equipo.irdRef === "object") {
-      setIrd(equipo.irdRef);
-      setIrdError(null);
-      setLoadingIrd(false);
+      setIrd(equipo.irdRef); setIrdError(null); setLoadingIrd(false);
       return;
     }
-
-    // irdRef es id → pedirlo
     const irdId =
       typeof equipo?.irdRef === "string" ? equipo.irdRef : toIdString(equipo?.irdRef);
-
     if (!irdId) {
-      setIrd(null);
-      setIrdError("Equipo IRD sin irdRef");
-      setLoadingIrd(false);
+      setIrd(null); setIrdError("Equipo IRD sin irdRef"); setLoadingIrd(false);
       return;
     }
-
     (async () => {
       try {
         setLoadingIrd(true);
@@ -232,58 +304,34 @@ const ChannelDiagram = () => {
         setIrd(res?.data || null);
       } catch (err) {
         setIrd(null);
-        setIrdError(
-          err?.response?.data?.message || err.message || "Error al cargar IRD"
-        );
+        setIrdError(err?.response?.data?.message || err.message || "Error al cargar IRD");
       } finally {
         setLoadingIrd(false);
       }
     })();
   }, [equipo]);
 
-  // Si el equipo es tipo "satelite" y tiene satelliteRef → usar populate si viene objeto, o pedir por id
+  // Auto-carga SAT si corresponde
   useEffect(() => {
     const tipo = norm(
-      typeof equipo?.tipoNombre === "object"
-        ? equipo?.tipoNombre?.tipoNombre
-        : equipo?.tipoNombre
+      typeof equipo?.tipoNombre === "object" ? equipo?.tipoNombre?.tipoNombre : equipo?.tipoNombre
     );
-
-    if (!equipo) {
-      setSat(null);
-      setSatError(null);
-      setLoadingSat(false);
+    if (!equipo || (tipo !== "satelite" && tipo !== "satellite")) {
+      setSat(null); setSatError(null); setLoadingSat(false);
       return;
     }
-
-    if (tipo !== "satelite") {
-      setSat(null);
-      setSatError(null);
-      setLoadingSat(false);
-      return;
-    }
-
-    // ya viene poblado (con .satelliteType si aplicaste populate anidado)
     if (equipo?.satelliteRef && typeof equipo.satelliteRef === "object") {
-      setSat(equipo.satelliteRef);
-      setSatError(null);
-      setLoadingSat(false);
+      setSat(equipo.satelliteRef); setSatError(null); setLoadingSat(false);
       return;
     }
-
-    // es id → pedir a API
     const satId =
       typeof equipo?.satelliteRef === "string"
         ? equipo.satelliteRef
         : toIdString(equipo?.satelliteRef);
-
     if (!satId) {
-      setSat(null);
-      setSatError("Equipo satélite sin satelliteRef");
-      setLoadingSat(false);
+      setSat(null); setSatError("Equipo satélite sin satelliteRef"); setLoadingSat(false);
       return;
     }
-
     (async () => {
       try {
         setLoadingSat(true);
@@ -293,52 +341,14 @@ const ChannelDiagram = () => {
         setSat(res?.data || null);
       } catch (err) {
         setSat(null);
-        setSatError(
-          err?.response?.data?.message ||
-          err.message ||
-          "Error al cargar Satélite"
-        );
+        setSatError(err?.response?.data?.message || err.message || "Error al cargar Satélite");
       } finally {
         setLoadingSat(false);
       }
     })();
   }, [equipo]);
 
-  const handleNodeClick = useCallback((evt, node) => {
-    const equipoObj =
-      node?.data?.equipo ??   // equipo embebido en el nodo (populate)
-      node?.equipo ??         // fallback si backend lo puso a nivel raíz
-      null;
-
-    if (equipoObj && typeof equipoObj === "object") {
-      // Limpia paneles secundarios (se volverán a poblar por los useEffect)
-      setIrd(null); setIrdError(null); setLoadingIrd(false);
-      setSat(null); setSatError(null); setLoadingSat(false);
-
-      // Fuerza NUEVA referencia aunque sea el mismo equipo (para re-disparar efectos)
-      setEquipo(prev => {
-        const prevId = toIdString(prev?._id);
-        const nextId = toIdString(equipoObj?._id);
-        // Si es el mismo id, clonar para cambiar la referencia
-        if (prevId === nextId) return { ...equipoObj };
-        // Si es otro equipo, set directo (ya es nueva ref)
-        return equipoObj;
-      });
-      return;
-    }
-
-    // Si no vino embebido, buscamos por id
-    const raw =
-      node?.data?.equipoId ??
-      node?.data?.equipo?._id ??
-      node?.equipo ?? null;
-
-    const idStr = toIdString(raw);
-    fetchEquipo(idStr);
-  }, [fetchEquipo]);
-
-
-
+  // Render
   return (
     <div
       className="outlet-main"
@@ -395,7 +405,10 @@ const ChannelDiagram = () => {
             edges={edges}
             nodeTypes={nodeTypes}
             edgeTypes={edgeTypes}
-            onNodeClick={handleNodeClick}
+            onNodesChange={onNodesChange}   // drag/move nodes
+            onEdgesChange={onEdgesChange}   // cambios en edges (label setEdges también repercute)
+            onConnect={onConnect}           // conectar nodos
+            onNodeClick={handleNodeClick}   // abre panel detalle
             fitView
             fitViewOptions={{ padding: 0.2 }}
             style={{ width: "100%", height: "100%", background: "#DCDCDC" }}
@@ -432,13 +445,11 @@ const ChannelDiagram = () => {
             (typeof equipo?.irdRef === "object" && equipo?.irdRef?._id) ||
             typeof equipo?.irdRef === "string";
 
-          const isSat = tipo === "satelite" || tipo === "satellite"; // por si tuvieras esa variante
+          const isSat = tipo === "satelite" || tipo === "satellite";
           const hasSatRef =
-            (typeof equipo?.satelliteRef === "object" &&
-              equipo?.satelliteRef?._id) ||
+            (typeof equipo?.satelliteRef === "object" && equipo?.satelliteRef?._id) ||
             typeof equipo?.satelliteRef === "string";
 
-          // Prioridad: satélite → IRD → equipo genérico
           if (isSat && hasSatRef) {
             return (
               <EquipoSatellite

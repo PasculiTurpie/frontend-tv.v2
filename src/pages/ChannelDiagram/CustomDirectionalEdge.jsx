@@ -1,14 +1,41 @@
-import React from "react";
-import { BaseEdge, EdgeLabelRenderer, getSmoothStepPath } from "reactflow";
+import React, { useCallback, useMemo, useRef } from "react";
+import {
+  BezierEdge,
+  getBezierPath,
+  getEdgeCenter,
+  EdgeLabelRenderer,
+  useReactFlow,
+} from "reactflow";
 
 /**
- * Edge smoothstep direccional:
- * - Usa style.stroke para color de línea
- * - Usa markerEnd para flecha
- * - Etiqueta negra con fondo blanco y borde gris
- * - Si los nodos están casi al mismo X, mueve la etiqueta hacia la flecha (target)
+ * Label visual + draggable
  */
-const CustomDirectionalEdge = (props) => {
+const DraggableLabel = ({ x, y, children, onPointerDown }) => (
+  <EdgeLabelRenderer>
+    <div
+      onMouseDown={onPointerDown}
+      onTouchStart={onPointerDown}
+      style={{
+        position: "absolute",
+        transform: `translate(-50%, -50%) translate(${x}px, ${y}px)`,
+        pointerEvents: "all",
+        background: "#fff",
+        border: "1px solid #e5e7eb",
+        borderRadius: 6,
+        padding: "4px 8px",
+        fontSize: 12,
+        boxShadow: "0 1px 4px rgba(0,0,0,0.08)",
+        cursor: "grab",
+        userSelect: "none",
+        whiteSpace: "nowrap",
+      }}
+    >
+      {children}
+    </div>
+  </EdgeLabelRenderer>
+);
+
+export default function CustomDirectionalEdge(props) {
   const {
     id,
     sourceX,
@@ -17,81 +44,98 @@ const CustomDirectionalEdge = (props) => {
     targetY,
     sourcePosition,
     targetPosition,
-    style = {},
-    markerStart,
+    style,
     markerEnd,
-    label,
     data = {},
+    label,
   } = props;
 
-  // Path smoothstep (devuelve punto medio como labelX/labelY)
-  const [edgePath, midX, midY] = getSmoothStepPath({
-    sourceX,
-    sourceY,
-    targetX,
-    targetY,
-    sourcePosition,
-    targetPosition,
-    borderRadius: 8,
+  const rf = useReactFlow();
+  const dragRef = useRef({
+    dragging: false,
+    start: { x: 0, y: 0 },
+    origin: { x: 0, y: 0 },
   });
 
-  const text = data?.label ?? label;
+  // Path + centro por defecto
+  const [edgePath, cx, cy] = useMemo(() => {
+    const path = getBezierPath({
+      sourceX,
+      sourceY,
+      sourcePosition,
+      targetX,
+      targetY,
+      targetPosition,
+    });
+    const [centerX, centerY] = getEdgeCenter({ sourceX, sourceY, targetX, targetY });
+    return [path, centerX, centerY];
+  }, [sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition]);
 
-  // === Heurística: si están casi al mismo X (vertical), reubicar etiqueta cerca del target ===
-  const EPS_X = 8;           // tolerancia para "misma X"
-  const tNearTarget = 0.75;  // 0..1, más cerca del target
-  const sameX = Math.abs(sourceX - targetX) <= EPS_X;
+  // Posición actual del label (si no hay data.labelPos => centro)
+  const labelPos = useMemo(() => {
+    const lp = data?.labelPos;
+    if (lp && Number.isFinite(lp.x) && Number.isFinite(lp.y)) return lp;
+    return { x: cx, y: cy };
+  }, [data?.labelPos, cx, cy]);
 
-  // Interpolar desde el punto medio hacia el target
-  const interp = (a, b, t) => a * (1 - t) + b * t;
+  // Handler drag label
+  const onPointerDown = useCallback((e) => {
+    e.stopPropagation();
+    e.preventDefault();
 
-  let labelX = midX;
-  let labelY = midY;
+    const start = {
+      x: "touches" in e ? e.touches[0].clientX : e.clientX,
+      y: "touches" in e ? e.touches[0].clientY : e.clientY,
+    };
 
-  if (sameX) {
-    // acercar al target
-    labelX = interp(midX, targetX, tNearTarget);
-    labelY = interp(midY, targetY, tNearTarget);
+    dragRef.current.dragging = true;
+    dragRef.current.start = start;
+    dragRef.current.origin = { ...labelPos };
 
-    // pequeño offset vertical para no pisar la flecha
-    const dy = targetY - sourceY;
-    const dirY = Math.sign(dy) || 1; // 1 si hacia abajo, -1 si hacia arriba
-    labelY -= dirY * 10;             // separa un poco por encima de la punta
-  }
+    const onMove = (ev) => {
+      if (!dragRef.current.dragging) return;
+      const curr = {
+        x: "touches" in ev ? ev.touches[0].clientX : ev.clientX,
+        y: "touches" in ev ? ev.touches[0].clientY : ev.clientY,
+      };
+      const dx = curr.x - dragRef.current.start.x;
+      const dy = curr.y - dragRef.current.start.y;
+
+      const next = {
+        x: dragRef.current.origin.x + dx,
+        y: dragRef.current.origin.y + dy,
+      };
+
+      // Actualiza el edge en el store (esto dispara onEdgesChange indirectamente)
+      rf.setEdges((eds) =>
+        eds.map((edge) =>
+          edge.id === id ? { ...edge, data: { ...(edge.data || {}), labelPos: next } } : edge
+        )
+      );
+    };
+
+    const onUp = () => {
+      dragRef.current.dragging = false;
+      window.removeEventListener("mousemove", onMove);
+      window.removeEventListener("mouseup", onUp);
+      window.removeEventListener("touchmove", onMove);
+      window.removeEventListener("touchend", onUp);
+    };
+
+    window.addEventListener("mousemove", onMove);
+    window.addEventListener("mouseup", onUp);
+    window.addEventListener("touchmove", onMove, { passive: false });
+    window.addEventListener("touchend", onUp);
+  }, [id, labelPos, rf]);
 
   return (
     <>
-      <BaseEdge
-        id={id}
-        path={edgePath}
-        style={style}
-        markerStart={markerStart}
-        markerEnd={markerEnd}
-      />
-      {text && (
-        <EdgeLabelRenderer>
-          <div
-            style={{
-              position: "absolute",
-              transform: `translate(-50%, -50%) translate(${labelX}px, ${labelY}px)`,
-              fontSize: 12,
-              fontWeight: 600,
-              color: "black",
-              background: "white",
-              border: "1px solid #ccc",
-              borderRadius: 4,
-              padding: "2px 4px",
-              pointerEvents: "none",
-              whiteSpace: "nowrap",
-              boxShadow: "0 1px 2px rgba(0,0,0,0.1)",
-            }}
-          >
-            {text}
-          </div>
-        </EdgeLabelRenderer>
+      <BezierEdge id={id} path={edgePath} style={style} markerEnd={markerEnd} />
+      {(label || data?.label) && (
+        <DraggableLabel x={labelPos.x} y={labelPos.y} onPointerDown={onPointerDown}>
+          {label || data?.label}
+        </DraggableLabel>
       )}
     </>
   );
-};
-
-export default CustomDirectionalEdge;
+}

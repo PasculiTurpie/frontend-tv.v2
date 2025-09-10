@@ -286,6 +286,13 @@ class Api {
     getChannelDiagram() {
         return this._axios.get(`/channels`).then((res) => res);
     }
+    // 👇 NUEVO: actualizar sólo nodos/edges (posiciones y conexiones)
+    updateChannelFlow(id, payload) {
+        // payload = { nodes, edges }
+        return this._axios
+            .put(`/channels/${id}/flow`, payload)
+            .then((res) => res.data);
+    }
 }
 
 const api = new Api("http://localhost:3000/api/v2");
