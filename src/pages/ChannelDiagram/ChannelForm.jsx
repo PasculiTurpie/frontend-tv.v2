@@ -121,12 +121,26 @@ const ChannelForm = () => {
 
             for (const eq of arr) {
                 const key = tipoToKey(eq?.tipoNombre); // 'satelite' | 'ird' | 'switch' | 'router' | ...
+
+                // valores base
+                const baseName = (eq?.nombre?.toUpperCase?.() || eq?.nombre || "").trim();
+
+                // si es satélite, intenta sacar la polarización del populate
+                const pol =
+                    eq?.satelliteRef?.satelliteType?.typePolarization
+                        ? String(eq.satelliteRef.satelliteType.typePolarization).trim()
+                        : null;
+
+                // arma label según el tipo
+                const labelForSatellite = pol ? `${baseName} ${pol}` : baseName;
+
                 const option = {
-                    label: (eq?.nombre?.toUpperCase?.() || eq?.nombre || "").trim(),
+                    label: baseName, // default
                     value: eq?._id,
                 };
 
                 if (key === "satelite") {
+                    option.label = labelForSatellite;   // <-- concatena polarización
                     satelites.push(option);
                 } else if (key === "ird") {
                     irds.push(option);
