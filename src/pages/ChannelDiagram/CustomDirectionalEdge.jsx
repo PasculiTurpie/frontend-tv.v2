@@ -1,15 +1,13 @@
+// src/pages/ChannelDiagram/CustomDirectionalEdge.jsx
 import React, { useCallback, useMemo, useRef } from "react";
 import {
-  BezierEdge,
-  getBezierPath,
-  getEdgeCenter,
+  BaseEdge,
   EdgeLabelRenderer,
+  getSmoothStepPath,
   useReactFlow,
 } from "reactflow";
 
-/**
- * Label visual + draggable
- */
+/** Etiqueta draggable */
 const DraggableLabel = ({ x, y, children, onPointerDown }) => (
   <EdgeLabelRenderer>
     <div
@@ -29,6 +27,7 @@ const DraggableLabel = ({ x, y, children, onPointerDown }) => (
         userSelect: "none",
         whiteSpace: "nowrap",
       }}
+      className="nodrag nopan"
     >
       {children}
     </div>
@@ -57,80 +56,81 @@ export default function CustomDirectionalEdge(props) {
     origin: { x: 0, y: 0 },
   });
 
-  // Path + centro por defecto
-  const [edgePath, cx, cy] = useMemo(() => {
-    const path = getBezierPath({
+  // STEP path (ángulo recto). getSmoothStepPath devuelve [d, labelX, labelY].
+  const [edgePath, defaultLabelX, defaultLabelY] = useMemo(() => {
+    return getSmoothStepPath({
       sourceX,
       sourceY,
       sourcePosition,
       targetX,
       targetY,
       targetPosition,
+      borderRadius: 0, // 0 => “step” (sin esquinas redondeadas)
     });
-    const [centerX, centerY] = getEdgeCenter({ sourceX, sourceY, targetX, targetY });
-    return [path, centerX, centerY];
   }, [sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition]);
 
-  // Posición actual del label (si no hay data.labelPos => centro)
+  // Posición del label (persistente si existe en data.labelPos)
   const labelPos = useMemo(() => {
     const lp = data?.labelPos;
     if (lp && Number.isFinite(lp.x) && Number.isFinite(lp.y)) return lp;
-    return { x: cx, y: cy };
-  }, [data?.labelPos, cx, cy]);
+    return { x: defaultLabelX, y: defaultLabelY };
+  }, [data?.labelPos, defaultLabelX, defaultLabelY]);
 
-  // Handler drag label
-  const onPointerDown = useCallback((e) => {
-    e.stopPropagation();
-    e.preventDefault();
+  // Drag del label (actualiza edge.data.labelPos en el store)
+  const onPointerDown = useCallback(
+    (e) => {
+      e.stopPropagation();
+      e.preventDefault();
 
-    const start = {
-      x: "touches" in e ? e.touches[0].clientX : e.clientX,
-      y: "touches" in e ? e.touches[0].clientY : e.clientY,
-    };
-
-    dragRef.current.dragging = true;
-    dragRef.current.start = start;
-    dragRef.current.origin = { ...labelPos };
-
-    const onMove = (ev) => {
-      if (!dragRef.current.dragging) return;
-      const curr = {
-        x: "touches" in ev ? ev.touches[0].clientX : ev.clientX,
-        y: "touches" in ev ? ev.touches[0].clientY : ev.clientY,
-      };
-      const dx = curr.x - dragRef.current.start.x;
-      const dy = curr.y - dragRef.current.start.y;
-
-      const next = {
-        x: dragRef.current.origin.x + dx,
-        y: dragRef.current.origin.y + dy,
+      const start = {
+        x: "touches" in e ? e.touches[0].clientX : e.clientX,
+        y: "touches" in e ? e.touches[0].clientY : e.clientY,
       };
 
-      // Actualiza el edge en el store (esto dispara onEdgesChange indirectamente)
-      rf.setEdges((eds) =>
-        eds.map((edge) =>
-          edge.id === id ? { ...edge, data: { ...(edge.data || {}), labelPos: next } } : edge
-        )
-      );
-    };
+      dragRef.current.dragging = true;
+      dragRef.current.start = start;
+      dragRef.current.origin = { ...labelPos };
 
-    const onUp = () => {
-      dragRef.current.dragging = false;
-      window.removeEventListener("mousemove", onMove);
-      window.removeEventListener("mouseup", onUp);
-      window.removeEventListener("touchmove", onMove);
-      window.removeEventListener("touchend", onUp);
-    };
+      const onMove = (ev) => {
+        if (!dragRef.current.dragging) return;
+        const curr = {
+          x: "touches" in ev ? ev.touches[0].clientX : ev.clientX,
+          y: "touches" in ev ? ev.touches[0].clientY : ev.clientY,
+        };
+        const dx = curr.x - dragRef.current.start.x;
+        const dy = curr.y - dragRef.current.start.y;
 
-    window.addEventListener("mousemove", onMove);
-    window.addEventListener("mouseup", onUp);
-    window.addEventListener("touchmove", onMove, { passive: false });
-    window.addEventListener("touchend", onUp);
-  }, [id, labelPos, rf]);
+        const next = {
+          x: dragRef.current.origin.x + dx,
+          y: dragRef.current.origin.y + dy,
+        };
+
+        rf.setEdges((eds) =>
+          eds.map((edge) =>
+            edge.id === id ? { ...edge, data: { ...(edge.data || {}), labelPos: next } } : edge
+          )
+        );
+      };
+
+      const onUp = () => {
+        dragRef.current.dragging = false;
+        window.removeEventListener("mousemove", onMove);
+        window.removeEventListener("mouseup", onUp);
+        window.removeEventListener("touchmove", onMove);
+        window.removeEventListener("touchend", onUp);
+      };
+
+      window.addEventListener("mousemove", onMove);
+      window.addEventListener("mouseup", onUp);
+      window.addEventListener("touchmove", onMove, { passive: false });
+      window.addEventListener("touchend", onUp);
+    },
+    [id, labelPos, rf]
+  );
 
   return (
     <>
-      <BezierEdge id={id} path={edgePath} style={style} markerEnd={markerEnd} />
+      <BaseEdge id={id} path={edgePath} style={style} markerEnd={markerEnd} />
       {(label || data?.label) && (
         <DraggableLabel x={labelPos.x} y={labelPos.y} onPointerDown={onPointerDown}>
           {label || data?.label}

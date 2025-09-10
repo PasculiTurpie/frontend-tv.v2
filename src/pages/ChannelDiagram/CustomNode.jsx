@@ -1,44 +1,118 @@
+// src/pages/ChannelDiagram/CustomNode.jsx
 import React from "react";
 import { Handle, Position } from "reactflow";
 
-const dot = { background: "transparent" };
-const pctTop = (p) => ({ top: `${p}%` });
+const box = {
+  padding: 10,
+  border: "1px solid #444",
+  borderRadius: 10,
+  background: "#fff",
+  width: 170,
+  position: "relative",
+  textAlign: "center",
+};
 
-const CustomNode = ({ data }) => {
+const dot = { background: "transparent" };
+
+// helpers para posiciones
+const pctTop = (p) => ({ top: `${p}%` });
+const pctLeft = (p) => ({ left: `${p}%` });
+
+/**
+ * 10 puntos (slots) totales:
+ * - LEFT:   2 (top 30%, 70%)
+ * - RIGHT:  2 (top 30%, 70%)
+ * - TOP:    3 (left 20%, 50%, 80%)
+ * - BOTTOM: 3 (left 20%, 50%, 80%)
+ *
+ * Para cada punto coloco 2 handles: uno target (in-*) y uno source (out-*)
+ * para permitir bidireccionalidad sin cambiar la geometría.
+ */
+export default function CustomNode({ data }) {
+  // posiciones para cada lado
+  const leftSlots = [30, 70];     // % desde Top
+  const rightSlots = [30, 70];    // % desde Top
+  const topSlots = [20, 50, 80];  // % desde Left
+  const bottomSlots = [20, 50, 80];
+
   return (
     <div
       title={data?.tooltip || data?.description || data?.label}
-      style={{
-        padding: 10,
-        border: "1px solid #444",
-        borderRadius: 10,
-        background: "#fff",
-        width: 170,
-        position: "relative",
-        textAlign: "center",
-      }}
+      style={box}
     >
       <div style={{ fontWeight: "bold" }}>{data?.label}</div>
 
-      {/* TOP (2) */}
-      <Handle id="in-top-1" type="target" position={Position.Top} style={{ ...dot, left: "35%" }} />
-      <Handle id="in-top-2" type="target" position={Position.Top} style={{ ...dot, left: "65%" }} />
-      <Handle id="out-top-1" type="source" position={Position.Top} style={{ ...dot, left: "35%" }} />
-      <Handle id="out-top-2" type="source" position={Position.Top} style={{ ...dot, left: "65%" }} />
+      {/* TOP: 3 slots (cada uno con IN + OUT) */}
+      {topSlots.map((p, i) => (
+        <React.Fragment key={`top-${i}`}>
+          <Handle
+            id={`in-top-${i + 1}`}
+            type="target"
+            position={Position.Top}
+            style={{ ...dot, ...pctLeft(p) }}
+          />
+          <Handle
+            id={`out-top-${i + 1}`}
+            type="source"
+            position={Position.Top}
+            style={{ ...dot, ...pctLeft(p) }}
+          />
+        </React.Fragment>
+      ))}
 
-      {/* BOTTOM (2) */}
-      <Handle id="in-bottom-1" type="target" position={Position.Bottom} style={{ ...dot, left: "35%" }} />
-      <Handle id="in-bottom-2" type="target" position={Position.Bottom} style={{ ...dot, left: "65%" }} />
-      <Handle id="out-bottom-1" type="source" position={Position.Bottom} style={{ ...dot, left: "35%" }} />
-      <Handle id="out-bottom-2" type="source" position={Position.Bottom} style={{ ...dot, left: "65%" }} />
+      {/* BOTTOM: 3 slots (cada uno con IN + OUT) */}
+      {bottomSlots.map((p, i) => (
+        <React.Fragment key={`bottom-${i}`}>
+          <Handle
+            id={`in-bottom-${i + 1}`}
+            type="target"
+            position={Position.Bottom}
+            style={{ ...dot, ...pctLeft(p) }}
+          />
+          <Handle
+            id={`out-bottom-${i + 1}`}
+            type="source"
+            position={Position.Bottom}
+            style={{ ...dot, ...pctLeft(p) }}
+          />
+        </React.Fragment>
+      ))}
 
-      {/* LEFT/RIGHT */}
-      <Handle id="in-left" type="target" position={Position.Left} style={{ ...dot, ...pctTop(50) }} />
-      <Handle id="in-right" type="target" position={Position.Right} style={{ ...dot, ...pctTop(50) }} />
-      <Handle id="out-left" type="source" position={Position.Left} style={{ ...dot, ...pctTop(50) }} />
-      <Handle id="out-right" type="source" position={Position.Right} style={{ ...dot, ...pctTop(50) }} />
+      {/* LEFT: 2 slots (cada uno con IN + OUT) */}
+      {leftSlots.map((p, i) => (
+        <React.Fragment key={`left-${i}`}>
+          <Handle
+            id={`in-left-${i + 1}`}
+            type="target"
+            position={Position.Left}
+            style={{ ...dot, ...pctTop(p) }}
+          />
+          <Handle
+            id={`out-left-${i + 1}`}
+            type="source"
+            position={Position.Left}
+            style={{ ...dot, ...pctTop(p) }}
+          />
+        </React.Fragment>
+      ))}
+
+      {/* RIGHT: 2 slots (cada uno con IN + OUT) */}
+      {rightSlots.map((p, i) => (
+        <React.Fragment key={`right-${i}`}>
+          <Handle
+            id={`in-right-${i + 1}`}
+            type="target"
+            position={Position.Right}
+            style={{ ...dot, ...pctTop(p) }}
+          />
+          <Handle
+            id={`out-right-${i + 1}`}
+            type="source"
+            position={Position.Right}
+            style={{ ...dot, ...pctTop(p) }}
+          />
+        </React.Fragment>
+      ))}
     </div>
   );
-};
-
-export default CustomNode;
+}
