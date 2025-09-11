@@ -72,6 +72,13 @@ const Sidebar = () => {
           <Link to="/channel-form">Crear topología</Link>
         </li>
         <hr />
+        <p className="nodo">
+          Auditoría
+        </p>
+        <li>
+          <Link to="/audit-logs">Logs</Link>
+        </li>
+        <hr />
         <li>
           <Link to="/registrar-user">Usuarios</Link>
         </li>
