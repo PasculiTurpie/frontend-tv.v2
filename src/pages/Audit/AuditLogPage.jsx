@@ -1,5 +1,5 @@
-// src/pages/Audit/AuditLogs.jsx
-import React, { useEffect, useMemo, useState } from "react";
+// src/pages/Audit/AuditLogPage.jsx
+import React, { useEffect, useState } from "react";
 import api from "../../utils/api";
 import Swal from "sweetalert2";
 
@@ -7,25 +7,19 @@ const initialFilters = {
   q: "",
   userId: "",
   email: "",
-  action: "",          // create|update|delete|login|logout|read (texto libre también)
+  action: "",          // create|update|delete|login|logout|read
   method: "",          // GET|POST|PUT|DELETE
   ip: "",
   resource: "",
-  status: "",          // un número exacto (200, 401, etc). Si usas rango, deja vacío aquí.
+  status: "",          // número exacto (200, 401, ...)
   statusMin: "",
   statusMax: "",
-  dateFrom: "",        // "YYYY-MM-DD"
+  dateFrom: "",
   dateTo: "",
-  sort: "-createdAt",  // o "createdAt:desc"
+  sort: "-createdAt",
   page: 1,
   limit: 50,
 };
-
-function toDateInputValue(d) {
-  if (!d) return "";
-  const iso = new Date(d).toISOString();
-  return iso.slice(0, 10);
-}
 
 export default function AuditLogPage() {
   const [filters, setFilters] = useState(initialFilters);
@@ -33,7 +27,6 @@ export default function AuditLogPage() {
   const [rows, setRows] = useState([]);
   const [meta, setMeta] = useState({ page: 1, pages: 1, limit: 50, total: 0 });
 
-  // Helpers de UI
   const canPrev = meta.page > 1;
   const canNext = meta.page < meta.pages;
 
@@ -51,14 +44,13 @@ export default function AuditLogPage() {
     }
   };
 
-  // carga inicial
   useEffect(() => {
     load(filters);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const onApplyFilters = () => {
-    const next = { ...filters, page: 1 }; // reset page al aplicar filtros
+    const next = { ...filters, page: 1 };
     setFilters(next);
     load(next);
   };
@@ -68,7 +60,6 @@ export default function AuditLogPage() {
       const { data, headers } = await api.exportAuditLogsCSV(filters);
       const blob = new Blob([data], { type: "text/csv;charset=utf-8" });
 
-      // Intentar leer filename del Content-Disposition, si existe
       let filename = "audit.csv";
       const cd = headers?.["content-disposition"];
       if (cd) {
@@ -111,13 +102,40 @@ export default function AuditLogPage() {
 
       {/* Filtros */}
       <div style={{ margin: "12px 0", border: "1px solid #eee", padding: 12, borderRadius: 8 }}>
-        <div className="form__group-inputs" style={{ display: "grid", gridTemplateColumns: "repeat(4, minmax(0, 1fr))", gap: 8 }}>
-          <input className="form__input" placeholder="Búsqueda libre (q)" value={filters.q} onChange={(e) => onChange("q", e.target.value)} />
-          <input className="form__input" placeholder="User ID" value={filters.userId} onChange={(e) => onChange("userId", e.target.value)} />
-          <input className="form__input" placeholder="Email" value={filters.email} onChange={(e) => onChange("email", e.target.value)} />
-          <input className="form__input" placeholder="IP" value={filters.ip} onChange={(e) => onChange("ip", e.target.value)} />
+        <div
+          className="form__group-inputs"
+          style={{ display: "grid", gridTemplateColumns: "repeat(4, minmax(0, 1fr))", gap: 8 }}
+        >
+          <input
+            className="form__input"
+            placeholder="Búsqueda libre (q)"
+            value={filters.q}
+            onChange={(e) => onChange("q", e.target.value)}
+          />
+          <input
+            className="form__input"
+            placeholder="User ID"
+            value={filters.userId}
+            onChange={(e) => onChange("userId", e.target.value)}
+          />
+          <input
+            className="form__input"
+            placeholder="Email"
+            value={filters.email}
+            onChange={(e) => onChange("email", e.target.value)}
+          />
+          <input
+            className="form__input"
+            placeholder="IP"
+            value={filters.ip}
+            onChange={(e) => onChange("ip", e.target.value)}
+          />
 
-          <select className="form__input" value={filters.action} onChange={(e) => onChange("action", e.target.value)}>
+          <select
+            className="form__input"
+            value={filters.action}
+            onChange={(e) => onChange("action", e.target.value)}
+          >
             <option value="">Acción (cualquiera)</option>
             <option value="create">create</option>
             <option value="update">update</option>
@@ -127,19 +145,44 @@ export default function AuditLogPage() {
             <option value="logout">logout</option>
           </select>
 
-          <select className="form__input" value={filters.method} onChange={(e) => onChange("method", e.target.value)}>
+          <select
+            className="form__input"
+            value={filters.method}
+            onChange={(e) => onChange("method", e.target.value)}
+          >
             <option value="">Método (cualquiera)</option>
             <option value="GET">GET</option>
             <option value="POST">POST</option>
             <option value="PUT">PUT</option>
+            <option value="PATCH">PATCH</option>
             <option value="DELETE">DELETE</option>
           </select>
 
-          <input className="form__input" placeholder="Recurso (/ruta)" value={filters.resource} onChange={(e) => onChange("resource", e.target.value)} />
-          <input className="form__input" placeholder="Status exacto (e.g. 200)" value={filters.status} onChange={(e) => onChange("status", e.target.value)} />
+          <input
+            className="form__input"
+            placeholder="Recurso (/ruta base)"
+            value={filters.resource}
+            onChange={(e) => onChange("resource", e.target.value)}
+          />
+          <input
+            className="form__input"
+            placeholder="Status exacto (e.g. 200)"
+            value={filters.status}
+            onChange={(e) => onChange("status", e.target.value)}
+          />
 
-          <input className="form__input" placeholder="Status ≥" value={filters.statusMin} onChange={(e) => onChange("statusMin", e.target.value)} />
-          <input className="form__input" placeholder="Status ≤" value={filters.statusMax} onChange={(e) => onChange("statusMax", e.target.value)} />
+          <input
+            className="form__input"
+            placeholder="Status ≥"
+            value={filters.statusMin}
+            onChange={(e) => onChange("statusMin", e.target.value)}
+          />
+          <input
+            className="form__input"
+            placeholder="Status ≤"
+            value={filters.statusMax}
+            onChange={(e) => onChange("statusMax", e.target.value)}
+          />
 
           <div>
             <label style={{ fontSize: 12, color: "#666" }}>Desde</label>
@@ -160,14 +203,22 @@ export default function AuditLogPage() {
             />
           </div>
 
-          <select className="form__input" value={filters.sort} onChange={(e) => onChange("sort", e.target.value)}>
+          <select
+            className="form__input"
+            value={filters.sort}
+            onChange={(e) => onChange("sort", e.target.value)}
+          >
             <option value="-createdAt">Orden: Fecha ↓</option>
             <option value="createdAt">Orden: Fecha ↑</option>
-            <option value="status">Orden: Status ↑</option>
-            <option value="-status">Orden: Status ↓</option>
+            <option value="statusCode">Orden: Status ↑</option>
+            <option value="-statusCode">Orden: Status ↓</option>
           </select>
 
-          <select className="form__input" value={filters.limit} onChange={(e) => onChange("limit", Number(e.target.value))}>
+          <select
+            className="form__input"
+            value={filters.limit}
+            onChange={(e) => onChange("limit", Number(e.target.value))}
+          >
             <option value={20}>20</option>
             <option value={50}>50</option>
             <option value={100}>100</option>
@@ -187,10 +238,18 @@ export default function AuditLogPage() {
           <strong>Total:</strong> {meta.total} &nbsp;|&nbsp; <strong>Página:</strong> {meta.page} / {meta.pages}
         </div>
         <div style={{ marginLeft: "auto", display: "flex", gap: 8 }}>
-          <button className="button btn-secondary" disabled={!canPrev || loading} onClick={() => goto(meta.page - 1)}>
+          <button
+            className="button btn-secondary"
+            disabled={!canPrev || loading}
+            onClick={() => goto(meta.page - 1)}
+          >
             ◀ Anterior
           </button>
-          <button className="button btn-secondary" disabled={!canNext || loading} onClick={() => goto(meta.page + 1)}>
+          <button
+            className="button btn-secondary"
+            disabled={!canNext || loading}
+            onClick={() => goto(meta.page + 1)}
+          >
             Siguiente ▶
           </button>
         </div>
@@ -206,9 +265,9 @@ export default function AuditLogPage() {
               <th style={{ padding: 8, borderBottom: "1px solid #eee" }}>Acción</th>
               <th style={{ padding: 8, borderBottom: "1px solid #eee" }}>Método</th>
               <th style={{ padding: 8, borderBottom: "1px solid #eee" }}>Recurso</th>
+              <th style={{ padding: 8, borderBottom: "1px solid #eee" }}>Endpoint</th>
               <th style={{ padding: 8, borderBottom: "1px solid #eee" }}>Status</th>
               <th style={{ padding: 8, borderBottom: "1px solid #eee" }}>IP</th>
-              <th style={{ padding: 8, borderBottom: "1px solid #eee" }}>Mensaje</th>
             </tr>
           </thead>
           <tbody>
@@ -219,27 +278,33 @@ export default function AuditLogPage() {
                 </td>
               </tr>
             )}
-            {rows.map((r) => (
-              <tr key={r._id}>
-                <td style={{ padding: 8, borderBottom: "1px solid #f2f2f2", whiteSpace: "nowrap" }}>
-                  {r.createdAt ? new Date(r.createdAt).toLocaleString() : ""}
-                </td>
-                <td style={{ padding: 8, borderBottom: "1px solid #f2f2f2" }}>
-                  <div><b>{r.email || "-"}</b></div>
-                  <div style={{ fontSize: 12, color: "#555" }}>{r.userId || "-"}</div>
-                </td>
-                <td style={{ padding: 8, borderBottom: "1px solid #f2f2f2" }}>{r.action || "-"}</td>
-                <td style={{ padding: 8, borderBottom: "1px solid #f2f2f2" }}>{r.method || "-"}</td>
-                <td style={{ padding: 8, borderBottom: "1px solid #f2f2f2" }}>{r.resource || "-"}</td>
-                <td style={{ padding: 8, borderBottom: "1px solid #f2f2f2" }}>{r.status ?? "-"}</td>
-                <td style={{ padding: 8, borderBottom: "1px solid #f2f2f2" }}>{r.ip || "-"}</td>
-                <td style={{ padding: 8, borderBottom: "1px solid #f2f2f2", maxWidth: 420 }}>
-                  <div style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                    {r.message || "-"}
-                  </div>
-                </td>
-              </tr>
-            ))}
+            {rows.map((r) => {
+              const shortEndpoint = r.endpoint || "-";
+              const when = r.createdAt ? new Date(r.createdAt).toLocaleString() : "";
+              return (
+                <tr key={r._id}>
+                  <td style={{ padding: 8, borderBottom: "1px solid #f2f2f2", whiteSpace: "nowrap" }}>
+                    {when}
+                  </td>
+                  <td style={{ padding: 8, borderBottom: "1px solid #f2f2f2" }}>
+                    <div><b>{r.userEmail || "-"}</b></div>
+                    <div style={{ fontSize: 12, color: "#555" }}>{r.userId || "-"}</div>
+                  </td>
+                  <td style={{ padding: 8, borderBottom: "1px solid #f2f2f2" }}>{r.action || "-"}</td>
+                  <td style={{ padding: 8, borderBottom: "1px solid #f2f2f2" }}>{r.method || "-"}</td>
+                  <td style={{ padding: 8, borderBottom: "1px solid #f2f2f2" }}>{r.resource || "-"}</td>
+                  <td style={{ padding: 8, borderBottom: "1px solid #f2f2f2", maxWidth: 420 }}>
+                    <div style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                      {shortEndpoint}
+                    </div>
+                  </td>
+                  <td style={{ padding: 8, borderBottom: "1px solid " + (r.statusCode >= 400 ? "#ffd5d5" : "#f2f2f2") }}>
+                    {r.statusCode ?? "-"}
+                  </td>
+                  <td style={{ padding: 8, borderBottom: "1px solid #f2f2f2" }}>{r.ip || "-"}</td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
