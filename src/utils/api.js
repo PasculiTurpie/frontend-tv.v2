@@ -293,6 +293,87 @@ class Api {
             .put(`/channels/${id}/flow`, payload)
             .then((res) => res.data);
     }
+    getAuditLogs(params = {}) {
+        const qs = new URLSearchParams();
+
+        const push = (k, v) => {
+            if (v === undefined || v === null || v === "") return;
+            // permite arrays (action=['create','update']) → action=create&action=update
+            if (Array.isArray(v)) {
+                v.forEach((item) => qs.append(k, String(item)));
+            } else {
+                qs.set(k, String(v));
+            }
+        };
+
+        // paginación / orden
+        push("page", params.page);
+        push("limit", params.limit);
+        push("sort", params.sort);
+
+        // búsqueda rápida
+        push("q", params.q);
+
+        // filtros
+        push("userId", params.userId);
+        push("email", params.email);
+        push("action", params.action); // string o array
+        push("method", params.method); // string o array
+        push("ip", params.ip);
+        push("resource", params.resource);
+
+        // status exacto o rango
+        push("status", params.status);
+        push("statusMin", params.statusMin);
+        push("statusMax", params.statusMax);
+
+        // rango de fechas (ISO: 'YYYY-MM-DD' o ISO completo)
+        push("dateFrom", params.dateFrom);
+        push("dateTo", params.dateTo);
+
+        const query = qs.toString();
+        const url = `/audit${query ? `?${query}` : ""}`;
+
+        return this._axios.get(url).then((res) => res.data);
+    }
+
+    /**
+     * (Opcional) Exportar CSV de auditoría con los mismos filtros.
+     * Backend: crea un endpoint GET /audit/export que acepte mismos query params y devuelva 'text/csv'
+     */
+    exportAuditLogsCSV(params = {}) {
+        const qs = new URLSearchParams();
+        const push = (k, v) => {
+            if (v === undefined || v === null || v === "") return;
+            if (Array.isArray(v))
+                v.forEach((item) => qs.append(k, String(item)));
+            else qs.set(k, String(v));
+        };
+
+        // Reusa los mismos params
+        [
+            "page",
+            "limit",
+            "sort",
+            "q",
+            "userId",
+            "email",
+            "action",
+            "method",
+            "ip",
+            "resource",
+            "status",
+            "statusMin",
+            "statusMax",
+            "dateFrom",
+            "dateTo",
+        ].forEach((k) => push(k, params[k]));
+
+        const query = qs.toString();
+        const url = `/audit/export${query ? `?${query}` : ""}`;
+
+        return this._axios.get(url, { responseType: "blob" }); // .then(res => res.data)
+    }
 }
 
 const api = new Api("http://localhost:3000/api/v2");

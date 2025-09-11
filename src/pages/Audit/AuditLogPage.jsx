@@ -1,200 +1,248 @@
+// src/pages/Audit/AuditLogs.jsx
 import React, { useEffect, useMemo, useState } from "react";
 import api from "../../utils/api";
-import { Field, Form, Formik } from "formik";
-import Select from "react-select";
+import Swal from "sweetalert2";
 
-const actionOptions = [
-  { value: "", label: "Todas" },
-  { value: "create", label: "Create" },
-  { value: "update", label: "Update" },
-  { value: "delete", label: "Delete" },
-  { value: "read", label: "Read" },
-  { value: "login", label: "Login" },
-  { value: "logout", label: "Logout" },
-];
+const initialFilters = {
+  q: "",
+  userId: "",
+  email: "",
+  action: "",          // create|update|delete|login|logout|read (texto libre también)
+  method: "",          // GET|POST|PUT|DELETE
+  ip: "",
+  resource: "",
+  status: "",          // un número exacto (200, 401, etc). Si usas rango, deja vacío aquí.
+  statusMin: "",
+  statusMax: "",
+  dateFrom: "",        // "YYYY-MM-DD"
+  dateTo: "",
+  sort: "-createdAt",  // o "createdAt:desc"
+  page: 1,
+  limit: 50,
+};
+
+function toDateInputValue(d) {
+  if (!d) return "";
+  const iso = new Date(d).toISOString();
+  return iso.slice(0, 10);
+}
 
 export default function AuditLogPage() {
-  const [logs, setLogs] = useState([]);
-  const [page, setPage] = useState(1);
-  const [limit, setLimit] = useState(20);
-  const [total, setTotal] = useState(0);
+  const [filters, setFilters] = useState(initialFilters);
   const [loading, setLoading] = useState(false);
+  const [rows, setRows] = useState([]);
+  const [meta, setMeta] = useState({ page: 1, pages: 1, limit: 50, total: 0 });
 
-  const totalPages = useMemo(() => Math.max(1, Math.ceil(total / limit)), [total, limit]);
+  // Helpers de UI
+  const canPrev = meta.page > 1;
+  const canNext = meta.page < meta.pages;
 
-  const fetchLogs = async (filters = {}) => {
+  const load = async (params) => {
     try {
       setLoading(true);
-      const params = { page, limit, ...filters };
       const res = await api.getAuditLogs(params);
-      setLogs(res.data.items || []);
-      setTotal(res.data.total || 0);
+      setRows(res?.data || []);
+      setMeta(res?.meta || { page: 1, pages: 1, limit: 50, total: 0 });
     } catch (e) {
-      console.warn("Error fetch audit:", e?.response?.data || e);
+      console.error(e);
+      Swal.fire({ icon: "error", title: "Error cargando auditoría" });
     } finally {
       setLoading(false);
     }
   };
 
-  // estado local de filtros (para no resetear paginación cuando cambian)
-  const [filters, setFilters] = useState({
-    action: "",
-    resource: "",
-    userEmail: "",
-    resourceId: "",
-    from: "",
-    to: "",
-    q: "",
-  });
-
+  // carga inicial
   useEffect(() => {
-    fetchLogs(filters);
+    load(filters);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page, limit]);
+  }, []);
+
+  const onApplyFilters = () => {
+    const next = { ...filters, page: 1 }; // reset page al aplicar filtros
+    setFilters(next);
+    load(next);
+  };
+
+  const onExportCSV = async () => {
+    try {
+      const { data, headers } = await api.exportAuditLogsCSV(filters);
+      const blob = new Blob([data], { type: "text/csv;charset=utf-8" });
+
+      // Intentar leer filename del Content-Disposition, si existe
+      let filename = "audit.csv";
+      const cd = headers?.["content-disposition"];
+      if (cd) {
+        const match = /filename="?(.*?)"?$/.exec(cd);
+        if (match?.[1]) filename = match[1];
+      }
+
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    } catch (e) {
+      console.error(e);
+      Swal.fire({ icon: "error", title: "No se pudo exportar CSV" });
+    }
+  };
+
+  const onChange = (name, value) => {
+    setFilters((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const goto = (page) => {
+    const next = { ...filters, page };
+    setFilters(next);
+    load(next);
+  };
 
   return (
-    <div className="outlet-main" style={{ padding: 16 }}>
-      <h2>Auditoría de Accesos y Acciones</h2>
+    <div className="outlet-main">
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
+        <h2 style={{ margin: 0 }}>Auditoría</h2>
+        <button className="button btn-secondary" onClick={onExportCSV} disabled={loading}>
+          Exportar CSV
+        </button>
+      </div>
 
-      <Formik
-        initialValues={filters}
-        enableReinitialize
-        onSubmit={(vals) => {
-          setPage(1);
-          setFilters(vals);
-          fetchLogs(vals);
-        }}
-      >
-        {({ values, setFieldValue }) => (
-          <Form
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(6, minmax(0, 1fr))",
-              gap: 8,
-              alignItems: "end",
-              marginBottom: 12,
-            }}
-          >
-            <div>
-              <label>Acción</label>
-              <Select
-                value={actionOptions.find((o) => o.value === values.action)}
-                onChange={(opt) => setFieldValue("action", opt?.value || "")}
-                options={actionOptions}
-                placeholder="Acción"
-              />
-            </div>
+      {/* Filtros */}
+      <div style={{ margin: "12px 0", border: "1px solid #eee", padding: 12, borderRadius: 8 }}>
+        <div className="form__group-inputs" style={{ display: "grid", gridTemplateColumns: "repeat(4, minmax(0, 1fr))", gap: 8 }}>
+          <input className="form__input" placeholder="Búsqueda libre (q)" value={filters.q} onChange={(e) => onChange("q", e.target.value)} />
+          <input className="form__input" placeholder="User ID" value={filters.userId} onChange={(e) => onChange("userId", e.target.value)} />
+          <input className="form__input" placeholder="Email" value={filters.email} onChange={(e) => onChange("email", e.target.value)} />
+          <input className="form__input" placeholder="IP" value={filters.ip} onChange={(e) => onChange("ip", e.target.value)} />
 
-            <div>
-              <label>Recurso</label>
-              <Field name="resource" className="form__input" placeholder="equipo, channel, satellite..." />
-            </div>
+          <select className="form__input" value={filters.action} onChange={(e) => onChange("action", e.target.value)}>
+            <option value="">Acción (cualquiera)</option>
+            <option value="create">create</option>
+            <option value="update">update</option>
+            <option value="delete">delete</option>
+            <option value="read">read</option>
+            <option value="login">login</option>
+            <option value="logout">logout</option>
+          </select>
 
-            <div>
-              <label>Usuario (email)</label>
-              <Field name="userEmail" className="form__input" placeholder="usuario@dominio" />
-            </div>
+          <select className="form__input" value={filters.method} onChange={(e) => onChange("method", e.target.value)}>
+            <option value="">Método (cualquiera)</option>
+            <option value="GET">GET</option>
+            <option value="POST">POST</option>
+            <option value="PUT">PUT</option>
+            <option value="DELETE">DELETE</option>
+          </select>
 
-            <div>
-              <label>Resource ID</label>
-              <Field name="resourceId" className="form__input" placeholder="ObjectId o clave" />
-            </div>
+          <input className="form__input" placeholder="Recurso (/ruta)" value={filters.resource} onChange={(e) => onChange("resource", e.target.value)} />
+          <input className="form__input" placeholder="Status exacto (e.g. 200)" value={filters.status} onChange={(e) => onChange("status", e.target.value)} />
 
-            <div>
-              <label>Desde</label>
-              <Field name="from" type="date" className="form__input" />
-            </div>
+          <input className="form__input" placeholder="Status ≥" value={filters.statusMin} onChange={(e) => onChange("statusMin", e.target.value)} />
+          <input className="form__input" placeholder="Status ≤" value={filters.statusMax} onChange={(e) => onChange("statusMax", e.target.value)} />
 
-            <div>
-              <label>Hasta</label>
-              <Field name="to" type="date" className="form__input" />
-            </div>
+          <div>
+            <label style={{ fontSize: 12, color: "#666" }}>Desde</label>
+            <input
+              className="form__input"
+              type="date"
+              value={filters.dateFrom}
+              onChange={(e) => onChange("dateFrom", e.target.value)}
+            />
+          </div>
+          <div>
+            <label style={{ fontSize: 12, color: "#666" }}>Hasta</label>
+            <input
+              className="form__input"
+              type="date"
+              value={filters.dateTo}
+              onChange={(e) => onChange("dateTo", e.target.value)}
+            />
+          </div>
 
-            <div style={{ gridColumn: "span 3" }}>
-              <label>Buscar</label>
-              <Field name="q" className="form__input" placeholder="endpoint, userAgent, meta.query..." />
-            </div>
+          <select className="form__input" value={filters.sort} onChange={(e) => onChange("sort", e.target.value)}>
+            <option value="-createdAt">Orden: Fecha ↓</option>
+            <option value="createdAt">Orden: Fecha ↑</option>
+            <option value="status">Orden: Status ↑</option>
+            <option value="-status">Orden: Status ↓</option>
+          </select>
 
-            <div style={{ gridColumn: "span 3", textAlign: "right" }}>
-              <button className="button btn-primary" type="submit">Aplicar filtros</button>
-            </div>
-          </Form>
-        )}
-      </Formik>
-
-      <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 8 }}>
-        <div>
-          <label>Límite</label>
-          <select value={limit} onChange={(e) => { setLimit(Number(e.target.value)); setPage(1); }} className="form__input">
-            {[10, 20, 50, 100].map(n => <option key={n} value={n}>{n}</option>)}
+          <select className="form__input" value={filters.limit} onChange={(e) => onChange("limit", Number(e.target.value))}>
+            <option value={20}>20</option>
+            <option value={50}>50</option>
+            <option value={100}>100</option>
           </select>
         </div>
-        <div style={{ marginLeft: "auto" }}>
-          <button disabled={page <= 1 || loading} onClick={() => setPage(p => Math.max(1, p - 1))}>
-            « Anterior
-          </button>
-          <span style={{ padding: "0 8px" }}>
-            Página {page} / {totalPages}
-          </span>
-          <button disabled={page >= totalPages || loading} onClick={() => setPage(p => Math.min(totalPages, p + 1))}>
-            Siguiente »
+
+        <div style={{ marginTop: 8 }}>
+          <button className="button btn-primary" onClick={onApplyFilters} disabled={loading}>
+            {loading ? "Buscando..." : "Aplicar filtros"}
           </button>
         </div>
       </div>
 
-      <div style={{
-        border: "1px solid #ddd",
-        borderRadius: 8,
-        overflow: "hidden",
-        background: "#fff",
-      }}>
-        <table style={{ width: "100%", borderCollapse: "collapse" }}>
-          <thead style={{ background: "#f8fafc" }}>
+      {/* Meta / Paginación */}
+      <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 8 }}>
+        <div>
+          <strong>Total:</strong> {meta.total} &nbsp;|&nbsp; <strong>Página:</strong> {meta.page} / {meta.pages}
+        </div>
+        <div style={{ marginLeft: "auto", display: "flex", gap: 8 }}>
+          <button className="button btn-secondary" disabled={!canPrev || loading} onClick={() => goto(meta.page - 1)}>
+            ◀ Anterior
+          </button>
+          <button className="button btn-secondary" disabled={!canNext || loading} onClick={() => goto(meta.page + 1)}>
+            Siguiente ▶
+          </button>
+        </div>
+      </div>
+
+      {/* Tabla */}
+      <div style={{ overflow: "auto", border: "1px solid #eee", borderRadius: 8 }}>
+        <table className="table" style={{ width: "100%", borderCollapse: "collapse" }}>
+          <thead style={{ position: "sticky", top: 0, background: "#fafafa" }}>
             <tr>
-              <th style={th}>Fecha</th>
-              <th style={th}>Usuario</th>
-              <th style={th}>Acción</th>
-              <th style={th}>Recurso</th>
-              <th style={th}>ResourceId</th>
-              <th style={th}>Endpoint</th>
-              <th style={th}>Método</th>
-              <th style={th}>Status</th>
-              <th style={th}>IP</th>
+              <th style={{ padding: 8, borderBottom: "1px solid #eee" }}>Fecha</th>
+              <th style={{ padding: 8, borderBottom: "1px solid #eee" }}>Usuario</th>
+              <th style={{ padding: 8, borderBottom: "1px solid #eee" }}>Acción</th>
+              <th style={{ padding: 8, borderBottom: "1px solid #eee" }}>Método</th>
+              <th style={{ padding: 8, borderBottom: "1px solid #eee" }}>Recurso</th>
+              <th style={{ padding: 8, borderBottom: "1px solid #eee" }}>Status</th>
+              <th style={{ padding: 8, borderBottom: "1px solid #eee" }}>IP</th>
+              <th style={{ padding: 8, borderBottom: "1px solid #eee" }}>Mensaje</th>
             </tr>
           </thead>
           <tbody>
-            {loading ? (
-              <tr><td colSpan={9} style={{ padding: 12, textAlign: "center" }}>Cargando…</td></tr>
-            ) : logs.length === 0 ? (
-              <tr><td colSpan={9} style={{ padding: 12, textAlign: "center" }}>Sin resultados</td></tr>
-            ) : (
-              logs.map((log) => (
-                <tr key={log._id}>
-                  <td style={td}>{new Date(log.createdAt).toLocaleString()}</td>
-                  <td style={td}>
-                    <div style={{ fontWeight: 600 }}>{log.userEmail || "—"}</div>
-                    <div style={{ color: "#6b7280", fontSize: 12 }}>{log.role || "—"}</div>
-                  </td>
-                  <td style={td}>{log.action}</td>
-                  <td style={td}>{log.resource}</td>
-                  <td style={td}>{log.resourceId || "—"}</td>
-                  <td style={td}>{log.endpoint}</td>
-                  <td style={td}>{log.method}</td>
-                  <td style={td}>{log.statusCode}</td>
-                  <td style={td}>{log.ip}</td>
-                </tr>
-              ))
+            {rows.length === 0 && !loading && (
+              <tr>
+                <td colSpan={8} style={{ padding: 16, textAlign: "center", color: "#777" }}>
+                  Sin resultados.
+                </td>
+              </tr>
             )}
+            {rows.map((r) => (
+              <tr key={r._id}>
+                <td style={{ padding: 8, borderBottom: "1px solid #f2f2f2", whiteSpace: "nowrap" }}>
+                  {r.createdAt ? new Date(r.createdAt).toLocaleString() : ""}
+                </td>
+                <td style={{ padding: 8, borderBottom: "1px solid #f2f2f2" }}>
+                  <div><b>{r.email || "-"}</b></div>
+                  <div style={{ fontSize: 12, color: "#555" }}>{r.userId || "-"}</div>
+                </td>
+                <td style={{ padding: 8, borderBottom: "1px solid #f2f2f2" }}>{r.action || "-"}</td>
+                <td style={{ padding: 8, borderBottom: "1px solid #f2f2f2" }}>{r.method || "-"}</td>
+                <td style={{ padding: 8, borderBottom: "1px solid #f2f2f2" }}>{r.resource || "-"}</td>
+                <td style={{ padding: 8, borderBottom: "1px solid #f2f2f2" }}>{r.status ?? "-"}</td>
+                <td style={{ padding: 8, borderBottom: "1px solid #f2f2f2" }}>{r.ip || "-"}</td>
+                <td style={{ padding: 8, borderBottom: "1px solid #f2f2f2", maxWidth: 420 }}>
+                  <div style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                    {r.message || "-"}
+                  </div>
+                </td>
+              </tr>
+            ))}
           </tbody>
         </table>
       </div>
-
-      <p style={{ marginTop: 8, color: "#6b7280" }}>
-        Total: {total}
-      </p>
     </div>
   );
 }
-
-const th = { padding: "10px 12px", textAlign: "left", borderBottom: "1px solid #eee" };
-const td = { padding: "8px 12px", borderBottom: "1px solid #f3f4f6", verticalAlign: "top" };
