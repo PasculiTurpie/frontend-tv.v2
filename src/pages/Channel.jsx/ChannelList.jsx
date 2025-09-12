@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import api from "../../utils/api";
 import ModalChannel from "./ModalChannel";
@@ -11,17 +11,21 @@ const ChannelList = () => {
     const [modalOpen, setModalOpen] = useState(false);
     const [itemId, setItemId] = useState("");
 
-    const [currentPage, setCurrentPage] = useState(1);
-    const itemsPerPage = 10;
+    // --- Paginación (cliente) ---
+    const [page, setPage] = useState(1);
+    const [pageSize, setPageSize] = useState(10);
 
     const getAllChannel = () => {
-        api.getSignal()
+        setIsLoading(true);
+        api
+            .getSignal()
             .then((res) => {
-                const sortedChannels = res.data.sort((a, b) =>
-                    a.nameChannel.localeCompare(b.nameChannel)
+                const sorted = (res.data || []).sort((a, b) =>
+                    (a.nameChannel || "").localeCompare(b.nameChannel || "", "es", {
+                        sensitivity: "base",
+                    })
                 );
-                setChannels(sortedChannels);
-                setIsLoading(false);
+                setChannels(sorted);
             })
             .catch((error) => {
                 Swal.fire({
@@ -30,8 +34,8 @@ const ChannelList = () => {
                     text: `${error.message}`,
                     footer: '<a href="#">Contactar a administrador</a>',
                 });
-                setIsLoading(false);
-            });
+            })
+            .finally(() => setIsLoading(false));
     };
 
     useEffect(() => {
@@ -41,6 +45,23 @@ const ChannelList = () => {
     const refreshList = () => {
         getAllChannel();
     };
+
+    // Datos paginados
+    const total = channels.length;
+    const totalPages = Math.max(Math.ceil(total / pageSize) || 1, 1);
+
+    // Mantener page en rango si cambia lista o tamaño
+    useEffect(() => {
+        if (page > totalPages) setPage(totalPages);
+    }, [totalPages, page]);
+
+    const pageItems = useMemo(() => {
+        const start = (page - 1) * pageSize;
+        return channels.slice(start, start + pageSize);
+    }, [channels, page, pageSize]);
+
+    const rangeStart = total === 0 ? 0 : (page - 1) * pageSize + 1;
+    const rangeEnd = Math.min(page * pageSize, total);
 
     const deleteChannel = async (id) => {
         const result = await Swal.fire({
@@ -56,7 +77,15 @@ const ChannelList = () => {
         if (result.isConfirmed) {
             try {
                 await api.deleteSignal(id);
-                refreshList();
+                await refreshList();
+
+                // Si la página queda vacía tras eliminar, retrocede una
+                setTimeout(() => {
+                    const newTotal = Math.max(total - 1, 0);
+                    const newTotalPages = Math.max(Math.ceil(newTotal / pageSize) || 1, 1);
+                    if (page > newTotalPages) setPage(newTotalPages);
+                }, 0);
+
                 await Swal.fire({
                     title: "¡Eliminado!",
                     text: "El registro ha sido eliminado",
@@ -87,24 +116,50 @@ const ChannelList = () => {
             showConfirmButton: false,
             timer: 1500,
         });
+        refreshList();
     };
 
     const handleCancel = () => {
         setModalOpen(false);
     };
 
-    // PAGINACIÓN
-    const indexOfLastItem = currentPage * itemsPerPage;
-    const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-    const currentChannels = channels.slice(indexOfFirstItem, indexOfLastItem);
-    const totalPages = Math.ceil(channels.length / itemsPerPage);
-
-    const handlePrevPage = () => {
-        if (currentPage > 1) setCurrentPage(currentPage - 1);
+    const goTo = (p) => {
+        if (p < 1 || p > totalPages) return;
+        setPage(p);
     };
 
-    const handleNextPage = () => {
-        if (currentPage < totalPages) setCurrentPage(currentPage + 1);
+    // Paginador con elipsis (máx 7 botones)
+    const renderPager = () => {
+        const maxButtons = 7;
+        const pages = [];
+        const add = (n) =>
+            pages.push(
+                <button
+                    key={n}
+                    className={`button btn-secondary ${n === page ? "active" : ""}`}
+                    onClick={() => goTo(n)}
+                    disabled={n === page}
+                    style={{ minWidth: 40 }}
+                >
+                    {n}
+                </button>
+            );
+
+        if (totalPages <= maxButtons) {
+            for (let i = 1; i <= totalPages; i++) add(i);
+        } else {
+            const windowSize = 3;
+            const start = Math.max(2, page - windowSize);
+            const end = Math.min(totalPages - 1, page + windowSize);
+
+            add(1);
+            if (start > 2) pages.push(<span key="l-ellipsis">…</span>);
+            for (let i = start; i <= end; i++) add(i);
+            if (end < totalPages - 1) pages.push(<span key="r-ellipsis">…</span>);
+            add(totalPages);
+        }
+
+        return pages;
     };
 
     return (
@@ -120,10 +175,46 @@ const ChannelList = () => {
                         </li>
                     </ol>
                 </nav>
-                <p>
-                    <span className="total-list">Total items: </span>
-                    {channels.length}
-                </p>
+
+                {/* Barra superior: total, rango, page size */}
+                <div
+                    style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 12,
+                        flexWrap: "wrap",
+                        marginBottom: 8,
+                    }}
+                >
+                    <p style={{ margin: 0 }}>
+                        <span className="total-list">Total items: </span>
+                        {total}
+                        {total > 0 && (
+                            <span style={{ marginLeft: 8, color: "#666" }}>
+                                (Mostrando {rangeStart}–{rangeEnd})
+                            </span>
+                        )}
+                    </p>
+
+                    <div style={{ marginLeft: "auto", display: "flex", gap: 8 }}>
+                        <label style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                            Tamaño de página:
+                            <select
+                                className="form__input"
+                                value={pageSize}
+                                onChange={(e) => {
+                                    setPageSize(Number(e.target.value));
+                                    setPage(1);
+                                }}
+                            >
+                                <option value={10}>10</option>
+                                <option value={20}>20</option>
+                                <option value={50}>50</option>
+                            </select>
+                        </label>
+                    </div>
+                </div>
+
                 {isLoading ? (
                     <div className="loader__spinner">
                         <Loader />
@@ -141,49 +232,66 @@ const ChannelList = () => {
                                 </tr>
                             </thead>
                             <tbody>
-                                {currentChannels.map((channel) => (
-                                    <tr key={channel._id} id={channel._id}>
-                                        <td className="text__align">{channel.nameChannel}</td>
-                                        <td>{channel.numberChannelCn}</td>
-                                        <td>{channel.numberChannelSur}</td>
-                                        <td>{channel.tipoTecnologia?.toUpperCase()}</td>
-                                        <td className="button-action">
-                                            <button
-                                                className="button btn-primary"
-                                                onClick={() => showModal(channel._id)}
-                                            >
-                                                Editar
-                                            </button>
-                                            <button
-                                                className="button btn-danger"
-                                                onClick={() => deleteChannel(channel._id)}
-                                            >
-                                                Eliminar
-                                            </button>
+                                {pageItems.length === 0 ? (
+                                    <tr>
+                                        <td colSpan={5} style={{ textAlign: "center", color: "#777" }}>
+                                            Sin datos para mostrar.
                                         </td>
                                     </tr>
-                                ))}
+                                ) : (
+                                    pageItems.map((channel) => (
+                                        <tr key={channel._id} id={channel._id}>
+                                            <td className="text__align">{channel.nameChannel}</td>
+                                            <td>{channel.numberChannelCn}</td>
+                                            <td>{channel.numberChannelSur}</td>
+                                            <td>{channel.tipoTecnologia?.toUpperCase()}</td>
+                                            <td className="button-action">
+                                                <button
+                                                    className="button btn-primary"
+                                                    onClick={() => showModal(channel._id)}
+                                                >
+                                                    Editar
+                                                </button>
+                                                <button
+                                                    className="button btn-danger"
+                                                    onClick={() => deleteChannel(channel._id)}
+                                                >
+                                                    Eliminar
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    ))
+                                )}
                             </tbody>
                         </table>
 
-                        {/* CONTROLES DE PÁGINA */}
-                        <div className="pagination">
+                        {/* Controles de paginación */}
+                        <div
+                            style={{
+                                marginTop: 12,
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 8,
+                                justifyContent: "center",
+                                flexWrap: "wrap",
+                            }}
+                        >
                             <button
                                 className="button btn-secondary"
-                                onClick={handlePrevPage}
-                                disabled={currentPage === 1}
+                                onClick={() => goTo(page - 1)}
+                                disabled={page <= 1}
                             >
-                                Anterior
+                                ◀ Anterior
                             </button>
-                            <span style={{ margin: "0 10px" }}>
-                                Página {currentPage} de {totalPages}
-                            </span>
+
+                            {renderPager()}
+
                             <button
                                 className="button btn-secondary"
-                                onClick={handleNextPage}
-                                disabled={currentPage === totalPages}
+                                onClick={() => goTo(page + 1)}
+                                disabled={page >= totalPages}
                             >
-                                Siguiente
+                                Siguiente ▶
                             </button>
                         </div>
                     </>

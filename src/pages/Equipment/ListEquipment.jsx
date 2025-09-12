@@ -1,11 +1,10 @@
 import { Form, Formik } from "formik";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { ipGestionRegex } from "../../utils/regexValidate";
 import * as Yup from "yup";
 import Swal from "sweetalert2";
 import api from "../../utils/api";
-import ModalSwitch from "../Switch/ModalSwitch";
 import Loader from "../../components/Loader/Loader";
 import ModalEquipment from "./ModalEquipment";
 
@@ -15,25 +14,46 @@ const ListEquipment = () => {
     const [modalOpen, setModalOpen] = useState(false);
     const [itemId, setItemId] = useState("");
 
+    // --- Paginación (cliente) ---
+    const [page, setPage] = useState(1);
+    const [pageSize, setPageSize] = useState(10);
+
+    const total = equipos.length;
+    const totalPages = Math.max(Math.ceil(total / pageSize) || 1, 1);
+
+    // Asegura que page siempre esté dentro de rango cuando cambian lista/tamaño
+    useEffect(() => {
+        if (page > totalPages) setPage(totalPages);
+    }, [totalPages, page]);
+
+    // Items actuales de la página
+    const pageItems = useMemo(() => {
+        const start = (page - 1) * pageSize;
+        return equipos.slice(start, start + pageSize);
+    }, [equipos, page, pageSize]);
+
+    // Rango mostrado (1-indexed)
+    const rangeStart = total === 0 ? 0 : (page - 1) * pageSize + 1;
+    const rangeEnd = Math.min(page * pageSize, total);
+
     const getAllEquipos = () => {
-        api.getEquipo()
+        setIsLoading(true);
+        api
+            .getEquipo()
             .then((res) => {
-               
-                setEquipos(res.data);
-                setIsLoading(false);
+                setEquipos(res.data || []);
             })
             .catch((error) => {
-                 
-                 
                 Swal.fire({
                     icon: "error",
                     title: "Oops...",
                     text: `${error.message}`,
                     footer: '<a href="#">Contactar a administrador</a>',
                 });
-                setIsLoading(false); // también en caso de error
-            });
+            })
+            .finally(() => setIsLoading(false));
     };
+
     useEffect(() => {
         refreshList();
     }, []);
@@ -41,9 +61,8 @@ const ListEquipment = () => {
     const refreshList = () => {
         getAllEquipos();
     };
-     
+
     const deleteEquipment = async (id) => {
-         
         const result = await Swal.fire({
             title: "¿Estás seguro de eliminar el registro?",
             text: "¡No podrás revertir esto!",
@@ -57,8 +76,17 @@ const ListEquipment = () => {
         if (result.isConfirmed) {
             try {
                 await api.deleteEquipo(id);
-                 
-                refreshList(); // Refresca la lista después de confirmar
+                // Refresca y corrige la página si queda vacía
+                await refreshList();
+                // Si al borrar quedaste en una página sin elementos, retrocede una
+                setTimeout(() => {
+                    const newTotalPages = Math.max(
+                        Math.ceil((total - 1) / pageSize) || 1,
+                        1
+                    );
+                    if (page > newTotalPages) setPage(newTotalPages);
+                }, 0);
+
                 await Swal.fire({
                     title: "¡Eliminado!",
                     text: "El registro ha sido eliminado",
@@ -74,12 +102,12 @@ const ListEquipment = () => {
             }
         }
     };
+
     const showModal = (id) => {
-         
         setItemId(id);
         setModalOpen(true);
     };
-     
+
     const handleOk = () => {
         setModalOpen(false);
         Swal.fire({
@@ -89,10 +117,50 @@ const ListEquipment = () => {
             showConfirmButton: false,
             timer: 1500,
         });
+        refreshList();
     };
 
     const handleCancel = () => {
         setModalOpen(false);
+    };
+
+    const goTo = (p) => {
+        if (p < 1 || p > totalPages) return;
+        setPage(p);
+    };
+
+    // Render de botones de páginas (simple, hasta 7 botones max con ellipsis)
+    const renderPager = () => {
+        const maxButtons = 7;
+        const pages = [];
+        const add = (n) =>
+            pages.push(
+                <button
+                    key={n}
+                    className={`button btn-secondary ${n === page ? "active" : ""}`}
+                    onClick={() => goTo(n)}
+                    disabled={n === page}
+                    style={{ minWidth: 40 }}
+                >
+                    {n}
+                </button>
+            );
+
+        if (totalPages <= maxButtons) {
+            for (let i = 1; i <= totalPages; i++) add(i);
+        } else {
+            const windowSize = 3; // botones alrededor de la actual
+            const start = Math.max(2, page - windowSize);
+            const end = Math.min(totalPages - 1, page + windowSize);
+
+            add(1);
+            if (start > 2) pages.push(<span key="l-ellipsis">…</span>);
+            for (let i = start; i <= end; i++) add(i);
+            if (end < totalPages - 1) pages.push(<span key="r-ellipsis">…</span>);
+            add(totalPages);
+        }
+
+        return pages;
     };
 
     return (
@@ -103,70 +171,140 @@ const ListEquipment = () => {
                         <li className="breadcrumb-item">
                             <Link to="/equipment">Formulario</Link>
                         </li>
-                        <li
-                            className="breadcrumb-item active"
-                            aria-current="page"
-                        >
+                        <li className="breadcrumb-item active" aria-current="page">
                             Listar
                         </li>
                     </ol>
                 </nav>
-                <p className="">
-                    <span className="total-list">Total items: </span>
-                    {equipos.length}
-                </p>
+
+                {/* Barra superior: total, rango, page size */}
+                <div
+                    style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 12,
+                        flexWrap: "wrap",
+                        marginBottom: 8,
+                    }}
+                >
+                    <p style={{ margin: 0 }}>
+                        <span className="total-list">Total items: </span>
+                        {total}
+                        {total > 0 && (
+                            <span style={{ marginLeft: 8, color: "#666" }}>
+                                (Mostrando {rangeStart}–{rangeEnd})
+                            </span>
+                        )}
+                    </p>
+
+                    <div style={{ marginLeft: "auto", display: "flex", gap: 8 }}>
+                        <label style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                            Tamaño de página:
+                            <select
+                                className="form__input"
+                                value={pageSize}
+                                onChange={(e) => {
+                                    setPageSize(Number(e.target.value));
+                                    setPage(1); // reset a primera página
+                                }}
+                            >
+                                <option value={10}>10</option>
+                                <option value={20}>20</option>
+                                <option value={50}>50</option>
+                            </select>
+                        </label>
+                    </div>
+                </div>
+
                 {isLoading ? (
                     <div className="loader__spinner">
                         <Loader />
                     </div>
                 ) : (
-                    <table className="table">
-                        <thead>
-                            <tr>
-                                <th>Nombre</th>
-                                <th>Marca</th>
-                                <th>Modelo</th>
-                                <th>Tipo</th>
-                                <th>Ip Gestión</th>
-                                <th className="action">Acciones</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {equipos.map((equipo) => (
-                                <tr key={equipo._id} id={equipo._id}>
-                                    <td>{equipo.nombre.toUpperCase()}</td>
-                                    <td>{equipo.marca.toUpperCase()}</td>
-                                    <td>{equipo.modelo.toUpperCase()}</td>
-                                    <td>
-                                        {equipo.tipoNombre?.tipoNombre.toUpperCase() ||
-                                            "Sin tipo"}
-                                    </td>
-
-                                    <td>{equipo.ip_gestion}</td>
-                                    <td className="button-action">
-                                        <button
-                                            className="button btn-primary"
-                                            onClick={() => {
-                                                showModal(equipo._id);
-                                            }}
-                                        >
-                                            Editar
-                                        </button>
-                                        <button
-                                            className="button btn-danger"
-                                            onClick={() =>
-                                                deleteEquipment(equipo._id)
-                                            }
-                                        >
-                                            Eliminar
-                                        </button>
-                                    </td>
+                    <>
+                        <table className="table">
+                            <thead>
+                                <tr>
+                                    <th>Nombre</th>
+                                    <th>Marca</th>
+                                    <th>Modelo</th>
+                                    <th>Tipo</th>
+                                    <th>Ip Gestión</th>
+                                    <th className="action">Acciones</th>
                                 </tr>
-                            ))}
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody>
+                                {pageItems.length === 0 ? (
+                                    <tr>
+                                        <td colSpan={6} style={{ textAlign: "center", color: "#777" }}>
+                                            Sin datos para mostrar.
+                                        </td>
+                                    </tr>
+                                ) : (
+                                    pageItems.map((equipo) => (
+                                        <tr key={equipo._id} id={equipo._id}>
+                                            <td>{equipo.nombre?.toUpperCase?.() || equipo.nombre}</td>
+                                            <td>{equipo.marca?.toUpperCase?.() || equipo.marca}</td>
+                                            <td>{equipo.modelo?.toUpperCase?.() || equipo.modelo}</td>
+                                            <td>
+                                                {equipo.tipoNombre?.tipoNombre
+                                                    ? equipo.tipoNombre.tipoNombre.toUpperCase()
+                                                    : "Sin tipo"}
+                                            </td>
+                                            <td>{equipo.ip_gestion || "-"}</td>
+                                            <td className="button-action">
+                                                <button
+                                                    className="button btn-primary"
+                                                    onClick={() => showModal(equipo._id)}
+                                                >
+                                                    Editar
+                                                </button>
+                                                <button
+                                                    className="button btn-danger"
+                                                    onClick={() => deleteEquipment(equipo._id)}
+                                                >
+                                                    Eliminar
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    ))
+                                )}
+                            </tbody>
+                        </table>
+
+                        {/* Controles de paginación */}
+                        <div
+                            style={{
+                                marginTop: 12,
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 8,
+                                justifyContent: "center",
+                                flexWrap: "wrap",
+                            }}
+                        >
+                            <button
+                                className="button btn-secondary"
+                                onClick={() => goTo(page - 1)}
+                                disabled={page <= 1}
+                            >
+                                ◀ Anterior
+                            </button>
+
+                            {renderPager()}
+
+                            <button
+                                className="button btn-secondary"
+                                onClick={() => goTo(page + 1)}
+                                disabled={page >= totalPages}
+                            >
+                                Siguiente ▶
+                            </button>
+                        </div>
+                    </>
                 )}
             </div>
+
             {modalOpen && (
                 <ModalEquipment
                     modalOpen={modalOpen}

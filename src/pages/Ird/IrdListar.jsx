@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import Loader from "../../components/Loader/Loader";
 import api from "../../utils/api";
@@ -11,24 +11,33 @@ const IrdListar = () => {
     const [modalOpen, setModalOpen] = useState(false);
     const [itemId, setItemId] = useState("");
 
+    // Paginación (cliente)
+    const [page, setPage] = useState(1);
+    const [pageSize, setPageSize] = useState(10);
+
     const getAllIrds = () => {
-        api.getIrd()
+        setIsLoading(true);
+        api
+            .getIrd()
             .then((res) => {
-                 
-                setIrd(res.data);
-                setIsLoading(false);
+                const list = res.data || [];
+                // Ordenar por nombre
+                const sorted = list.sort((a, b) =>
+                    (a?.nombreIrd || "").localeCompare(b?.nombreIrd || "", "es", {
+                        sensitivity: "base",
+                    })
+                );
+                setIrd(sorted);
             })
             .catch((error) => {
-                 
-                 
                 Swal.fire({
                     icon: "error",
                     title: "Oops...",
                     text: `${error.message}`,
                     footer: '<a href="#">Contactar a administrador</a>',
                 });
-                setIsLoading(false); // también en caso de error
-            });
+            })
+            .finally(() => setIsLoading(false));
     };
 
     useEffect(() => {
@@ -53,7 +62,15 @@ const IrdListar = () => {
         if (result.isConfirmed) {
             try {
                 await api.deleteIrd(id);
-                refreshList(); // Refresca la lista después de confirmar
+                await refreshList();
+
+                // Ajustar página si queda vacía
+                setTimeout(() => {
+                    const newTotal = Math.max(ird.length - 1, 0);
+                    const newTotalPages = Math.max(Math.ceil(newTotal / pageSize) || 1, 1);
+                    if (page > newTotalPages) setPage(newTotalPages);
+                }, 0);
+
                 await Swal.fire({
                     title: "¡Eliminado!",
                     text: "El registro ha sido eliminado",
@@ -69,8 +86,8 @@ const IrdListar = () => {
             }
         }
     };
+
     const showModal = (id) => {
-         
         setItemId(id);
         setModalOpen(true);
     };
@@ -84,10 +101,65 @@ const IrdListar = () => {
             showConfirmButton: false,
             timer: 1500,
         });
+        refreshList();
     };
 
     const handleCancel = () => {
         setModalOpen(false);
+    };
+
+    // --- Paginación calculada ---
+    const total = ird.length;
+    const totalPages = Math.max(Math.ceil(total / pageSize) || 1, 1);
+
+    useEffect(() => {
+        if (page > totalPages) setPage(totalPages);
+    }, [totalPages, page]);
+
+    const pageItems = useMemo(() => {
+        const start = (page - 1) * pageSize;
+        return ird.slice(start, start + pageSize);
+    }, [ird, page, pageSize]);
+
+    const rangeStart = total === 0 ? 0 : (page - 1) * pageSize + 1;
+    const rangeEnd = Math.min(page * pageSize, total);
+
+    const goTo = (p) => {
+        if (p < 1 || p > totalPages) return;
+        setPage(p);
+    };
+
+    const renderPager = () => {
+        const maxButtons = 7;
+        const nodes = [];
+        const add = (n) =>
+            nodes.push(
+                <button
+                    key={n}
+                    className={`button btn-secondary ${n === page ? "active" : ""}`}
+                    onClick={() => goTo(n)}
+                    disabled={n === page}
+                    style={{ minWidth: 40 }}
+                >
+                    {n}
+                </button>
+            );
+
+        if (totalPages <= maxButtons) {
+            for (let i = 1; i <= totalPages; i++) add(i);
+        } else {
+            const windowSize = 3;
+            const start = Math.max(2, page - windowSize);
+            const end = Math.min(totalPages - 1, page + windowSize);
+
+            add(1);
+            if (start > 2) nodes.push(<span key="l-ellipsis">…</span>);
+            for (let i = start; i <= end; i++) add(i);
+            if (end < totalPages - 1) nodes.push(<span key="r-ellipsis">…</span>);
+            add(totalPages);
+        }
+
+        return nodes;
     };
 
     return (
@@ -98,69 +170,133 @@ const IrdListar = () => {
                         <li className="breadcrumb-item">
                             <Link to="/ird">Formulario</Link>
                         </li>
-                        <li
-                            className="breadcrumb-item active"
-                            aria-current="page"
-                        >
+                        <li className="breadcrumb-item active" aria-current="page">
                             Listar
                         </li>
                     </ol>
                 </nav>
-                <p className="">
-                    <span className="total-list">Total items: </span>
-                    {ird.length}
-                </p>
+
+                {/* Barra superior */}
+                <div
+                    style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 12,
+                        flexWrap: "wrap",
+                        marginBottom: 8,
+                    }}
+                >
+                    <p style={{ margin: 0 }}>
+                        <span className="total-list">Total items: </span>
+                        {total}
+                        {total > 0 && (
+                            <span style={{ marginLeft: 8, color: "#666" }}>
+                                (Mostrando {rangeStart}–{rangeEnd})
+                            </span>
+                        )}
+                    </p>
+
+                    <div style={{ marginLeft: "auto", display: "flex", gap: 8 }}>
+                        <label style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                            Tamaño de página:
+                            <select
+                                className="form__input"
+                                value={pageSize}
+                                onChange={(e) => {
+                                    setPageSize(Number(e.target.value));
+                                    setPage(1);
+                                }}
+                            >
+                                <option value={10}>10</option>
+                                <option value={20}>20</option>
+                                <option value={50}>50</option>
+                            </select>
+                        </label>
+                    </div>
+                </div>
+
                 {isLoading ? (
                     <div className="loader__spinner">
                         <Loader />
                     </div>
                 ) : (
-                    <table className="table">
-                        <thead>
+                    <>
+                        <table className="table">
+                            <thead>
                                 <tr>
                                     <th>Nombre Ird</th>
-                                <th>Marca Ird</th>
-                                <th>Multicast salida</th>
-                                <th>Ip de gestión</th>
-                                <th className="action">Acciones</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {ird.map((ird) => (
-                                <tr key={ird._id} id={ird._id}>
-                                    <td>{ird.nombreIrd}</td>
-                                    <td>{ird.marcaIrd}</td>
-                                    <td>{ird.multicastReceptor}</td>
-                                    <td>
-                                        <Link
-                                            to={`http://${ird.ipAdminIrd}`}
-                                            target="_blank"
-                                        >
-                                            {ird.ipAdminIrd}
-                                        </Link>
-                                    </td>
-                                    <td className="button-action">
-                                        <button
-                                            className="button btn-primary"
-                                            onClick={() => {
-                                                showModal(ird._id);
-                                            }}
-                                        >
-                                            Editar
-                                        </button>
-                                        <button
-                                            className="button btn-danger"
-                                            onClick={() =>
-                                                deleteEncoderIrd(ird._id)
-                                            }
-                                        >
-                                            Eliminar
-                                        </button>
-                                    </td>
+                                    <th>Marca Ird</th>
+                                    <th>Multicast salida</th>
+                                    <th>Ip de gestión</th>
+                                    <th className="action">Acciones</th>
                                 </tr>
-                            ))}
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody>
+                                {pageItems.length === 0 ? (
+                                    <tr>
+                                        <td colSpan={5} style={{ textAlign: "center", color: "#777" }}>
+                                            Sin datos para mostrar.
+                                        </td>
+                                    </tr>
+                                ) : (
+                                    pageItems.map((x) => (
+                                        <tr key={x._id} id={x._id}>
+                                            <td>{x.nombreIrd}</td>
+                                            <td>{x.marcaIrd}</td>
+                                            <td>{x.multicastReceptor}</td>
+                                            <td>
+                                                <Link to={`http://${x.ipAdminIrd}`} target="_blank">
+                                                    {x.ipAdminIrd}
+                                                </Link>
+                                            </td>
+                                            <td className="button-action">
+                                                <button
+                                                    className="button btn-primary"
+                                                    onClick={() => showModal(x._id)}
+                                                >
+                                                    Editar
+                                                </button>
+                                                <button
+                                                    className="button btn-danger"
+                                                    onClick={() => deleteEncoderIrd(x._id)}
+                                                >
+                                                    Eliminar
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    ))
+                                )}
+                            </tbody>
+                        </table>
+
+                        {/* Paginador */}
+                        <div
+                            style={{
+                                marginTop: 12,
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 8,
+                                justifyContent: "center",
+                                flexWrap: "wrap",
+                            }}
+                        >
+                            <button
+                                className="button btn-secondary"
+                                onClick={() => goTo(page - 1)}
+                                disabled={page <= 1}
+                            >
+                                ◀ Anterior
+                            </button>
+                            {renderPager()}
+                            <button
+                                className="button btn-secondary"
+                                onClick={() => goTo(page + 1)}
+                                disabled={page >= totalPages}
+                            >
+                                Siguiente ▶
+                            </button>
+                        </div>
+                    </>
                 )}
             </div>
 
