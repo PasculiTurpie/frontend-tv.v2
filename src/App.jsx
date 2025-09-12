@@ -40,8 +40,18 @@ import ChannelEditor from "./pages/ChannelDiagram/ChannelEditor";
 import ChannelListDiagram from "./pages/ChannelDiagram/ChannelListDiagram";
 import Diagram from "./components/Diagrama/Diagram";
 import AuditLogPage from "./pages/Audit/AuditLogPage";
+import { useEffect } from "react";
+import api from "../src/utils/api";
 
 const App = () => {
+    useEffect(() => {
+        // 🔐 leer token al arrancar
+        const token = localStorage.getItem("auth_token");
+        if (token) {
+            // 🧩 reinyectar Authorization en axios
+            api._axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+        }
+    }, []);
     return (
         <>
             <ScrollToTop />

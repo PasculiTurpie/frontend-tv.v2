@@ -2,20 +2,37 @@ import axios from "axios";
 
 class Api {
     constructor(url) {
-        this._url = url;
+        this._axios = axios.create({ baseURL: url, withCredentials: true });
 
-        this._axios = axios.create({
-            baseURL: this._url,
-            withCredentials: true, // Se envían cookies en cada solicitud
+        // Interceptor: mete Authorization en cada request si hay token
+        this._axios.interceptors.request.use((config) => {
+            const token = localStorage.getItem("auth_token");
+            if (token) {
+                config.headers = config.headers || {};
+                config.headers.Authorization = `Bearer ${token}`;
+            } else if (config.headers?.Authorization) {
+                delete config.headers.Authorization;
+            }
+            return config;
         });
     }
 
-    /*LOGIN & LOGOUT */
-
     login(values) {
-        return this._axios.post("/auth/login", values).then((res) => res.data);
+        return this._axios.post("/auth/login", values).then((res) => {
+            const data = res.data || {};
+            if (data.token) {
+                localStorage.setItem("auth_token", data.token); // 👈 clave única
+                this._axios.defaults.headers.common[
+                    "Authorization"
+                ] = `Bearer ${data.token}`;
+            }
+            return data;
+        });
     }
+
     logout() {
+        localStorage.removeItem("auth_token");
+        delete this._axios.defaults.headers.common["Authorization"];
         return this._axios.post("/auth/logout").then((res) => res.data);
     }
 
