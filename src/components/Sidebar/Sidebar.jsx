@@ -12,7 +12,7 @@ const Sidebar = () => {
     <div className="sidebar">
       {user?.profilePicture && (
         <img
-          src={user.profilePicture}
+          src={user?.profilePicture}
           alt="Profile"
           className="sidebar__profile-pic"
         />
