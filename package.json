@@ -12,6 +12,7 @@
   "dependencies": {
     "@tailwindcss/vite": "^4.0.15",
     "@xyflow/react": "^12.7.1",
+    "animate.css": "^4.1.1",
     "antd": "^5.24.8",
     "axios": "^1.8.4",
     "formik": "^2.4.6",

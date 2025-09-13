@@ -28,6 +28,8 @@ const IrdSchema = Yup.object().shape({
     cvirtualReceptor: Yup.string().required("Campo obligatorio"),
     vctReceptor: Yup.string().required("Campo obligatorio"),
     outputReceptor: Yup.string().required("Campo obligatorio"),
+    swAdmin: Yup.string(),
+    portSw: Yup.string(),
     multicastReceptor: Yup.string()
         .matches(ipMulticastRegex, "Debe ser una multicast válida")
         .required("Campo requerido"),
@@ -140,6 +142,8 @@ const IrdForm = () => {
                         cvirtualReceptor: "",
                         vctReceptor: "",
                         outputReceptor: "",
+                        swAdmin: "",
+                        portSw: "",
                         multicastReceptor: "",
                         ipVideoMulticast: "",
                         locationRow: "",
@@ -419,6 +423,23 @@ const IrdForm = () => {
                                             </div>
                                         ) : null}
                                     </div>
+                                    <div className="form__group">
+                                        <label htmlFor="swAdmin" className="form__group-label">
+                                            SW Admin
+                                            <br />
+                                            <Field
+                                                type="text"
+                                                className="form__group-input"
+                                                placeholder="SW Admin"
+                                                name="swAdmin"
+                                            />
+                                        </label>
+                                        {errors.swAdmin && touched.swAdmin ? (
+                                            <div className="form__group-error">
+                                                {errors.swAdmin}
+                                            </div>
+                                        ) : null}
+                                    </div>
                                 </div>
 
                                 {/* ###################################### */}
@@ -510,6 +531,23 @@ const IrdForm = () => {
                                         {errors.vctReceptor && touched.vctReceptor ? (
                                             <div className="form__group-error">
                                                 {errors.vctReceptor}
+                                            </div>
+                                        ) : null}
+                                    </div>
+                                    <div className="form__group">
+                                        <label htmlFor="portSw" className="form__group-label">
+                                            SW Port
+                                            <br />
+                                            <Field
+                                                type="text"
+                                                className="form__group-input"
+                                                placeholder="TID"
+                                                name="portSw"
+                                            />
+                                        </label>
+                                        {errors.portSw && touched.portSw ? (
+                                            <div className="form__group-error">
+                                                {errors.portSw}
                                             </div>
                                         ) : null}
                                     </div>

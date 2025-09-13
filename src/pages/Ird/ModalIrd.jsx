@@ -34,6 +34,8 @@ const UpdateIrdSchema = Yup.object().shape({
     cvirtualReceptor: Yup.string(),
     vctReceptor: Yup.string(),
     outputReceptor: Yup.string(),
+    swAdmin: Yup.string(),
+        portSw: Yup.string(),
     multicastReceptor: Yup.string().matches(
         ipMulticastRegex,
         "Debe ser una multicast válida"
@@ -81,6 +83,8 @@ const ModalIrd = ({ itemId, modalOpen, setModalOpen, title, refreshList }) => {
                 cvirtualReceptor: dataIrd.cvirtualReceptor || "",
                 vctReceptor: dataIrd.vctReceptor || "",
                 outputReceptor: dataIrd.outputReceptor || "",
+                swAdmin: dataIrd.swAdmin || "",
+                portSw: dataIrd.portSw || "",
                 multicastReceptor: dataIrd.multicastReceptor || "",
                 ipVideoMulticast: dataIrd.ipVideoMulticast || "",
                 locationRow: dataIrd.locationRow || "",
@@ -505,6 +509,28 @@ const ModalIrd = ({ itemId, modalOpen, setModalOpen, title, refreshList }) => {
                                         </div>
                                     ) : null}
                                 </div>
+                                <div className="form__group">
+                                    <label
+                                        htmlFor="swAdmin"
+                                        className="form__group-label"
+                                    >
+                                        SW Admin
+                                        <br />
+                                        <Field
+                                            type="text"
+                                            className="form__group-input"
+                                            placeholder="SW Admin"
+                                            name="swAdmin"
+                                        />
+                                    </label>
+
+                                    {errors.swAdmin &&
+                                        touched.swAdmin ? (
+                                        <div className="form__group-error">
+                                            {errors.swAdmin}
+                                        </div>
+                                    ) : null}
+                                </div>
                             </div>
 
                             {/* ###################################### */}
@@ -620,6 +646,28 @@ const ModalIrd = ({ itemId, modalOpen, setModalOpen, title, refreshList }) => {
                                     touched.locationCol ? (
                                         <div className="form__group-error">
                                             {errors.locationCol}
+                                        </div>
+                                    ) : null}
+                                </div>
+                                <div className="form__group">
+                                    <label
+                                        htmlFor="portSw"
+                                        className="form__group-label"
+                                    >
+                                        SW Port
+                                        <br />
+                                        <Field
+                                            type="text"
+                                            className="form__group-input"
+                                            placeholder="SW Port"
+                                            name="portSw"
+                                        />
+                                    </label>
+
+                                    {errors.portSw &&
+                                        touched.portSw ? (
+                                        <div className="form__group-error">
+                                            {errors.portSw}
                                         </div>
                                     ) : null}
                                 </div>

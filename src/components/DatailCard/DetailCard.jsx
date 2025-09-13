@@ -3,6 +3,8 @@ import { useNavigate, useParams } from "react-router-dom";
 import "./DetailCard.css";
 import api from "../../utils/api";
 import ModalContact from "./ModalContact";
+import Swal from "sweetalert2";
+import 'animate.css';
 
 const DetailCard = () => {
     const { id } = useParams();
@@ -64,7 +66,23 @@ const DetailCard = () => {
             } else {
                 // Aquí puedes redirigir a crear diagrama con el id de la señal preseleccionado si quieres
                 // navigate(`/channels/new?signal=${id}`);
-                alert("No se encontró un diagrama para esta señal.");
+                Swal.fire({
+                    title: "No existe flujo para este canal",
+                    showClass: {
+                        popup: `
+      animate__animated
+      animate__fadeInUp
+      animate__faster
+    `
+                    },
+                    hideClass: {
+                        popup: `
+      animate__animated
+      animate__fadeOutDown
+      animate__faster
+    `
+                    }
+                });
             }
         } catch (err) {
             console.error("Error obteniendo el diagrama:", err);
