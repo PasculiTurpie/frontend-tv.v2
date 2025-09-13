@@ -10,11 +10,11 @@ const NotFound = () => {
 
     return (
         <div className="flex flex-col items-center justify-center min-h-screen bg-black text-white text-center px-4">
-            <img
-                src="https://cdn-icons-png.flaticon.com/512/535/535234.png" // Puedes cambiar esta imagen
+            {/* <img
+                src="https://cdn-icons-png.flaticon.com/512/535/535234.png" 
                 alt="TV Not Found"
                 className="w-40 h-40 mb-6 opacity-80"
-            />
+            /> */}
             <h1 className="text-5xl font-bold mb-4">
                 404 - Página No Encontrada
             </h1>
