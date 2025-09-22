@@ -1,20 +1,24 @@
-import React, { useContext } from "react";
 import { Navigate, Outlet } from "react-router-dom";
-import { UserContext } from "../context/UserContext";
-import LoadingSpinner from "../LoadingSpinner/LoadingSpinner";
+import { useEffect, useState } from "react";
+import api from "../../utils/api";
 
-const ProtectedRoute = () => {
-  const { isAuth, loading } = useContext(UserContext);
+// Ruta protegida basada en cookies httpOnly:
+// - Llama a /auth/me (o /auth/profile fallback en api.js) para verificar sesión.
+// - Si 200 => deja pasar; si no => redirige a /auth/login.
+export default function ProtectedRoute() {
+  const [ok, setOk] = useState(null);
 
-  if (loading) {
-    return <LoadingSpinner />; // o spinner
-  }
+  useEffect(() => {
+    let mounted = true;
+    api._axios
+      .get("/auth/me")
+      .then(() => mounted && setOk(true))
+      .catch(() => mounted && setOk(false));
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
-  if (!isAuth) {
-    return <Navigate to="/auth/login" replace />;
-  }
-
-  return <Outlet />;
-};
-
-export default ProtectedRoute;
+  if (ok === null) return <div style={{ padding: 16 }}>Cargando...</div>;
+  return ok ? <Outlet /> : <Navigate to="/auth/login" replace />;
+}
