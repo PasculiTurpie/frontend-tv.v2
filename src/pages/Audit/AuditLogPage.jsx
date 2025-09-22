@@ -279,7 +279,6 @@ export default function AuditLogPage() {
               </tr>
             )}
             {rows.map((r) => {
-              console.log(r)
               const shortEndpoint = r.endpoint || "-";
               const when = r.createdAt ? new Date(r.createdAt).toLocaleString() : "";
               return (
