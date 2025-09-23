@@ -37,6 +37,8 @@ const DraggableLabel = ({ x, y, children, onPointerDown }) => (
 export default function CustomDirectionalEdge(props) {
   const {
     id,
+    source,
+    target,
     sourceX,
     sourceY,
     targetX,
@@ -56,7 +58,7 @@ export default function CustomDirectionalEdge(props) {
     origin: { x: 0, y: 0 },
   });
 
-  // STEP path (ángulo recto). getSmoothStepPath devuelve [d, labelX, labelY].
+  // Path tipo "step" (getSmoothStepPath devuelve [d, labelX, labelY])
   const [edgePath, defaultLabelX, defaultLabelY] = useMemo(() => {
     return getSmoothStepPath({
       sourceX,
@@ -65,18 +67,23 @@ export default function CustomDirectionalEdge(props) {
       targetX,
       targetY,
       targetPosition,
-      borderRadius: 0, // 0 => “step” (sin esquinas redondeadas)
+      borderRadius: 0, // recto
     });
   }, [sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition]);
 
-  // Posición del label (persistente si existe en data.labelPos)
+  // Pequeño offset para separar ida/vuelta en etiquetas
+  const PARALLEL_OFFSET = 8;
+  const isAB = String(source) < String(target);
+
   const labelPos = useMemo(() => {
     const lp = data?.labelPos;
-    if (lp && Number.isFinite(lp.x) && Number.isFinite(lp.y)) return lp;
-    return { x: defaultLabelX, y: defaultLabelY };
-  }, [data?.labelPos, defaultLabelX, defaultLabelY]);
+    const base = {
+      x: Number.isFinite(lp?.x) ? lp.x : defaultLabelX,
+      y: Number.isFinite(lp?.y) ? lp.y : defaultLabelY,
+    };
+    return { x: base.x, y: base.y + (isAB ? -PARALLEL_OFFSET : PARALLEL_OFFSET) };
+  }, [data?.labelPos, defaultLabelX, defaultLabelY, isAB]);
 
-  // Drag del label (actualiza edge.data.labelPos en el store)
   const onPointerDown = useCallback(
     (e) => {
       e.stopPropagation();

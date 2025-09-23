@@ -20,6 +20,13 @@ html {
     padding   : 50px 80px;
 }
 
+.react-flow__edge,
+.react-flow__edge-path {
+  opacity: 1 !important;
+  stroke-opacity: 1 !important;
+}
+
+
 @keyframes spin {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
