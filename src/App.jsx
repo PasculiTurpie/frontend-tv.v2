@@ -20,20 +20,6 @@ import Login from "./pages/Login/Login";
 import DetailCard from "./components/DatailCard/DetailCard";
 
 import Diagrama from "./components/Diagrama/Diagrama";
-import ListarDcm from "./pages/Dcm/ListarDcm";
-import FormDcm from "./pages/Dcm/FormDcm";
-
-import ListarEncoderTitan from "./pages/EncoderTitan/ListarEncoderTitan";
-import FormEncoderTitan from "./pages/EncoderTitan/FormEncoderTitan";
-
-import ListarDcmVmx from "./pages/DcmVmx/ListarDcmVmx";
-import FormDcmVmx from "./pages/DcmVmx/FormDcmVmx";
-
-import RtesVmxListar from "./pages/RtesVmx/RtesVmxListar";
-import RtesVmxForm from "./pages/RtesVmx/RtesVmxForm";
-
-import FormSwitch from "./pages/Switch/FormSwitch";
-import ListarSwitch from "./pages/Switch/ListarSwitch";
 
 import NodoListar from "./components/Nodo/NodoListar";
 
@@ -63,6 +49,7 @@ import 'sweetalert2/dist/sweetalert2.min.css';
 // 🔔 Hook de aviso + auto-refresh con cookies (sin localStorage)
 import useSessionRefresher from "./hooks/useSessionRefresher";
 
+
 const App = () => {
     useSessionRefresher();
 
@@ -88,21 +75,6 @@ const App = () => {
 
                         <Route path="/registrar-user" element={<RegisterUser />} />
                         <Route path="/listar-user" element={<ListarUsers />} />
-
-                        <Route path="/dcm-listar" element={<ListarDcm />} />
-                        <Route path="/dcm" element={<FormDcm />} />
-
-                        <Route path="/listar-titan" element={<ListarEncoderTitan />} />
-                        <Route path="/titan" element={<FormEncoderTitan />} />
-
-                        <Route path="/listar-dcmVmx" element={<ListarDcmVmx />} />
-                        <Route path="/dcmVmx" element={<FormDcmVmx />} />
-
-                        <Route path="/rtesVmx" element={<RtesVmxForm />} />
-                        <Route path="/rtesVmx-listar" element={<RtesVmxListar />} />
-
-                        <Route path="/switch" element={<FormSwitch />} />
-                        <Route path="/switch-listar" element={<ListarSwitch />} />
 
                         <Route path="/channel-form" element={<ChannelForm />} />
                         <Route path="/channel-editor" element={<ChannelEditor />} />
