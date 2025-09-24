@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useContext, useEffect, useRef, useState } from "react";
 import {
   ReactFlow,
   Background,
@@ -12,6 +12,7 @@ import {
 import "@xyflow/react/dist/style.css";
 import api from "../../utils/api";
 import { useParams } from "react-router-dom";
+import { UserContext } from "../../components/context/UserContext"; // ⬅️ usa tu ruta real del UserContext
 import CustomNode from "./CustomNode";
 import CustomDirectionalEdge from "./CustomDirectionalEdge";
 import CustomWaypointEdge from "./CustomWaypointEdge";
@@ -60,7 +61,6 @@ const isBidirectionalPair = (arr, a, b) =>
 
 const isReturnEdge = (sourceId, targetId) => String(sourceId) > String(targetId);
 
-/** Regla: si hay par bidireccional, ida = idx1 (source<target), vuelta = idx3 (source>target) */
 const pickHandlesForNodes = (sNode, tNode, allEdges = []) => {
   const sx = sNode.position.x + (sNode.width ?? 0) / 2;
   const sy = sNode.position.y + (sNode.height ?? 0) / 2;
@@ -112,20 +112,10 @@ const useDebouncedSaver = (fn, delay = 600) => {
 };
 
 /* ─── Colores deterministas para pares bidireccionales ──────────────────── */
-const COLOR_OUT = "red";    // ida (source < target)
-const COLOR_BACK = "green"; // vuelta (source > target)
+const COLOR_OUT = "red";
+const COLOR_BACK = "green";
 
-/**
- * Marca ida/vuelta por par (dash + __reversed) y aplica color auto si corresponde.
- * Regla de color:
- *  - Si el par es bidireccional: ida=rojo, vuelta=verde.
- *  - Si no es bidireccional, respeta el color existente (o negro por defecto).
- *  - Si el color fue auto-asignado antes (data.__autoColor === true), se puede
- *    volver a auto-asignar; si el usuario fijó un color manual (style.stroke),
- *    lo respetamos.
- */
 const recomputeReverseFlags = (eds) => {
-  // agrupar por par (minId|maxId)
   const groups = new Map();
   for (const e of eds) {
     const a = String(e.source);
@@ -142,40 +132,27 @@ const recomputeReverseFlags = (eds) => {
     const group = groups.get(key) || [];
 
     const bidir = group.length >= 2;
-    const reversed = bidir && (a > b); // “vuelta” si source > target
+    const reversed = bidir && (a > b);
 
-    // base style
     const nextStyle = { ...(e.style || {}) };
+    if (reversed) nextStyle.strokeDasharray = nextStyle.strokeDasharray || "4 3";
+    else if (nextStyle.strokeDasharray) delete nextStyle.strokeDasharray;
 
-    // dash solo para la vuelta (opcional limpiar si no es vuelta)
-    if (reversed) {
-      nextStyle.strokeDasharray = nextStyle.strokeDasharray || "4 3";
-    } else if (nextStyle.strokeDasharray) {
-      delete nextStyle.strokeDasharray;
-    }
-
-    // auto-color por par (solo si procede)
     const wasAuto = !!e?.data?.__autoColor;
     const shouldAutoPaint = bidir && (wasAuto || !nextStyle.stroke);
-
-    if (shouldAutoPaint) {
-      nextStyle.stroke = reversed ? COLOR_BACK : COLOR_OUT;
-    }
+    if (shouldAutoPaint) nextStyle.stroke = reversed ? COLOR_BACK : COLOR_OUT;
 
     return {
       ...e,
       style: nextStyle,
-      data: {
-        ...(e.data || {}),
-        __reversed: reversed,
-        __autoColor: shouldAutoPaint ? true : wasAuto,
-      },
+      data: { ...(e.data || {}), __reversed: reversed, __autoColor: shouldAutoPaint ? true : wasAuto },
     };
   });
 };
 
 const ChannelDiagram = () => {
   const { id } = useParams();
+  const { isAuth } = useContext(UserContext); // ⬅️ estado de login
 
   const [signal, setSignal] = useState({});
   const [equipo, setEquipo] = useState(null);
@@ -192,25 +169,6 @@ const ChannelDiagram = () => {
 
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
-
-  /* ─── BRIDGE: aplica patches desde edges (label drag) ─────────────────── */
-  useEffect(() => {
-    const onEdgeDataChange = (ev) => {
-      const { edgeId, dataPatch, edgePatch } = ev.detail || {};
-      if (!edgeId) return;
-      setEdges((eds) =>
-        eds.map((e) => {
-          if (e.id !== edgeId) return e;
-          const next = { ...e };
-          if (edgePatch) Object.assign(next, edgePatch);
-          if (dataPatch) next.data = { ...(next.data || {}), ...dataPatch };
-          return next;
-        })
-      );
-    };
-    window.addEventListener("edge-data-change", onEdgeDataChange);
-    return () => window.removeEventListener("edge-data-change", onEdgeDataChange);
-  }, [setEdges]);
 
   /* ─── carga inicial ───────────────────────────────────────────────────── */
   useEffect(() => {
@@ -254,12 +212,7 @@ const ChannelDiagram = () => {
           }
 
           const waypoints = Array.isArray(e?.data?.waypoints) ? e.data.waypoints : [];
-          const baseStyle = {
-            stroke: e?.style?.stroke || "#000",
-            strokeWidth: e?.style?.strokeWidth ?? 2,
-            ...e?.style,
-          };
-
+          const baseStyle = { stroke: e?.style?.stroke || "#000", strokeWidth: e?.style?.strokeWidth ?? 2, ...e?.style };
           const finalType = waypoints.length ? "waypoint" : (e.type === "waypoint" ? "waypoint" : "directional");
 
           return {
@@ -269,7 +222,7 @@ const ChannelDiagram = () => {
             sourceHandle,
             targetHandle,
             label: e.label,
-            data: { ...(e.data || {}), waypoints, __autorouted: true }, // __reversed/__autoColor se setean después
+            data: { ...(e.data || {}), waypoints, __autorouted: true },
             type: finalType,
             animated: e.animated ?? true,
             style: baseStyle,
@@ -278,10 +231,9 @@ const ChannelDiagram = () => {
             interactionWidth: 24,
           };
         })
-        .filter(
-          (e) =>
-            normalizedNodes.some((n) => n.id === e.source) &&
-            normalizedNodes.some((n) => n.id === e.target)
+        .filter((e) =>
+          normalizedNodes.some((n) => n.id === e.source) &&
+          normalizedNodes.some((n) => n.id === e.target)
         );
 
       setNodes(normalizedNodes);
@@ -308,11 +260,11 @@ const ChannelDiagram = () => {
           target: ed.target,
           sourceHandle: ed.sourceHandle,
           targetHandle: ed.targetHandle,
-          label: ed.label,
+          label: ed.label,                 // compat
           type: ed.type || "directional",
           style: ed.style,
           markerEnd: ed.markerEnd,
-          data: sanitizeData(ed.data),
+          data: sanitizeData(ed.data),     // label, labelPos, etc.
           animated: ed.animated ?? true,
         })),
       });
@@ -321,21 +273,30 @@ const ChannelDiagram = () => {
     }
   }, [id]);
 
-  const requestSave = useDebouncedSaver(doSave, 600);
+  const requestSave = useDebouncedSaver(doSave, 500);
+
+  // autosave por cambios
   const first = useRef(true);
   useEffect(() => {
     if (first.current) { first.current = false; return; }
     requestSave(nodes, edges);
   }, [nodes, edges, requestSave]);
 
+  // save inmediato (emitido por editores)
+  useEffect(() => {
+    const handler = () => requestSave(nodes, edges);
+    window.addEventListener("flow:save", handler);
+    return () => window.removeEventListener("flow:save", handler);
+  }, [nodes, edges, requestSave]);
+
   /* ─── conectar ───────────────────────────────────────────────────────── */
   const onConnect = useCallback((connection) => {
+    if (!isAuth) return; // bloquea edición si no logueado
     setEdges((eds) => {
       const nodesIdx = indexNodes(nodes);
       const sNode = nodesIdx[String(connection.source)];
       const tNode = nodesIdx[String(connection.target)];
       const routed = sNode && tNode ? pickHandlesForNodes(sNode, tNode, eds) : {};
-
       const newEdge = {
         ...connection,
         ...routed,
@@ -348,13 +309,13 @@ const ChannelDiagram = () => {
         updatable: "both",
         interactionWidth: 24,
       };
-
       return recomputeReverseFlags(addEdge(newEdge, eds));
     });
-  }, [nodes, setEdges]);
+  }, [nodes, setEdges, isAuth]);
 
   /* ─── actualizar edge (reconexión) ───────────────────────────────────── */
   const onEdgeUpdate = useCallback((oldEdge, connection) => {
+    if (!isAuth) return; // bloquea edición si no logueado
     setEdges((eds) => {
       const idx = eds.findIndex((e) => e.id === oldEdge.id);
       if (idx === -1) return eds;
@@ -371,12 +332,7 @@ const ChannelDiagram = () => {
         oldEdge.data.waypoints.length > 0;
 
       const nextType = keepWaypoints ? "waypoint" : (oldEdge.type || "directional");
-      const nextId = makeEdgeId({
-        ...oldEdge,
-        source: connection.source,
-        target: connection.target,
-        ...routed,
-      });
+      const nextId = makeEdgeId({ ...oldEdge, source: connection.source, target: connection.target, ...routed });
 
       const updatedEdge = {
         ...oldEdge,
@@ -397,23 +353,22 @@ const ChannelDiagram = () => {
       next[idx] = updatedEdge;
       return recomputeReverseFlags(next);
     });
-  }, [nodes, setEdges]);
+  }, [nodes, setEdges, isAuth]);
 
-  /* ─── mover nodos: re‐enrutar edges + refrescar labels no “pinned” ───── */
+  /* ─── mover nodos: re‐enrutar ─────────────────────────────────────────── */
   const handleNodesChange = useCallback((changes) => {
+    if (!isAuth) return; // bloquea edición si no logueado
     onNodesChange(changes);
     if (!changes.some((c) => c.type === "position")) return;
 
     setEdges((eds) => {
       const nodesIdx = indexNodes(nodes);
-
-      // 1) autoroute (si no tiene waypoints)
       let next = eds.map((e) => {
         if (e.type === "waypoint" && Array.isArray(e?.data?.waypoints) && e.data.waypoints.length) return e;
         return autoRouteEdge(e, nodesIdx, eds);
       });
 
-      // 2) si el label NO está “pinned”, limpiamos labelPos para forzar recálculo
+      // si el label NO está “pinned”, limpiamos labelPos para recálculo
       next = next.map((e) => {
         if (e?.data?.labelPinned) return e;
         if (e?.data?.labelPos === undefined) return e;
@@ -421,17 +376,16 @@ const ChannelDiagram = () => {
         return { ...e, data: rest };
       });
 
-      // 3) flags ida/vuelta + auto-color
       next = recomputeReverseFlags(next);
-
       return next;
     });
-  }, [nodes, onNodesChange, setEdges]);
+  }, [nodes, onNodesChange, setEdges, isAuth]);
 
-  /* ─── persistir tras soltar un nodo ───────────────────────────────────── */
+  /* ─── persistir al soltar ─────────────────────────────────────────────── */
   const onNodeDragStop = useCallback(() => {
+    if (!isAuth) return;
     requestSave(nodes, edges);
-  }, [nodes, edges, requestSave]);
+  }, [nodes, edges, requestSave, isAuth]);
 
   /* ─── detalle equipo ─────────────────────────────────────────────────── */
   const fetchEquipo = useCallback(async (equipoId) => {
@@ -504,6 +458,15 @@ const ChannelDiagram = () => {
         </div>
 
         <div style={{ width: "100%", height: "72vh", position: "relative" }}>
+          {!isAuth && (
+            <div style={{
+              position: "absolute", right: 12, top: 8, zIndex: 5,
+              background: "#1f2937", color: "#fff", padding: "4px 8px", borderRadius: 6, fontSize: 12
+            }}>
+              Vista de solo lectura (inicia sesión para editar)
+            </div>
+          )}
+
           {nodes.length === 0 && (
             <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", color: "#6b7280", zIndex: 1 }}>
               No hay nodos para mostrar.
@@ -533,6 +496,12 @@ const ChannelDiagram = () => {
               updatable: "both",
               interactionWidth: 24,
             }}
+            /* 🔒 restricciones de edición si no está logueado */
+            nodesDraggable={!!isAuth}
+            nodesConnectable={!!isAuth}
+            elementsSelectable={!!isAuth}
+            panOnDrag={!isAuth}        // si no está logueado, permitir pan con drag
+            zoomOnScroll
           >
             <Controls />
             <Background variant="dots" gap={18} />

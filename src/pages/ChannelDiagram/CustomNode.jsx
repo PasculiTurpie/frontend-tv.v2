@@ -1,5 +1,6 @@
-import React from "react";
-import { Handle, Position } from "@xyflow/react";
+import React, { useCallback, useContext, useState } from "react";
+import { Handle, Position, useReactFlow } from "@xyflow/react";
+import { UserContext } from "../../components/context/UserContext"; // ⬅️ ruta real
 
 const box = {
   padding: 10,
@@ -15,7 +16,39 @@ const dot = { background: "transparent" };
 const pctTop = (p) => ({ top: `${p}%` });
 const pctLeft = (p) => ({ left: `${p}%` });
 
-export default function CustomNode({ data }) {
+export default function CustomNode({ id, data }) {
+  const { isAuth } = useContext(UserContext);
+  const rf = useReactFlow();
+  const [editing, setEditing] = useState(false);
+  const [value, setValue] = useState(() => data?.label ?? "");
+
+  const startEdit = useCallback((e) => {
+    if (!isAuth) return;
+    e.stopPropagation();
+    setValue(String(data?.label ?? ""));
+    setEditing(true);
+  }, [data?.label, isAuth]);
+
+  const commit = useCallback(() => {
+    if (!isAuth) { setEditing(false); return; }
+    setEditing(false);
+    rf.setNodes((nds) =>
+      nds.map((n) =>
+        n.id === id ? { ...n, data: { ...(n.data || {}), label: value } } : n
+      )
+    );
+    // guarda inmediatamente
+    window.dispatchEvent(new Event("flow:save"));
+  }, [id, value, rf, isAuth]);
+
+  const onKeyDown = useCallback((e) => {
+    if (e.key === "Enter") commit();
+    if (e.key === "Escape") {
+      setEditing(false);
+      setValue(String(data?.label ?? ""));
+    }
+  }, [commit, data?.label]);
+
   const leftSlots = [30, 70];
   const rightSlots = [30, 70];
   const topSlots = [20, 50, 80];
@@ -23,7 +56,36 @@ export default function CustomNode({ data }) {
 
   return (
     <div title={data?.tooltip || data?.description || data?.label} style={box}>
-      <div style={{ fontWeight: "bold" }}>{data?.label}</div>
+      {!editing ? (
+        <div
+          style={{ fontWeight: "bold", cursor: isAuth ? "text" : "default", padding: "2px 4px", userSelect: "none" }}
+          title={isAuth ? "Doble click para editar el nombre" : "Solo lectura"}
+          onDoubleClick={startEdit}
+          className="nodrag nopan"
+        >
+          {data?.label}
+        </div>
+      ) : (
+        <input
+          value={value}
+          onChange={(e) => setValue(e.target.value)}
+          onBlur={commit}
+          onKeyDown={onKeyDown}
+          onMouseDown={(e) => { e.stopPropagation(); }}
+          onClick={(e) => { e.stopPropagation(); }}
+          style={{
+            width: "100%",
+            fontWeight: 700,
+            fontSize: 14,
+            padding: "2px 4px",
+            border: "1px solid #bbb",
+            borderRadius: 6,
+            outline: "none",
+          }}
+          className="nodrag nopan"
+          autoFocus
+        />
+      )}
 
       {/* TOP */}
       {topSlots.map((p, i) => (
