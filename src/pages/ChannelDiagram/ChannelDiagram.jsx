@@ -111,6 +111,69 @@ const useDebouncedSaver = (fn, delay = 600) => {
   return save;
 };
 
+/* ─── Colores deterministas para pares bidireccionales ──────────────────── */
+const COLOR_OUT = "red";    // ida (source < target)
+const COLOR_BACK = "green"; // vuelta (source > target)
+
+/**
+ * Marca ida/vuelta por par (dash + __reversed) y aplica color auto si corresponde.
+ * Regla de color:
+ *  - Si el par es bidireccional: ida=rojo, vuelta=verde.
+ *  - Si no es bidireccional, respeta el color existente (o negro por defecto).
+ *  - Si el color fue auto-asignado antes (data.__autoColor === true), se puede
+ *    volver a auto-asignar; si el usuario fijó un color manual (style.stroke),
+ *    lo respetamos.
+ */
+const recomputeReverseFlags = (eds) => {
+  // agrupar por par (minId|maxId)
+  const groups = new Map();
+  for (const e of eds) {
+    const a = String(e.source);
+    const b = String(e.target);
+    const key = a < b ? `${a}|${b}` : `${b}|${a}`;
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(e);
+  }
+
+  return eds.map((e) => {
+    const a = String(e.source);
+    const b = String(e.target);
+    const key = a < b ? `${a}|${b}` : `${b}|${a}`;
+    const group = groups.get(key) || [];
+
+    const bidir = group.length >= 2;
+    const reversed = bidir && (a > b); // “vuelta” si source > target
+
+    // base style
+    const nextStyle = { ...(e.style || {}) };
+
+    // dash solo para la vuelta (opcional limpiar si no es vuelta)
+    if (reversed) {
+      nextStyle.strokeDasharray = nextStyle.strokeDasharray || "4 3";
+    } else if (nextStyle.strokeDasharray) {
+      delete nextStyle.strokeDasharray;
+    }
+
+    // auto-color por par (solo si procede)
+    const wasAuto = !!e?.data?.__autoColor;
+    const shouldAutoPaint = bidir && (wasAuto || !nextStyle.stroke);
+
+    if (shouldAutoPaint) {
+      nextStyle.stroke = reversed ? COLOR_BACK : COLOR_OUT;
+    }
+
+    return {
+      ...e,
+      style: nextStyle,
+      data: {
+        ...(e.data || {}),
+        __reversed: reversed,
+        __autoColor: shouldAutoPaint ? true : wasAuto,
+      },
+    };
+  });
+};
+
 const ChannelDiagram = () => {
   const { id } = useParams();
 
@@ -206,7 +269,7 @@ const ChannelDiagram = () => {
             sourceHandle,
             targetHandle,
             label: e.label,
-            data: { ...(e.data || {}), waypoints, __autorouted: true }, // __reversed se setea después
+            data: { ...(e.data || {}), waypoints, __autorouted: true }, // __reversed/__autoColor se setean después
             type: finalType,
             animated: e.animated ?? true,
             style: baseStyle,
@@ -264,33 +327,6 @@ const ChannelDiagram = () => {
     if (first.current) { first.current = false; return; }
     requestSave(nodes, edges);
   }, [nodes, edges, requestSave]);
-
-  /* ─── flags ida/vuelta por par (para dash y offset) ───────────────────── */
-  const recomputeReverseFlags = (eds) => {
-    const groups = new Map();
-    for (const e of eds) {
-      const a = String(e.source);
-      const b = String(e.target);
-      const key = a < b ? `${a}|${b}` : `${b}|${a}`;
-      if (!groups.has(key)) groups.set(key, []);
-      groups.get(key).push(e);
-    }
-
-    return eds.map((e) => {
-      const a = String(e.source);
-      const b = String(e.target);
-      const key = a < b ? `${a}|${b}` : `${b}|${a}`;
-      const group = groups.get(key) || [];
-      const bidir = group.length >= 2;
-      const reversed = bidir && isReturnEdge(a, b);
-
-      const nextStyle = { ...(e.style || {}) };
-      if (reversed) nextStyle.strokeDasharray = nextStyle.strokeDasharray || "4 3";
-      else if (nextStyle.strokeDasharray) delete nextStyle.strokeDasharray;
-
-      return { ...e, data: { ...(e.data || {}), __reversed: reversed }, style: nextStyle };
-    });
-  };
 
   /* ─── conectar ───────────────────────────────────────────────────────── */
   const onConnect = useCallback((connection) => {
@@ -385,7 +421,7 @@ const ChannelDiagram = () => {
         return { ...e, data: rest };
       });
 
-      // 3) flags ida/vuelta (dash + offset)
+      // 3) flags ida/vuelta + auto-color
       next = recomputeReverseFlags(next);
 
       return next;
