@@ -19,8 +19,6 @@ import ListarUsers from "./pages/User/ListarUsers";
 import Login from "./pages/Login/Login";
 import DetailCard from "./components/DatailCard/DetailCard";
 
-import Diagrama from "./components/Diagrama/Diagrama";
-
 import NodoListar from "./components/Nodo/NodoListar";
 
 import Channel from "./pages/Channel.jsx/Channel";
@@ -42,7 +40,6 @@ import ChannelForm from "./pages/ChannelDiagram/ChannelForm";
 import ChannelEditor from "./pages/ChannelDiagram/ChannelEditor";
 import ChannelListDiagram from "./pages/ChannelDiagram/ChannelListDiagram";
 
-import Diagram from "./components/Diagrama/Diagram";
 import AuditLogPage from "./pages/Audit/AuditLogPage";
 import 'sweetalert2/dist/sweetalert2.min.css';
 
@@ -62,7 +59,6 @@ const App = () => {
                     <Route path="/auth/login" element={<Login />} />
                     <Route path="/search" element={<SearchFilter />} />
                     <Route path="/signal/:id" element={<DetailCard />} />
-                    <Route path="/diagrama/:id" element={<Diagrama />} />
 
                     <Route element={<ProtectedRoute />}>
                         <Route path="/auth/logout" element={<Login />} />
@@ -98,8 +94,6 @@ const App = () => {
 
                         <Route path="/audit-logs" element={<AuditLogPage />} />
                     </Route>
-
-                    <Route path="/diagram" element={<Diagram />} />
                     <Route path="/channels/:id" element={<ChannelDiagram />} />
                 </Route>
 

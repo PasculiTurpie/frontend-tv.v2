@@ -1,39 +1,41 @@
 // src/pages/ChannelDiagram/CustomWaypointEdge.jsx
 import React, { useCallback, useMemo, useRef } from "react";
-import {
-  BaseEdge,
-  EdgeLabelRenderer,
-  useReactFlow,
-} from "reactflow";
+import { BaseEdge, EdgeLabelRenderer, useReactFlow } from "@xyflow/react";
 
-/**
- * Edge con waypoints:
- * - Doble click sobre la línea: agrega un waypoint en la posición del click.
- * - Arrastrar los puntos (circulitos) para moldear la ruta.
- * - Alt/Option + Click sobre un punto: elimina ese waypoint.
- * - Si no quedan waypoints, cambia a type "directional".
- */
+const DraggableLabel = ({ x, y, children, onPointerDown }) => (
+  <EdgeLabelRenderer>
+    <div
+      onMouseDown={onPointerDown}
+      onTouchStart={onPointerDown}
+      style={{
+        position: "absolute",
+        transform: `translate(-50%, -50%) translate(${x}px, ${y}px)`,
+        pointerEvents: "all",
+        background: "#fff",
+        border: "1px solid #e5e7eb",
+        borderRadius: 6,
+        padding: "4px 8px",
+        fontSize: 12,
+        boxShadow: "0 1px 4px rgba(0,0,0,0.08)",
+        cursor: "grab",
+        userSelect: "none",
+        whiteSpace: "nowrap",
+      }}
+      className="nodrag nopan"
+    >
+      {children}
+    </div>
+  </EdgeLabelRenderer>
+);
+
 export default function CustomWaypointEdge(props) {
-  const {
-    id,
-    sourceX,
-    sourceY,
-    targetX,
-    targetY,
-    style,
-    markerEnd,
-    data = {},
-    label,
-    source,
-    target,
-  } = props;
+  const { id, sourceX, sourceY, targetX, targetY, style, markerEnd, data = {}, label } = props;
 
   const rf = useReactFlow();
-  const draggingIdx = useRef(-1);
+  const dragLabelRef = useRef({ dragging: false, startPane: { x: 0, y: 0 }, startOffset: { x: 0, y: 0 } });
 
   const points = useMemo(() => {
     const wp = Array.isArray(data.waypoints) ? data.waypoints : [];
-    // Path: start -> waypoints -> end
     return [{ x: sourceX, y: sourceY }, ...wp, { x: targetX, y: targetY }];
   }, [sourceX, sourceY, targetX, targetY, data.waypoints]);
 
@@ -44,131 +46,93 @@ export default function CustomWaypointEdge(props) {
     return `M ${start.x} ${start.y} ${segs}`;
   }, [points]);
 
-  // Midpoint simple para colocar etiqueta
-  const { labelX, labelY } = useMemo(() => {
+  // punto medio para default label
+  const defaultLabelPos = useMemo(() => {
     let total = 0;
-    for (let i = 1; i < points.length; i++) {
-      const a = points[i - 1];
-      const b = points[i];
-      total += Math.hypot(b.x - a.x, b.y - a.y);
-    }
+    for (let i = 1; i < points.length; i++) total += Math.hypot(points[i].x - points[i - 1].x, points[i].y - points[i - 1].y);
     let half = total / 2;
     for (let i = 1; i < points.length; i++) {
-      const a = points[i - 1];
-      const b = points[i];
+      const a = points[i - 1], b = points[i];
       const seg = Math.hypot(b.x - a.x, b.y - a.y);
-      if (half > seg) {
-        half -= seg;
-        continue;
-      }
+      if (half > seg) { half -= seg; continue; }
       const t = seg === 0 ? 0 : half / seg;
-      return { labelX: a.x + (b.x - a.x) * t, labelY: a.y + (b.y - a.y) * t };
+      return { x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t };
     }
     const last = points[points.length - 1];
-    return { labelX: last.x, labelY: last.y };
+    return { x: last.x, y: last.y };
   }, [points]);
 
-  // Agregar waypoint con doble click en el trazo
-  const onDoubleClickPath = useCallback(
-    (e) => {
-      e.stopPropagation();
-      const pane = rf.project({ x: e.clientX, y: e.clientY });
-      rf.setEdges((eds) =>
-        eds.map((edge) => {
-          if (edge.id !== id) return edge;
-          const current = Array.isArray(edge.data?.waypoints) ? edge.data.waypoints : [];
-          const next = [...current, { x: pane.x, y: pane.y }];
-          return {
-            ...edge,
-            type: "waypoint",
-            data: { ...(edge.data || {}), waypoints: next },
-          };
-        })
-      );
-    },
-    [id, rf]
-  );
+  const labelPos = useMemo(() => {
+    const lp = data?.labelPos;
+    return { x: Number.isFinite(lp?.x) ? lp.x : defaultLabelPos.x, y: Number.isFinite(lp?.y) ? lp.y : defaultLabelPos.y };
+  }, [data?.labelPos, defaultLabelPos]);
 
-  // Drag de un waypoint
+  // mover waypoint (solo drag; creación/borrado por gestos está desactivado)
   const onPointerDownPoint = useCallback(
     (idx) => (e) => {
       e.stopPropagation();
-      draggingIdx.current = idx;
-
       const move = (ev) => {
         const clientX = "touches" in ev ? ev.touches[0].clientX : ev.clientX;
         const clientY = "touches" in ev ? ev.touches[0].clientY : ev.clientY;
         const pane = rf.project({ x: clientX, y: clientY });
-
-        rf.setEdges((eds) =>
-          eds.map((edge) => {
-            if (edge.id !== id) return edge;
-            const curr = Array.isArray(edge.data?.waypoints) ? edge.data.waypoints : [];
-            if (idx < 0 || idx >= curr.length) return edge;
-            const next = curr.map((p, i) => (i === idx ? { x: pane.x, y: pane.y } : p));
-            return { ...edge, data: { ...(edge.data || {}), waypoints: next } };
-          })
-        );
+        const curr = Array.isArray(data.waypoints) ? data.waypoints : [];
+        if (idx < 0 || idx >= curr.length) return;
+        const next = curr.map((p, i) => (i === idx ? { x: pane.x, y: pane.y } : p));
+        window.dispatchEvent(new CustomEvent("edge-data-change", { detail: { edgeId: id, dataPatch: { waypoints: next } } }));
       };
-
       const up = () => {
-        draggingIdx.current = -1;
         window.removeEventListener("mousemove", move);
         window.removeEventListener("mouseup", up);
         window.removeEventListener("touchmove", move);
         window.removeEventListener("touchend", up);
       };
-
       window.addEventListener("mousemove", move);
       window.addEventListener("mouseup", up);
       window.addEventListener("touchmove", move, { passive: false });
       window.addEventListener("touchend", up);
     },
-    [id, rf]
+    [id, data.waypoints, rf]
   );
 
-  // Eliminar waypoint con Alt/Option + Click
-  const onClickPoint = useCallback(
-    (idx) => (e) => {
-      if (!e.altKey) return;
+  const onPointerDownLabel = useCallback(
+    (e) => {
       e.stopPropagation();
-      rf.setEdges((eds) =>
-        eds
-          .map((edge) => {
-            if (edge.id !== id) return edge;
-            const curr = Array.isArray(edge.data?.waypoints) ? edge.data.waypoints : [];
-            const next = curr.filter((_, i) => i !== idx);
-            // Si no quedan waypoints → volver a directional
-            if (next.length === 0) {
-              return {
-                ...edge,
-                type: "directional",
-                data: { ...(edge.data || {}), waypoints: [] },
-              };
-            }
-            return { ...edge, data: { ...(edge.data || {}), waypoints: next } };
-          })
-      );
+      e.preventDefault();
+      const startClient = { x: "touches" in e ? e.touches[0].clientX : e.clientX, y: "touches" in e ? e.touches[0].clientY : e.clientY };
+      const startPane = rf.project(startClient);
+
+      dragLabelRef.current.dragging = true;
+      dragLabelRef.current.startPane = startPane;
+      dragLabelRef.current.startOffset = { x: (data?.labelPos?.x ?? labelPos.x) - startPane.x, y: (data?.labelPos?.y ?? labelPos.y) - startPane.y };
+
+      const onMove = (ev) => {
+        if (!dragLabelRef.current.dragging) return;
+        const currClient = { x: "touches" in ev ? ev.touches[0].clientX : ev.clientX, y: "touches" in ev ? ev.touches[0].clientY : ev.clientY };
+        const currPane = rf.project(currClient);
+        const next = { x: currPane.x + dragLabelRef.current.startOffset.x, y: currPane.y + dragLabelRef.current.startOffset.y };
+        window.dispatchEvent(new CustomEvent("edge-data-change", { detail: { edgeId: id, dataPatch: { labelPos: next, labelPinned: true } } }));
+      };
+
+      const onUp = () => {
+        dragLabelRef.current.dragging = false;
+        window.removeEventListener("mousemove", onMove);
+        window.removeEventListener("mouseup", onUp);
+        window.removeEventListener("touchmove", onMove);
+        window.removeEventListener("touchend", onUp);
+      };
+
+      window.addEventListener("mousemove", onMove);
+      window.addEventListener("mouseup", onUp);
+      window.addEventListener("touchmove", onMove, { passive: false });
+      window.addEventListener("touchend", onUp);
     },
-    [id, rf]
+    [id, data, labelPos, rf]
   );
 
   return (
     <>
-      {/* Path visible */}
       <BaseEdge id={id} path={pathD} style={style} markerEnd={markerEnd} />
 
-      {/* Path “ancho” para capturar doble click y facilitar interacción */}
-      <path
-        d={pathD}
-        stroke="transparent"
-        strokeWidth={24}
-        fill="none"
-        onDoubleClick={onDoubleClickPath}
-        style={{ pointerEvents: "stroke" }}
-      />
-
-      {/* Waypoints (círculos) */}
       {Array.isArray(data.waypoints) &&
         data.waypoints.map((p, i) => (
           <circle
@@ -181,33 +145,15 @@ export default function CustomWaypointEdge(props) {
             fill="#fff"
             onMouseDown={onPointerDownPoint(i)}
             onTouchStart={onPointerDownPoint(i)}
-            onClick={onClickPoint(i)}
             style={{ cursor: "grab" }}
+            title="Arrastra para mover"
           />
         ))}
 
-      {/* Etiqueta en el punto medio del path */}
       {(label || data?.label) && (
-        <EdgeLabelRenderer>
-          <div
-            style={{
-              position: "absolute",
-              transform: `translate(-50%, -50%) translate(${labelX}px, ${labelY}px)`,
-              pointerEvents: "all",
-              background: "#fff",
-              border: "1px solid #e5e7eb",
-              borderRadius: 6,
-              padding: "4px 8px",
-              fontSize: 12,
-              boxShadow: "0 1px 4px rgba(0,0,0,0.08)",
-              userSelect: "none",
-              whiteSpace: "nowrap",
-            }}
-            className="nodrag nopan"
-          >
-            {label || data?.label}
-          </div>
-        </EdgeLabelRenderer>
+        <DraggableLabel x={labelPos.x} y={labelPos.y} onPointerDown={onPointerDownLabel}>
+          {label || data?.label}
+        </DraggableLabel>
       )}
     </>
   );

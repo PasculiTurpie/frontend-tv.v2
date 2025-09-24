@@ -1,13 +1,30 @@
 // src/pages/ChannelDiagram/CustomDirectionalEdge.jsx
 import React, { useCallback, useMemo, useRef } from "react";
-import {
-  BaseEdge,
-  EdgeLabelRenderer,
-  getSmoothStepPath,
-  useReactFlow,
-} from "reactflow";
+import { BaseEdge, EdgeLabelRenderer, getSmoothStepPath, useReactFlow } from "@xyflow/react";
 
-/** Etiqueta draggable */
+const PARALLEL_OFFSET = 10;
+
+function offsetPathStep({ sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition, isReverse }) {
+  const dx = targetX - sourceX;
+  const dy = targetY - sourceY;
+  const vertical = Math.abs(dy) >= Math.abs(dx);
+  const sign = isReverse ? 1 : -1;
+  const ox = vertical ? sign * PARALLEL_OFFSET : 0;
+  const oy = vertical ? 0 : sign * PARALLEL_OFFSET;
+
+  const [d, lx, ly] = getSmoothStepPath({
+    sourceX: sourceX + ox,
+    sourceY: sourceY + oy,
+    targetX: targetX + ox,
+    targetY: targetY + oy,
+    sourcePosition,
+    targetPosition,
+    borderRadius: 0,
+  });
+
+  return [d, lx + ox, ly + oy];
+}
+
 const DraggableLabel = ({ x, y, children, onPointerDown }) => (
   <EdgeLabelRenderer>
     <div
@@ -36,43 +53,24 @@ const DraggableLabel = ({ x, y, children, onPointerDown }) => (
 
 export default function CustomDirectionalEdge(props) {
   const {
-    id,
-    source,
-    target,
-    sourceX,
-    sourceY,
-    targetX,
-    targetY,
-    sourcePosition,
-    targetPosition,
-    style,
-    markerEnd,
-    data = {},
-    label,
+    id, source, target,
+    sourceX, sourceY, targetX, targetY,
+    sourcePosition, targetPosition,
+    style, markerEnd,
+    data = {}, label,
   } = props;
 
   const rf = useReactFlow();
-  const dragRef = useRef({
-    dragging: false,
-    start: { x: 0, y: 0 },
-    origin: { x: 0, y: 0 },
-  });
+  const dragRef = useRef({ dragging: false, startPane: { x: 0, y: 0 }, startOffset: { x: 0, y: 0 } });
 
-  // Path tipo "step" (getSmoothStepPath devuelve [d, labelX, labelY])
-  const [edgePath, defaultLabelX, defaultLabelY] = useMemo(() => {
-    return getSmoothStepPath({
-      sourceX,
-      sourceY,
-      sourcePosition,
-      targetX,
-      targetY,
-      targetPosition,
-      borderRadius: 0, // recto
-    });
-  }, [sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition]);
+  const isReverse = !!data?.__reversed;
 
-  // Pequeño offset para separar ida/vuelta en etiquetas
-  const PARALLEL_OFFSET = 8;
+  const [edgePath, defaultLabelX, defaultLabelY] = useMemo(
+    () => offsetPathStep({ sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition, isReverse }),
+    [sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition, isReverse]
+  );
+
+  const LABEL_SIDE_OFFSET = 8;
   const isAB = String(source) < String(target);
 
   const labelPos = useMemo(() => {
@@ -81,41 +79,33 @@ export default function CustomDirectionalEdge(props) {
       x: Number.isFinite(lp?.x) ? lp.x : defaultLabelX,
       y: Number.isFinite(lp?.y) ? lp.y : defaultLabelY,
     };
-    return { x: base.x, y: base.y + (isAB ? -PARALLEL_OFFSET : PARALLEL_OFFSET) };
+    return { x: base.x, y: base.y + (isAB ? -LABEL_SIDE_OFFSET : LABEL_SIDE_OFFSET) };
   }, [data?.labelPos, defaultLabelX, defaultLabelY, isAB]);
 
   const onPointerDown = useCallback(
     (e) => {
       e.stopPropagation();
       e.preventDefault();
-
-      const start = {
-        x: "touches" in e ? e.touches[0].clientX : e.clientX,
-        y: "touches" in e ? e.touches[0].clientY : e.clientY,
-      };
+      const startClient = { x: "touches" in e ? e.touches[0].clientX : e.clientX, y: "touches" in e ? e.touches[0].clientY : e.clientY };
+      const startPane = rf.project(startClient);
 
       dragRef.current.dragging = true;
-      dragRef.current.start = start;
-      dragRef.current.origin = { ...labelPos };
+      dragRef.current.startPane = startPane;
+      dragRef.current.startOffset = {
+        x: (data?.labelPos?.x ?? defaultLabelX) - startPane.x,
+        y: (data?.labelPos?.y ?? defaultLabelY) - startPane.y,
+      };
 
       const onMove = (ev) => {
         if (!dragRef.current.dragging) return;
-        const curr = {
-          x: "touches" in ev ? ev.touches[0].clientX : ev.clientX,
-          y: "touches" in ev ? ev.touches[0].clientY : ev.clientY,
-        };
-        const dx = curr.x - dragRef.current.start.x;
-        const dy = curr.y - dragRef.current.start.y;
+        const currClient = { x: "touches" in ev ? ev.touches[0].clientX : ev.clientX, y: "touches" in ev ? ev.touches[0].clientY : ev.clientY };
+        const currPane = rf.project(currClient);
+        const next = { x: currPane.x + dragRef.current.startOffset.x, y: currPane.y + dragRef.current.startOffset.y };
 
-        const next = {
-          x: dragRef.current.origin.x + dx,
-          y: dragRef.current.origin.y + dy,
-        };
-
-        rf.setEdges((eds) =>
-          eds.map((edge) =>
-            edge.id === id ? { ...edge, data: { ...(edge.data || {}), labelPos: next } } : edge
-          )
+        window.dispatchEvent(
+          new CustomEvent("edge-data-change", {
+            detail: { edgeId: id, dataPatch: { labelPos: next, labelPinned: true } },
+          })
         );
       };
 
@@ -132,7 +122,7 @@ export default function CustomDirectionalEdge(props) {
       window.addEventListener("touchmove", onMove, { passive: false });
       window.addEventListener("touchend", onUp);
     },
-    [id, labelPos, rf]
+    [id, data, defaultLabelX, defaultLabelY, rf]
   );
 
   return (

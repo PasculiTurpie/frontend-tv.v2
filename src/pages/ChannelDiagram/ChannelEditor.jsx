@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
-import ReactFlow, {
+import {
+  ReactFlow, 
   Controls,
   Background,
   useNodesState,
@@ -8,9 +9,9 @@ import ReactFlow, {
   MiniMap,
   Handle,
   Position,
-} from "reactflow";
+} from "@xyflow/react";
 import Select from "react-select";
-import "reactflow/dist/style.css";
+import "@xyflow/react/dist/style.css";
 import Swal from "sweetalert2";
 import axios from "axios";
 import api from "../../utils/api";

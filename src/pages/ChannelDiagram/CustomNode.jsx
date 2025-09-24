@@ -1,31 +1,12 @@
 // src/pages/ChannelDiagram/CustomNode.jsx
 import React from "react";
-import { Handle, Position } from "reactflow";
+import { Handle, Position } from "@xyflow/react";
 
-const box = {
-  padding: 10,
-  border: "1px solid #444",
-  borderRadius: 10,
-  background: "#fff",
-  width: 170,
-  position: "relative",
-  textAlign: "center",
-};
-
+const box = { padding: 10, border: "1px solid #444", borderRadius: 10, background: "#fff", width: 170, position: "relative", textAlign: "center" };
 const dot = { background: "transparent" };
-
-// helpers para posiciones
 const pctTop = (p) => ({ top: `${p}%` });
 const pctLeft = (p) => ({ left: `${p}%` });
 
-/**
- * 10 puntos (slots) totales:
- * - LEFT:   2 (top 30%, 70%)
- * - RIGHT:  2 (top 30%, 70%)
- * - TOP:    3 (left 20%, 50%, 80%)
- * - BOTTOM: 3 (left 20%, 50%, 80%)
- * Para cada punto se ponen dos handles: target (in-*) y source (out-*)
- */
 export default function CustomNode({ data }) {
   const leftSlots = [30, 70];
   const rightSlots = [30, 70];
@@ -36,7 +17,6 @@ export default function CustomNode({ data }) {
     <div title={data?.tooltip || data?.description || data?.label} style={box}>
       <div style={{ fontWeight: "bold" }}>{data?.label}</div>
 
-      {/* TOP */}
       {topSlots.map((p, i) => (
         <React.Fragment key={`top-${i}`}>
           <Handle id={`in-top-${i + 1}`} type="target" position={Position.Top} style={{ ...dot, ...pctLeft(p) }} />
@@ -44,7 +24,6 @@ export default function CustomNode({ data }) {
         </React.Fragment>
       ))}
 
-      {/* BOTTOM */}
       {bottomSlots.map((p, i) => (
         <React.Fragment key={`bottom-${i}`}>
           <Handle id={`in-bottom-${i + 1}`} type="target" position={Position.Bottom} style={{ ...dot, ...pctLeft(p) }} />
@@ -52,7 +31,6 @@ export default function CustomNode({ data }) {
         </React.Fragment>
       ))}
 
-      {/* LEFT */}
       {leftSlots.map((p, i) => (
         <React.Fragment key={`left-${i}`}>
           <Handle id={`in-left-${i + 1}`} type="target" position={Position.Left} style={{ ...dot, ...pctTop(p) }} />
@@ -60,7 +38,6 @@ export default function CustomNode({ data }) {
         </React.Fragment>
       ))}
 
-      {/* RIGHT */}
       {rightSlots.map((p, i) => (
         <React.Fragment key={`right-${i}`}>
           <Handle id={`in-right-${i + 1}`} type="target" position={Position.Right} style={{ ...dot, ...pctTop(p) }} />

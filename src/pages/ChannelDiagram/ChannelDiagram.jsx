@@ -1,6 +1,7 @@
 // src/pages/ChannelDiagram/ChannelDiagram.jsx
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import ReactFlow, {
+import {
+  ReactFlow,
   Background,
   Controls,
   addEdge,
@@ -8,9 +9,8 @@ import ReactFlow, {
   useNodesState,
   MarkerType,
   ConnectionMode,
-  updateEdge,
-} from "reactflow";
-import "reactflow/dist/style.css";
+} from "@xyflow/react";
+import "@xyflow/react/dist/style.css";
 import api from "../../utils/api";
 import { useParams } from "react-router-dom";
 import CustomNode from "./CustomNode";
@@ -20,41 +20,17 @@ import EquipoDetail from "../Equipment/EquipoDetail";
 import EquipoIrd from "../Equipment/EquipoIrd";
 import EquipoSatellite from "../Equipment/EquipoSatellite";
 
-/* ─────────────────────────────
- * Tipos de nodos y edges
- * ───────────────────────────── */
+/* ─── tipos ─────────────────────────────────────────────────────────────── */
 const nodeTypes = { custom: CustomNode };
-const edgeTypes = {
-  directional: CustomDirectionalEdge,
-  waypoint: CustomWaypointEdge,
-};
+const edgeTypes = { directional: CustomDirectionalEdge, waypoint: CustomWaypointEdge };
 
-/* ─────────────────────────────
- * Utils
- * ───────────────────────────── */
-const nn = (v) => {
-  const n = Number(v);
-  return Number.isFinite(n) ? n : 0;
-};
-const toIdString = (raw) => {
-  if (!raw) return null;
-  if (typeof raw === "string") return raw;
-  if (typeof raw === "object") return raw._id || null;
-  return null;
-};
-const norm = (v) =>
-  (v || "")
-    .toString()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase()
-    .trim();
+/* ─── utils ─────────────────────────────────────────────────────────────── */
+const nn = (v) => { const n = Number(v); return Number.isFinite(n) ? n : 0; };
+const toIdString = (raw) => (typeof raw === "string" ? raw : raw && raw._id ? raw._id : null);
+const norm = (v) => (v || "").toString().normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
 
-/** ID determinista para edges, evita colisiones */
-const makeEdgeId = (e) =>
-  `${String(e.source)}:${e.sourceHandle || ""}->${String(e.target)}:${e.targetHandle || ""}`;
+const makeEdgeId = (e) => `${String(e.source)}:${e.sourceHandle || ""}->${String(e.target)}:${e.targetHandle || ""}`;
 
-/** Mapea "in-left" -> "in-left-1", "out-right" -> "out-right-1" si no traen índice */
 const normalizeHandle = (h) => {
   if (!h) return undefined;
   const rxIndexed = /^(in|out)-(top|bottom|left|right)-\d+$/;
@@ -64,88 +40,60 @@ const normalizeHandle = (h) => {
   return undefined;
 };
 
-/** ¿Existe la arista inversa B->A para A->B en un array crudo? */
-const hasReverseIn = (rawEdges, a, b) =>
-  rawEdges.some((x) => String(x.source) === String(b) && String(x.target) === String(a));
+const hasReverseIn = (arr, a, b) => arr.some((x) => String(x.source) === String(b) && String(x.target) === String(a));
 
-/* ─────────────────────────────
- * Enrutado automático por geometría
- * ───────────────────────────── */
+/* ─── enrutado por geometría + regla ida/vuelta ─────────────────────────── */
 const SIDE = { TOP: "top", RIGHT: "right", BOTTOM: "bottom", LEFT: "left" };
-
-// Devuelve "top" | "right" | "bottom" | "left" según la posición relativa
-const pickSide = (sx, sy, tx, ty, angleBiasDeg = 12, minDelta = 8) => {
-  const dx = tx - sx;
-  const dy = ty - sy;
-  const adx = Math.abs(dx);
-  const ady = Math.abs(dy);
-
+const pickSide = (sx, sy, tx, ty, bias = 12, minDelta = 8) => {
+  const dx = tx - sx, dy = ty - sy;
+  const adx = Math.abs(dx), ady = Math.abs(dy);
   if (adx < minDelta && ady < minDelta) return SIDE.RIGHT;
-
-  const angle = (Math.atan2(dy, dx) * 180) / Math.PI; // -180..180
-  const a = Math.abs(angle);
-
-  if (a > 90 - angleBiasDeg && a < 90 + angleBiasDeg) return dy < 0 ? SIDE.TOP : SIDE.BOTTOM;
-  if (a < angleBiasDeg || a > 180 - angleBiasDeg) return dx < 0 ? SIDE.LEFT : SIDE.RIGHT;
-
-  if (ady > adx) return dy < 0 ? SIDE.TOP : SIDE.BOTTOM;
-  return dx < 0 ? SIDE.LEFT : SIDE.RIGHT;
+  const a = Math.abs((Math.atan2(dy, dx) * 180) / Math.PI);
+  if (a > 90 - bias && a < 90 + bias) return dy < 0 ? SIDE.TOP : SIDE.BOTTOM;
+  if (a < bias || a > 180 - bias) return dx < 0 ? SIDE.LEFT : SIDE.RIGHT;
+  return ady > adx ? (dy < 0 ? SIDE.TOP : SIDE.BOTTOM) : (dx < 0 ? SIDE.LEFT : SIDE.RIGHT);
 };
+const buildHandle = (side, kind, idx = 1) => `${kind}-${side}-${idx}`;
 
-const buildHandlesForSide = (side, kind /* 'in' | 'out' */) => `${kind}-${side}-1`;
-
-const pickHandlesForNodes = (sourceNode, targetNode) => {
-  const sx = sourceNode.position.x + (sourceNode.width ?? 0) / 2;
-  const sy = sourceNode.position.y + (sourceNode.height ?? 0) / 2;
-  const tx = targetNode.position.x + (targetNode.width ?? 0) / 2;
-  const ty = targetNode.position.y + (targetNode.height ?? 0) / 2;
+const pickHandlesForNodes = (sNode, tNode, allEdges = []) => {
+  const sx = sNode.position.x + (sNode.width ?? 0) / 2;
+  const sy = sNode.position.y + (sNode.height ?? 0) / 2;
+  const tx = tNode.position.x + (tNode.width ?? 0) / 2;
+  const ty = tNode.position.y + (tNode.height ?? 0) / 2;
 
   const side = pickSide(sx, sy, tx, ty);
-  const opposite = {
-    [SIDE.TOP]: SIDE.BOTTOM,
-    [SIDE.BOTTOM]: SIDE.TOP,
-    [SIDE.LEFT]: SIDE.RIGHT,
-    [SIDE.RIGHT]: SIDE.LEFT,
-  }[side];
+  const isReturn = hasReverseIn(allEdges, sNode.id, tNode.id);
+  const idx = isReturn ? 3 : 1;
 
-  return {
-    sourceHandle: buildHandlesForSide(side, "out"),
-    targetHandle: buildHandlesForSide(opposite, "in"),
-  };
+  if (side === SIDE.TOP || side === SIDE.BOTTOM) {
+    return {
+      sourceHandle: buildHandle(side, "out", idx),
+      targetHandle: buildHandle(side === SIDE.TOP ? SIDE.BOTTOM : SIDE.TOP, "in", idx),
+    };
+  }
+  return isReturn
+    ? { sourceHandle: buildHandle(SIDE.RIGHT, "out", 3), targetHandle: buildHandle(SIDE.LEFT, "in", 3) }
+    : { sourceHandle: buildHandle(SIDE.LEFT, "out", 1), targetHandle: buildHandle(SIDE.RIGHT, "in", 1) };
 };
 
-const autoRouteEdge = (edge, nodesById) => {
-  const s = nodesById[edge.source];
-  const t = nodesById[edge.target];
+const autoRouteEdge = (edge, nodesById, allEdges = []) => {
+  const s = nodesById[edge.source], t = nodesById[edge.target];
   if (!s || !t) return edge;
-  const { sourceHandle, targetHandle } = pickHandlesForNodes(s, t);
-  return {
-    ...edge,
-    sourceHandle,
-    targetHandle,
-    id: makeEdgeId({ ...edge, sourceHandle, targetHandle }),
-  };
+  const { sourceHandle, targetHandle } = pickHandlesForNodes(s, t, allEdges);
+  return { ...edge, sourceHandle, targetHandle, id: makeEdgeId({ ...edge, sourceHandle, targetHandle }) };
 };
 
-/* Índice id->node */
-const indexNodes = (nodesArr) => {
-  const map = {};
-  for (const n of nodesArr) map[n.id] = n;
-  return map;
-};
+const indexNodes = (arr) => Object.fromEntries(arr.map((n) => [n.id, n]));
+const sanitizeData = (d) =>
+  Object.fromEntries(Object.entries(d || {}).filter(([k, v]) => typeof v !== "function" && !String(k).startsWith("__")));
 
-/* ─────────────────────────────
- * Debounce guardado
- * ───────────────────────────── */
+/* ─── debounce ──────────────────────────────────────────────────────────── */
 const useDebouncedSaver = (fn, delay = 600) => {
   const tRef = useRef(null);
-  const save = useCallback(
-    (...args) => {
-      if (tRef.current) clearTimeout(tRef.current);
-      tRef.current = setTimeout(() => fn(...args), delay);
-    },
-    [fn, delay]
-  );
+  const save = useCallback((...args) => {
+    if (tRef.current) clearTimeout(tRef.current);
+    tRef.current = setTimeout(() => fn(...args), delay);
+  }, [fn, delay]);
   useEffect(() => () => tRef.current && clearTimeout(tRef.current), []);
   return save;
 };
@@ -166,485 +114,343 @@ const ChannelDiagram = () => {
   const [loadingSat, setLoadingSat] = useState(false);
   const [satError, setSatError] = useState(null);
 
-  // React Flow state
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
 
-  /* ─────────────────────────────
-   * Carga
-   * ───────────────────────────── */
+  /* ─── BRIDGE: aplica patches desde edges (label drag, etc.) ───────────── */
+  useEffect(() => {
+    const onEdgeDataChange = (ev) => {
+      const { edgeId, dataPatch, edgePatch } = ev.detail || {};
+      if (!edgeId) return;
+      setEdges((eds) =>
+        eds.map((e) => {
+          if (e.id !== edgeId) return e;
+          const next = { ...e };
+          if (edgePatch) Object.assign(next, edgePatch);
+          if (dataPatch) next.data = { ...(next.data || {}), ...dataPatch };
+          return next;
+        })
+      );
+    };
+    window.addEventListener("edge-data-change", onEdgeDataChange);
+    return () => window.removeEventListener("edge-data-change", onEdgeDataChange);
+  }, [setEdges]);
+
+  /* ─── carga inicial ───────────────────────────────────────────────────── */
   useEffect(() => {
     let mounted = true;
+    api.getChannelDiagramById(id).then((res) => {
+      if (!mounted) return;
+      const result = res.data || {};
+      console.log("[LOAD] result", result);
+      setSignal(result);
 
-    api
-      .getChannelDiagramById(id)
-      .then((res) => {
-        if (!mounted) return;
-        const result = res.data || {};
-        setSignal(result);
+      const rawNodes = Array.isArray(result.nodes) ? result.nodes : [];
+      let normalizedNodes = rawNodes.map((n, i) => {
+        const baseData = n.data || {};
+        const label = baseData.label ?? n.label ?? String(n.id ?? i + 1);
+        const rawEquipoId = baseData.equipoId ?? n.equipoId ?? n.equipo ?? null;
+        const embedEquipo = baseData.equipo ?? n.equipo ?? n.equipoObject ?? null;
+        const equipoId = toIdString(rawEquipoId);
 
-        // Nodos
-        const rawNodes = Array.isArray(result.nodes) ? result.nodes : [];
-        let normalizedNodes = rawNodes.map((n, i) => {
-          const baseData = n.data || {};
-          const label = baseData.label ?? n.label ?? String(n.id ?? i + 1);
-          const rawEquipoId = baseData.equipoId ?? n.equipoId ?? n.equipo ?? null;
-          const embedEquipo = baseData.equipo ?? n.equipo ?? n.equipoObject ?? null;
-          const equipoId = toIdString(rawEquipoId);
-
-          return {
-            id: String(n.id ?? i + 1),
-            type: n.type || "custom",
-            data: {
-              ...baseData,
-              label,
-              ...(equipoId ? { equipoId } : {}),
-              ...(embedEquipo ? { equipo: embedEquipo } : {}),
-            },
-            position: { x: nn(n?.position?.x), y: nn(n?.position?.y) },
-          };
-        });
-
-        // Distribuye si todos están en (0,0)
-        if (
-          normalizedNodes.length &&
-          normalizedNodes.every((n) => n.position.x === 0 && n.position.y === 0)
-        ) {
-          normalizedNodes = normalizedNodes.map((n, idx) => ({
-            ...n,
-            position: { x: idx * 220, y: 100 },
-          }));
-        }
-
-        // Edges (autoroute + dash si hay inversa)
-        const rawEdges = Array.isArray(result.edges) ? result.edges : [];
-        const nodesIndex = indexNodes(normalizedNodes);
-
-        const normalizedEdges = rawEdges
-          .map((e) => {
-            const reversed = hasReverseIn(rawEdges, e.source, e.target);
-
-            // si no vienen handles, calcular por posiciones
-            let sourceHandle = normalizeHandle(e.sourceHandle);
-            let targetHandle = normalizeHandle(e.targetHandle);
-            if (!sourceHandle || !targetHandle) {
-              const routed = pickHandlesForNodes(
-                nodesIndex[String(e.source)],
-                nodesIndex[String(e.target)]
-              );
-              sourceHandle = sourceHandle || routed.sourceHandle;
-              targetHandle = targetHandle || routed.targetHandle;
-            }
-
-            const baseStyle = {
-              stroke: e?.style?.stroke || "#000",
-              strokeWidth: e?.style?.strokeWidth ?? 2,
-              ...(reversed ? { strokeDasharray: "4 3" } : {}),
-              ...e?.style,
-            };
-
-            // Si viene type "waypoint" respetamos data.waypoints; si no, lo dejamos vacío
-            const waypoints =
-              Array.isArray(e?.data?.waypoints) && e.type === "waypoint" ? e.data.waypoints : [];
-
-            return {
-              id: String(e.id ?? makeEdgeId({ ...e, sourceHandle, targetHandle })),
-              source: String(e.source),
-              target: String(e.target),
-              sourceHandle,
-              targetHandle,
-              label: e.label,
-              data: { ...(e.data || {}), waypoints, __reversed: reversed, __autorouted: true },
-              type: e.type === "waypoint" ? "waypoint" : "directional",
-              animated: e.animated ?? true,
-              style: baseStyle,
-              markerEnd:
-                e.markerEnd || {
-                  type: MarkerType.ArrowClosed,
-                  color: baseStyle.stroke || "#000",
-                },
-              updatable: "both",
-              interactionWidth: 24,
-            };
-          })
-          .filter(
-            (e) =>
-              normalizedNodes.some((n) => n.id === e.source) &&
-              normalizedNodes.some((n) => n.id === e.target)
-          );
-
-        setNodes(normalizedNodes);
-        setEdges(normalizedEdges);
-      })
-      .catch((err) => {
-        console.error("Error al cargar diagrama:", err);
+        return {
+          id: String(n.id ?? i + 1),
+          type: n.type || "custom",
+          data: { ...baseData, label, ...(equipoId ? { equipoId } : {}), ...(embedEquipo ? { equipo: embedEquipo } : {}) },
+          position: { x: nn(n?.position?.x), y: nn(n?.position?.y) },
+        };
       });
 
-    return () => {
-      mounted = false;
-    };
+      if (normalizedNodes.length && normalizedNodes.every((n) => n.position.x === 0 && n.position.y === 0)) {
+        normalizedNodes = normalizedNodes.map((n, idx) => ({ ...n, position: { x: idx * 220, y: 100 } }));
+      }
+
+      const rawEdges = Array.isArray(result.edges) ? result.edges : [];
+      const nodesIndex = indexNodes(normalizedNodes);
+
+      const normalizedEdges = rawEdges
+        .map((e) => {
+          let sourceHandle = normalizeHandle(e.sourceHandle);
+          let targetHandle = normalizeHandle(e.targetHandle);
+          if (!sourceHandle || !targetHandle) {
+            const r = pickHandlesForNodes(nodesIndex[String(e.source)], nodesIndex[String(e.target)], rawEdges);
+            sourceHandle = sourceHandle || r.sourceHandle;
+            targetHandle = targetHandle || r.targetHandle;
+          }
+
+          const waypoints = Array.isArray(e?.data?.waypoints) ? e.data.waypoints : [];
+          const reversed = hasReverseIn(rawEdges, e.source, e.target);
+
+          const baseStyle = {
+            stroke: e?.style?.stroke || "#000",
+            strokeWidth: e?.style?.strokeWidth ?? 2,
+            ...(reversed ? { strokeDasharray: "4 3" } : {}),
+            ...e?.style,
+          };
+
+          const finalType = waypoints.length ? "waypoint" : (e.type === "waypoint" ? "waypoint" : "directional");
+
+          return {
+            id: String(e.id ?? makeEdgeId({ ...e, sourceHandle, targetHandle })),
+            source: String(e.source),
+            target: String(e.target),
+            sourceHandle,
+            targetHandle,
+            label: e.label,
+            data: { ...(e.data || {}), waypoints, __reversed: reversed, __autorouted: true },
+            type: finalType,
+            animated: e.animated ?? true,
+            style: baseStyle,
+            markerEnd: e.markerEnd || { type: MarkerType.ArrowClosed, color: baseStyle.stroke || "#000" },
+            updatable: "both",
+            interactionWidth: 24,
+          };
+        })
+        .filter(
+          (e) =>
+            normalizedNodes.some((n) => n.id === e.source) &&
+            normalizedNodes.some((n) => n.id === e.target)
+        );
+
+      setNodes(normalizedNodes);
+      setEdges(normalizedEdges);
+    }).catch((err) => console.error("Error al cargar diagrama:", err));
+    return () => { mounted = false; };
   }, [id, setNodes, setEdges]);
 
-  /* ─────────────────────────────
-   * Guardado (debounced)
-   * ───────────────────────────── */
-  const doSave = useCallback(
-    async (n, e) => {
-      try {
-        await api.updateChannelFlow(id, {
-          nodes: n.map((node) => ({
-            id: node.id,
-            type: node.type || "custom",
-            data: node.data || {},
-            position: node.position || { x: 0, y: 0 },
-            label: node.data?.label || node.label,
-            equipo: node.data?.equipoId || node.equipo,
-          })),
-          edges: e.map((ed) => ({
-            id: ed.id,
-            source: ed.source,
-            target: ed.target,
-            sourceHandle: ed.sourceHandle,
-            targetHandle: ed.targetHandle,
-            label: ed.label,
-            type: ed.type || "directional",
-            style: ed.style,
-            markerEnd: ed.markerEnd,
-            data: ed.data || {}, // incluye labelPos y waypoints
-            animated: ed.animated ?? true,
-          })),
-        });
-      } catch (err) {
-        console.warn("No se pudo guardar el flujo:", err?.response?.data || err);
-      }
-    },
-    [id]
-  );
+  /* ─── guardado ────────────────────────────────────────────────────────── */
+  const doSave = useCallback(async (n, e) => {
+    console.log("[SAVE] nodes", n);
+    console.log("[SAVE] edges", e);
+    try {
+      await api.updateChannelFlow(id, {
+        nodes: n.map((node) => ({
+          id: node.id,
+          type: node.type || "custom",
+          data: node.data || {},
+          position: node.position || { x: 0, y: 0 },
+          label: node.data?.label || node.label,
+          equipo: node.data?.equipoId || node.equipo,
+        })),
+        edges: e.map((ed) => ({
+          id: ed.id,
+          source: ed.source,
+          target: ed.target,
+          sourceHandle: ed.sourceHandle,
+          targetHandle: ed.targetHandle,
+          label: ed.label,
+          type: ed.type || "directional",
+          style: ed.style,
+          markerEnd: ed.markerEnd,
+          data: sanitizeData(ed.data),
+          animated: ed.animated ?? true,
+        })),
+      });
+    } catch (err) {
+      console.warn("No se pudo guardar el flujo:", err?.response?.data || err);
+    }
+  }, [id]);
 
   const requestSave = useDebouncedSaver(doSave, 600);
-
-  // Dispara guardado en cambios (excepto primera carga)
   const first = useRef(true);
   useEffect(() => {
-    if (first.current) {
-      first.current = false;
-      return;
-    }
+    if (first.current) { first.current = false; return; }
     requestSave(nodes, edges);
   }, [nodes, edges, requestSave]);
 
-  /* ─────────────────────────────
-   * onConnect (nuevas aristas) con auto handles
-   * ───────────────────────────── */
-  const onConnect = useCallback(
-    (connection) => {
-      setEdges((eds) => {
-        const nodesIdx = indexNodes(nodes);
-        const sNode = nodesIdx[String(connection.source)];
-        const tNode = nodesIdx[String(connection.target)];
-        const routed = sNode && tNode ? pickHandlesForNodes(sNode, tNode) : {};
+  /* ─── helpers de recomputación ────────────────────────────────────────── */
+  const recomputeReverseFlags = (eds) => {
+    const pair = new Set(eds.map((e) => `${e.source}->${e.target}`));
+    return eds.map((e) => {
+      const rev = pair.has(`${e.target}->${e.source}`);
+      const nextStyle = { ...(e.style || {}) };
+      if (rev) nextStyle.strokeDasharray = nextStyle.strokeDasharray || "4 3";
+      return { ...e, data: { ...(e.data || {}), __reversed: rev }, style: nextStyle };
+    });
+  };
 
-        const reverseExists = eds.some(
-          (x) =>
-            String(x.source) === String(connection.target) &&
-            String(x.target) === String(connection.source)
-        );
+  /* ─── conectar ───────────────────────────────────────────────────────── */
+  const onConnect = useCallback((connection) => {
+    setEdges((eds) => {
+      const nodesIdx = indexNodes(nodes);
+      const sNode = nodesIdx[String(connection.source)];
+      const tNode = nodesIdx[String(connection.target)];
+      const routed = sNode && tNode ? pickHandlesForNodes(sNode, tNode, eds) : {};
 
-        const newEdge = {
-          ...connection,
-          ...routed,
-          id: makeEdgeId({ ...connection, ...routed }),
-          type: "directional",
-          animated: true,
-          style: {
-            stroke: "#000",
-            strokeWidth: 2,
-            ...(reverseExists ? { strokeDasharray: "4 3" } : {}),
-          },
-          markerEnd: { type: MarkerType.ArrowClosed, color: "#000" },
-          data: {
-            label: `${connection.source}→${connection.target}`,
-            waypoints: [],
-            __reversed: reverseExists,
-            __autorouted: true,
-          },
-          updatable: "both",
-          interactionWidth: 24,
-        };
-
-        return addEdge(newEdge, eds);
-      });
-    },
-    [nodes, setEdges]
-  );
-
-  /* ─────────────────────────────
-   * onEdgeUpdate: mover enlaces + autorute
-   * ───────────────────────────── */
-  const onEdgeUpdate = useCallback(
-    (oldEdge, connection) => {
-      setEdges((eds) => {
-        const nodesIdx = indexNodes(nodes);
-
-        const baseConn = {
-          ...connection,
-          sourceHandle: normalizeHandle(connection.sourceHandle),
-          targetHandle: normalizeHandle(connection.targetHandle),
-        };
-
-        let nextConn = { ...baseConn };
-        const sNode = nodesIdx[String(baseConn.source)];
-        const tNode = nodesIdx[String(baseConn.target)];
-        if ((!baseConn.sourceHandle || !baseConn.targetHandle) && sNode && tNode) {
-          nextConn = { ...baseConn, ...pickHandlesForNodes(sNode, tNode) };
-        }
-
-        const nextId = makeEdgeId({ ...oldEdge, ...nextConn });
-
-        const updated = updateEdge(
-          oldEdge,
-          {
-            ...nextConn,
-            id: nextId,
-            type: oldEdge.type || "directional",
-            animated: oldEdge.animated ?? true,
-            style: oldEdge.style || { stroke: "#000", strokeWidth: 2 },
-            markerEnd: oldEdge.markerEnd || { type: MarkerType.ArrowClosed, color: "#000" },
-            data: { ...(oldEdge.data || {}), __autorouted: true },
-            updatable: "both",
-            interactionWidth: oldEdge.interactionWidth ?? 24,
-          },
-          eds
-        );
-
-        return updated;
-      });
-    },
-    [nodes, setEdges]
-  );
-
-  const onEdgeUpdateStart = useCallback(() => {}, []);
-  const onEdgeUpdateEnd = useCallback(() => {}, []);
-
-  /* ─────────────────────────────
-   * onNodesChange con autoroute al soltar
-   * ───────────────────────────── */
-  const handleNodesChange = useCallback(
-    (changes) => {
-      // 1) Aplica cambios base
-      onNodesChange(changes);
-
-      // 2) Detecta fin de drag
-      const movedIds = new Set(
-        changes
-          .filter((c) => c.type === "position" && c.dragging === false && c.id)
-          .map((c) => c.id)
+      const reverseExists = eds.some(
+        (x) => String(x.source) === String(connection.target) && String(x.target) === String(connection.source)
       );
-      if (movedIds.size === 0) return;
 
-      // 3) Reautorutear edges conectadas (respetando waypoints si las hay)
-      setEdges((eds) => {
-        const nodesIdx = indexNodes(nodes);
-        let changed = false;
+      const newEdge = {
+        ...connection,
+        ...routed,
+        id: makeEdgeId({ ...connection, ...routed }),
+        type: "directional",
+        animated: true,
+        style: { stroke: "#000", strokeWidth: 2, ...(reverseExists ? { strokeDasharray: "4 3" } : {}) },
+        markerEnd: { type: MarkerType.ArrowClosed, color: "#000" },
+        data: { label: `${connection.source}→${connection.target}`, waypoints: [], __reversed: reverseExists, __autorouted: true },
+        updatable: "both",
+        interactionWidth: 24,
+      };
 
-        const next = eds.map((e) => {
-          if (!movedIds.has(e.source) && !movedIds.has(e.target)) return e;
-          if (e.type === "waypoint" && Array.isArray(e?.data?.waypoints) && e.data.waypoints.length) {
-            // Mantén waypoints si existen
-            return e;
-          }
-          const updated = autoRouteEdge(e, nodesIdx);
-          if (
-            updated.sourceHandle !== e.sourceHandle ||
-            updated.targetHandle !== e.targetHandle ||
-            updated.id !== e.id
-          ) {
-            changed = true;
-            return updated;
-          }
-          return e;
-        });
+      return recomputeReverseFlags(addEdge(newEdge, eds));
+    });
+  }, [nodes, setEdges]);
 
-        return changed ? next : eds;
+  /* ─── actualizar edge (reconexión) ───────────────────────────────────── */
+  const onEdgeUpdate = useCallback((oldEdge, connection) => {
+    setEdges((eds) => {
+      const idx = eds.findIndex((e) => e.id === oldEdge.id);
+      if (idx === -1) return eds;
+
+      const nodesIdx = indexNodes(nodes);
+      const sNode = nodesIdx[String(connection.source)];
+      const tNode = nodesIdx[String(connection.target)];
+      if (!sNode || !tNode) return eds;
+
+      const routed = pickHandlesForNodes(sNode, tNode, eds);
+      const keepWaypoints =
+        oldEdge.type === "waypoint" &&
+        Array.isArray(oldEdge?.data?.waypoints) &&
+        oldEdge.data.waypoints.length > 0;
+
+      const nextType = keepWaypoints ? "waypoint" : (oldEdge.type || "directional");
+      const nextId = makeEdgeId({
+        ...oldEdge,
+        source: connection.source,
+        target: connection.target,
+        ...routed,
       });
-    },
-    [nodes, onNodesChange, setEdges]
-  );
 
-  /* ─────────────────────────────
-   * Click nodo → panel detalle
-   * ───────────────────────────── */
+      const updatedEdge = {
+        ...oldEdge,
+        id: nextId,
+        source: connection.source,
+        target: connection.target,
+        ...routed,
+        type: nextType,
+        animated: oldEdge.animated ?? true,
+        style: oldEdge.style || { stroke: "#000", strokeWidth: 2 },
+        markerEnd: oldEdge.markerEnd || { type: MarkerType.ArrowClosed, color: "#000" },
+        data: { ...(oldEdge.data || {}), __autorouted: true },
+        updatable: "both",
+        interactionWidth: oldEdge.interactionWidth ?? 24,
+      };
+
+      const next = [...eds];
+      next[idx] = updatedEdge;
+      return recomputeReverseFlags(next);
+    });
+  }, [nodes, setEdges]);
+
+  /* ─── mover nodos: re‐enrutar edges + refrescar labels no “pinned” ───── */
+  const handleNodesChange = useCallback((changes) => {
+    onNodesChange(changes);
+    if (!changes.some((c) => c.type === "position")) return;
+
+    setEdges((eds) => {
+      const nodesIdx = indexNodes(nodes);
+
+      // 1) autoroute (si no tiene waypoints)
+      let next = eds.map((e) => {
+        if (e.type === "waypoint" && Array.isArray(e?.data?.waypoints) && e.data.waypoints.length) return e;
+        return autoRouteEdge(e, nodesIdx, eds);
+      });
+
+      // 2) si el label NO está “pinned”, limpiamos labelPos para forzar recálculo
+      next = next.map((e) => {
+        if (e?.data?.labelPinned) return e;
+        if (e?.data?.labelPos === undefined) return e;
+        const { labelPos, ...rest } = e.data || {};
+        return { ...e, data: rest };
+      });
+
+      // 3) actualizar flags de reverso (offset visual)
+      next = recomputeReverseFlags(next);
+
+      return next;
+    });
+  }, [nodes, onNodesChange, setEdges]);
+
+  /* ─── persistir tras soltar un nodo ───────────────────────────────────── */
+  const onNodeDragStop = useCallback(() => {
+    requestSave(nodes, edges);
+  }, [nodes, edges, requestSave]);
+
+  /* ─── detalle equipo (igual que tenías) ───────────────────────────────── */
   const fetchEquipo = useCallback(async (equipoId) => {
     const idStr = toIdString(equipoId);
-    if (!idStr) {
-      setEquipo(null);
-      setEquipoError("Nodo sin equipo asociado");
-      return;
-    }
+    if (!idStr) { setEquipo(null); setEquipoError("Nodo sin equipo asociado"); return; }
     try {
       setLoadingEquipo(true);
       setEquipoError(null);
       setEquipo(null);
       setIrd(null); setIrdError(null); setLoadingIrd(false);
       setSat(null); setSatError(null); setLoadingSat(false);
-
       const res = await api.getIdEquipo(encodeURIComponent(idStr));
       setEquipo(res?.data || null);
     } catch (err) {
       setEquipo(null);
-      setEquipoError(
-        err?.response?.data?.message || err.message || "Error al cargar equipo"
-      );
-    } finally {
-      setLoadingEquipo(false);
-    }
+      setEquipoError(err?.response?.data?.message || err.message || "Error al cargar equipo");
+    } finally { setLoadingEquipo(false); }
   }, []);
 
-  const handleNodeClick = useCallback(
-    (evt, node) => {
-      const equipoObj = node?.data?.equipo ?? node?.equipo ?? null;
-
-      if (equipoObj && typeof equipoObj === "object") {
-        setIrd(null); setIrdError(null); setLoadingIrd(false);
-        setSat(null); setSatError(null); setLoadingSat(false);
-        setEquipo({ ...equipoObj });
-        return;
-      }
-
-      const raw =
-        node?.data?.equipoId ??
-        node?.data?.equipo?._id ??
-        node?.equipo ?? null;
-
-      const idStr = toIdString(raw);
-      fetchEquipo(idStr);
-    },
-    [fetchEquipo]
-  );
-
-  /* ─────────────────────────────
-   * Auto-carga IRD / SAT
-   * ───────────────────────────── */
-  useEffect(() => {
-    const tipo = norm(
-      typeof equipo?.tipoNombre === "object" ? equipo?.tipoNombre?.tipoNombre : equipo?.tipoNombre
-    );
-    if (!equipo || tipo !== "ird") {
+  const handleNodeClick = useCallback((evt, node) => {
+    const equipoObj = node?.data?.equipo ?? node?.equipo ?? null;
+    if (equipoObj && typeof equipoObj === "object") {
       setIrd(null); setIrdError(null); setLoadingIrd(false);
+      setSat(null); setSatError(null); setLoadingSat(false);
+      setEquipo({ ...equipoObj });
       return;
     }
-    if (equipo?.irdRef && typeof equipo.irdRef === "object") {
-      setIrd(equipo.irdRef); setIrdError(null); setLoadingIrd(false);
-      return;
-    }
-    const irdId =
-      typeof equipo?.irdRef === "string" ? equipo.irdRef : toIdString(equipo?.irdRef);
-    if (!irdId) {
-      setIrd(null); setIrdError("Equipo IRD sin irdRef"); setLoadingIrd(false);
-      return;
-    }
+    const raw = node?.data?.equipoId ?? node?.data?.equipo?._id ?? node?.equipo ?? null;
+    fetchEquipo(toIdString(raw));
+  }, [fetchEquipo]);
+
+  /* ─── auto-carga IRD / SAT ───────────────────────────────────────────── */
+  useEffect(() => {
+    const tipo = norm(typeof equipo?.tipoNombre === "object" ? equipo?.tipoNombre?.tipoNombre : equipo?.tipoNombre);
+    if (!equipo || tipo !== "ird") { setIrd(null); setIrdError(null); setLoadingIrd(false); return; }
+    if (equipo?.irdRef && typeof equipo.irdRef === "object") { setIrd(equipo.irdRef); setIrdError(null); setLoadingIrd(false); return; }
+    const irdId = typeof equipo?.irdRef === "string" ? equipo.irdRef : toIdString(equipo?.irdRef);
+    if (!irdId) { setIrd(null); setIrdError("Equipo IRD sin irdRef"); setLoadingIrd(false); return; }
     (async () => {
       try {
-        setLoadingIrd(true);
-        setIrdError(null);
-        setIrd(null);
-        const res = await api.getIdIrd(encodeURIComponent(irdId));
-        setIrd(res?.data || null);
-      } catch (err) {
-        setIrd(null);
-        setIrdError(err?.response?.data?.message || err.message || "Error al cargar IRD");
-      } finally {
-        setLoadingIrd(false);
-      }
+        setLoadingIrd(true); setIrdError(null); setIrd(null);
+        const res = await api.getIdIrd(encodeURIComponent(irdId)); setIrd(res?.data || null);
+      } catch (err) { setIrd(null); setIrdError(err?.response?.data?.message || err.message || "Error al cargar IRD"); }
+      finally { setLoadingIrd(false); }
     })();
   }, [equipo]);
 
   useEffect(() => {
-    const tipo = norm(
-      typeof equipo?.tipoNombre === "object" ? equipo?.tipoNombre?.tipoNombre : equipo?.tipoNombre
-    );
-    if (!equipo || (tipo !== "satelite" && tipo !== "satellite")) {
-      setSat(null); setSatError(null); setLoadingSat(false);
-      return;
-    }
-    if (equipo?.satelliteRef && typeof equipo.satelliteRef === "object") {
-      setSat(equipo.satelliteRef); setSatError(null); setLoadingSat(false);
-      return;
-    }
-    const satId =
-      typeof equipo?.satelliteRef === "string"
-        ? equipo.satelliteRef
-        : toIdString(equipo?.satelliteRef);
-    if (!satId) {
-      setSat(null); setSatError("Equipo satélite sin satelliteRef"); setLoadingSat(false);
-      return;
-    }
+    const tipo = norm(typeof equipo?.tipoNombre === "object" ? equipo?.tipoNombre?.tipoNombre : equipo?.tipoNombre);
+    if (!equipo || (tipo !== "satelite" && tipo !== "satellite")) { setSat(null); setSatError(null); setLoadingSat(false); return; }
+    if (equipo?.satelliteRef && typeof equipo.satelliteRef === "object") { setSat(equipo.satelliteRef); setSatError(null); setLoadingSat(false); return; }
+    const satId = typeof equipo?.satelliteRef === "string" ? equipo.satelliteRef : toIdString(equipo?.satelliteRef);
+    if (!satId) { setSat(null); setSatError("Equipo satélite sin satelliteRef"); setLoadingSat(false); return; }
     (async () => {
       try {
-        setLoadingSat(true);
-        setSatError(null);
-        setSat(null);
-        const res = await api.getSatelliteId(encodeURIComponent(satId));
-        setSat(res?.data || null);
-      } catch (err) {
-        setSat(null);
-        setSatError(err?.response?.data?.message || err.message || "Error al cargar Satélite");
-      } finally {
-        setLoadingSat(false);
-      }
+        setLoadingSat(true); setSatError(null); setSat(null);
+        const res = await api.getSatelliteId(encodeURIComponent(satId)); setSat(res?.data || null);
+      } catch (err) { setSat(null); setSatError(err?.response?.data?.message || err.message || "Error al cargar Satélite"); }
+      finally { setLoadingSat(false); }
     })();
   }, [equipo]);
 
-  /* ─────────────────────────────
-   * Render
-   * ───────────────────────────── */
+  /* ─── render ──────────────────────────────────────────────────────────── */
   return (
-    <div
-      className="outlet-main"
-      style={{
-        display: "grid",
-        gridTemplateColumns: "minmax(0, 1fr) 380px",
-        gap: 16,
-        width: "100%",
-        minHeight: "70vh",
-      }}
-    >
-      {/* DIAGRAMA */}
-      <div
-        style={{
-          minWidth: 0,
-          border: "1px solid #ddd",
-          borderRadius: 8,
-          overflow: "hidden",
-          display: "flex",
-          flexDirection: "column",
-        }}
-      >
-        <div
-          style={{
-            padding: "8px 12px",
-            borderBottom: "1px solid #eee",
-            fontWeight: 600,
-          }}
-        >
+    <div className="outlet-main" style={{ display: "grid", gridTemplateColumns: "minmax(0, 1fr) 380px", gap: 16, width: "100%", minHeight: "70vh" }}>
+      <div style={{ minWidth: 0, border: "1px solid #ddd", borderRadius: 8, overflow: "hidden", display: "flex", flexDirection: "column" }}>
+        <div style={{ padding: "8px 12px", borderBottom: "1px solid #eee", fontWeight: 600 }}>
           {signal?.signal?.nameChannel || "Diagrama de Canal"}{" "}
-          {signal?.signal?.tipoTecnologia &&
-            `(${String(signal.signal.tipoTecnologia).toUpperCase()})`}
+          {signal?.signal?.tipoTecnologia && `(${String(signal.signal.tipoTecnologia).toUpperCase()})`}
         </div>
 
         <div style={{ width: "100%", height: "72vh", position: "relative" }}>
           {nodes.length === 0 && (
-            <div
-              style={{
-                position: "absolute",
-                inset: 0,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                color: "#6b7280",
-                zIndex: 1,
-              }}
-            >
+            <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", color: "#6b7280", zIndex: 1 }}>
               No hay nodos para mostrar.
             </div>
           )}
@@ -658,8 +464,7 @@ const ChannelDiagram = () => {
             onEdgesChange={onEdgesChange}
             onConnect={onConnect}
             onEdgeUpdate={onEdgeUpdate}
-            onEdgeUpdateStart={() => {}}
-            onEdgeUpdateEnd={() => {}}
+            onNodeDragStop={onNodeDragStop}
             onNodeClick={handleNodeClick}
             fitView
             fitViewOptions={{ padding: 0.2 }}
@@ -680,66 +485,19 @@ const ChannelDiagram = () => {
         </div>
       </div>
 
-      {/* DETALLE */}
-      <div
-        style={{
-          minWidth: 0,
-          border: "1px solid #ddd",
-          borderRadius: 8,
-          padding: 12,
-          overflowY: "auto",
-          height: "72vh",
-        }}
-      >
+      {/* panel lateral */}
+      <div style={{ minWidth: 0, border: "1px solid #ddd", borderRadius: 8, padding: 12, overflowY: "auto", height: "72vh" }}>
         <h2 style={{ marginTop: 0, marginBottom: 8 }}>Detalle</h2>
-
         {(() => {
-          const tipo = norm(
-            typeof equipo?.tipoNombre === "object"
-              ? equipo?.tipoNombre?.tipoNombre
-              : equipo?.tipoNombre
-          );
-
+          const tipo = norm(typeof equipo?.tipoNombre === "object" ? equipo?.tipoNombre?.tipoNombre : equipo?.tipoNombre);
           const isIrd = tipo === "ird";
-          const hasIrdRef =
-            (typeof equipo?.irdRef === "object" && equipo?.irdRef?._id) ||
-            typeof equipo?.irdRef === "string";
-
+          const hasIrdRef = (typeof equipo?.irdRef === "object" && equipo?.irdRef?._id) || typeof equipo?.irdRef === "string";
           const isSat = tipo === "satelite" || tipo === "satellite";
-          const hasSatRef =
-            (typeof equipo?.satelliteRef === "object" && equipo?.satelliteRef?._id) ||
-            typeof equipo?.satelliteRef === "string";
+          const hasSatRef = (typeof equipo?.satelliteRef === "object" && equipo?.satelliteRef?._id) || typeof equipo?.satelliteRef === "string";
 
-          if (isSat && hasSatRef) {
-            return (
-              <EquipoSatellite
-                title="Detalle Satélite"
-                satellite={sat}
-                loading={loadingSat || loadingEquipo}
-                error={satError || equipoError}
-              />
-            );
-          }
-
-          if (isIrd && hasIrdRef) {
-            return (
-              <EquipoIrd
-                title="Detalle IRD"
-                ird={ird}
-                loading={loadingIrd || loadingEquipo}
-                error={irdError || equipoError}
-              />
-            );
-          }
-
-          return (
-            <EquipoDetail
-              title="Detalle de Equipo"
-              equipo={equipo}
-              loading={loadingEquipo}
-              error={equipoError}
-            />
-          );
+          if (isSat && hasSatRef) return <EquipoSatellite title="Detalle Satélite" satellite={sat} loading={loadingSat || loadingEquipo} error={satError || equipoError} />;
+          if (isIrd && hasIrdRef) return <EquipoIrd title="Detalle IRD" ird={ird} loading={loadingIrd || loadingEquipo} error={irdError || equipoError} />;
+          return <EquipoDetail title="Detalle de Equipo" equipo={equipo} loading={loadingEquipo} error={equipoError} />;
         })()}
       </div>
     </div>
