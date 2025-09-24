@@ -1,4 +1,3 @@
-// src/pages/ChannelDiagram/CustomWaypointEdge.jsx
 import React, { useCallback, useMemo, useRef } from "react";
 import { BaseEdge, EdgeLabelRenderer, useReactFlow } from "@xyflow/react";
 
@@ -29,11 +28,26 @@ const DraggableLabel = ({ x, y, children, onPointerDown }) => (
 );
 
 export default function CustomWaypointEdge(props) {
-  const { id, sourceX, sourceY, targetX, targetY, style, markerEnd, data = {}, label } = props;
+  const {
+    id,
+    sourceX,
+    sourceY,
+    targetX,
+    targetY,
+    style,
+    markerEnd,
+    data = {},
+    label,
+  } = props;
 
   const rf = useReactFlow();
-  const dragLabelRef = useRef({ dragging: false, startPane: { x: 0, y: 0 }, startOffset: { x: 0, y: 0 } });
+  const dragLabelRef = useRef({
+    dragging: false,
+    startPane: { x: 0, y: 0 },
+    startOffset: { x: 0, y: 0 },
+  });
 
+  // Construye un path poligonal con waypoints existentes (sin edición desde UI)
   const points = useMemo(() => {
     const wp = Array.isArray(data.waypoints) ? data.waypoints : [];
     return [{ x: sourceX, y: sourceY }, ...wp, { x: targetX, y: targetY }];
@@ -46,10 +60,12 @@ export default function CustomWaypointEdge(props) {
     return `M ${start.x} ${start.y} ${segs}`;
   }, [points]);
 
-  // punto medio para default label
+  // Posición por defecto del label = mitad del largo total
   const defaultLabelPos = useMemo(() => {
     let total = 0;
-    for (let i = 1; i < points.length; i++) total += Math.hypot(points[i].x - points[i - 1].x, points[i].y - points[i - 1].y);
+    for (let i = 1; i < points.length; i++)
+      total += Math.hypot(points[i].x - points[i - 1].x, points[i].y - points[i - 1].y);
+
     let half = total / 2;
     for (let i = 1; i < points.length; i++) {
       const a = points[i - 1], b = points[i];
@@ -64,53 +80,47 @@ export default function CustomWaypointEdge(props) {
 
   const labelPos = useMemo(() => {
     const lp = data?.labelPos;
-    return { x: Number.isFinite(lp?.x) ? lp.x : defaultLabelPos.x, y: Number.isFinite(lp?.y) ? lp.y : defaultLabelPos.y };
+    return {
+      x: Number.isFinite(lp?.x) ? lp.x : defaultLabelPos.x,
+      y: Number.isFinite(lp?.y) ? lp.y : defaultLabelPos.y,
+    };
   }, [data?.labelPos, defaultLabelPos]);
 
-  // mover waypoint (solo drag; creación/borrado por gestos está desactivado)
-  const onPointerDownPoint = useCallback(
-    (idx) => (e) => {
-      e.stopPropagation();
-      const move = (ev) => {
-        const clientX = "touches" in ev ? ev.touches[0].clientX : ev.clientX;
-        const clientY = "touches" in ev ? ev.touches[0].clientY : ev.clientY;
-        const pane = rf.project({ x: clientX, y: clientY });
-        const curr = Array.isArray(data.waypoints) ? data.waypoints : [];
-        if (idx < 0 || idx >= curr.length) return;
-        const next = curr.map((p, i) => (i === idx ? { x: pane.x, y: pane.y } : p));
-        window.dispatchEvent(new CustomEvent("edge-data-change", { detail: { edgeId: id, dataPatch: { waypoints: next } } }));
-      };
-      const up = () => {
-        window.removeEventListener("mousemove", move);
-        window.removeEventListener("mouseup", up);
-        window.removeEventListener("touchmove", move);
-        window.removeEventListener("touchend", up);
-      };
-      window.addEventListener("mousemove", move);
-      window.addEventListener("mouseup", up);
-      window.addEventListener("touchmove", move, { passive: false });
-      window.addEventListener("touchend", up);
-    },
-    [id, data.waypoints, rf]
-  );
-
+  // Drag del label → persistir en data.labelPos
   const onPointerDownLabel = useCallback(
     (e) => {
       e.stopPropagation();
       e.preventDefault();
-      const startClient = { x: "touches" in e ? e.touches[0].clientX : e.clientX, y: "touches" in e ? e.touches[0].clientY : e.clientY };
+      const startClient = {
+        x: "touches" in e ? e.touches[0].clientX : e.clientX,
+        y: "touches" in e ? e.touches[0].clientY : e.clientY,
+      };
       const startPane = rf.project(startClient);
 
       dragLabelRef.current.dragging = true;
       dragLabelRef.current.startPane = startPane;
-      dragLabelRef.current.startOffset = { x: (data?.labelPos?.x ?? labelPos.x) - startPane.x, y: (data?.labelPos?.y ?? labelPos.y) - startPane.y };
+      dragLabelRef.current.startOffset = {
+        x: (data?.labelPos?.x ?? labelPos.x) - startPane.x,
+        y: (data?.labelPos?.y ?? labelPos.y) - startPane.y,
+      };
 
       const onMove = (ev) => {
         if (!dragLabelRef.current.dragging) return;
-        const currClient = { x: "touches" in ev ? ev.touches[0].clientX : ev.clientX, y: "touches" in ev ? ev.touches[0].clientY : ev.clientY };
+        const currClient = {
+          x: "touches" in ev ? ev.touches[0].clientX : ev.clientX,
+          y: "touches" in ev ? ev.touches[0].clientY : ev.clientY,
+        };
         const currPane = rf.project(currClient);
-        const next = { x: currPane.x + dragLabelRef.current.startOffset.x, y: currPane.y + dragLabelRef.current.startOffset.y };
-        window.dispatchEvent(new CustomEvent("edge-data-change", { detail: { edgeId: id, dataPatch: { labelPos: next, labelPinned: true } } }));
+        const next = {
+          x: currPane.x + dragLabelRef.current.startOffset.x,
+          y: currPane.y + dragLabelRef.current.startOffset.y,
+        };
+
+        window.dispatchEvent(
+          new CustomEvent("edge-data-change", {
+            detail: { edgeId: id, dataPatch: { labelPos: next } },
+          })
+        );
       };
 
       const onUp = () => {
@@ -132,24 +142,6 @@ export default function CustomWaypointEdge(props) {
   return (
     <>
       <BaseEdge id={id} path={pathD} style={style} markerEnd={markerEnd} />
-
-      {Array.isArray(data.waypoints) &&
-        data.waypoints.map((p, i) => (
-          <circle
-            key={`${id}-wp-${i}`}
-            cx={p.x}
-            cy={p.y}
-            r={6}
-            stroke={style?.stroke || "#000"}
-            strokeWidth={2}
-            fill="#fff"
-            onMouseDown={onPointerDownPoint(i)}
-            onTouchStart={onPointerDownPoint(i)}
-            style={{ cursor: "grab" }}
-            title="Arrastra para mover"
-          />
-        ))}
-
       {(label || data?.label) && (
         <DraggableLabel x={labelPos.x} y={labelPos.y} onPointerDown={onPointerDownLabel}>
           {label || data?.label}

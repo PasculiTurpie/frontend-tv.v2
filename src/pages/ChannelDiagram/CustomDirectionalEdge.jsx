@@ -1,14 +1,23 @@
-// src/pages/ChannelDiagram/CustomDirectionalEdge.jsx
 import React, { useCallback, useMemo, useRef } from "react";
-import { BaseEdge, EdgeLabelRenderer, getSmoothStepPath, useReactFlow } from "@xyflow/react";
+import {
+  BaseEdge,
+  EdgeLabelRenderer,
+  getSmoothStepPath,
+  useReactFlow,
+} from "@xyflow/react";
 
+/** Offset para separar visualmente ida/vuelta */
 const PARALLEL_OFFSET = 10;
 
-function offsetPathStep({ sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition, isReverse }) {
+/** Path "step" con offset perpendicular (si es vuelta: desplazamos al lado opuesto) */
+function offsetPathStep({
+  sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition, isReverse
+}) {
   const dx = targetX - sourceX;
   const dy = targetY - sourceY;
   const vertical = Math.abs(dy) >= Math.abs(dx);
-  const sign = isReverse ? 1 : -1;
+
+  const sign = isReverse ? 1 : -1; // ida arriba/izq, vuelta abajo/der
   const ox = vertical ? sign * PARALLEL_OFFSET : 0;
   const oy = vertical ? 0 : sign * PARALLEL_OFFSET;
 
@@ -53,40 +62,60 @@ const DraggableLabel = ({ x, y, children, onPointerDown }) => (
 
 export default function CustomDirectionalEdge(props) {
   const {
-    id, source, target,
-    sourceX, sourceY, targetX, targetY,
-    sourcePosition, targetPosition,
-    style, markerEnd,
-    data = {}, label,
+    id,
+    source,
+    sourceX,
+    sourceY,
+    targetX,
+    targetY,
+    sourcePosition,
+    targetPosition,
+    style,
+    markerEnd,
+    data = {},
+    label,
   } = props;
 
   const rf = useReactFlow();
-  const dragRef = useRef({ dragging: false, startPane: { x: 0, y: 0 }, startOffset: { x: 0, y: 0 } });
+  const dragRef = useRef({
+    dragging: false,
+    startPane: { x: 0, y: 0 },
+    startOffset: { x: 0, y: 0 },
+  });
 
   const isReverse = !!data?.__reversed;
 
-  const [edgePath, defaultLabelX, defaultLabelY] = useMemo(
-    () => offsetPathStep({ sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition, isReverse }),
-    [sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition, isReverse]
-  );
-
-  const LABEL_SIDE_OFFSET = 8;
-  const isAB = String(source) < String(target);
+  // Path con offset para paralelos + punto por defecto del label
+  const [edgePath, defaultLabelX, defaultLabelY] = useMemo(() => {
+    return offsetPathStep({
+      sourceX,
+      sourceY,
+      targetX,
+      targetY,
+      sourcePosition,
+      targetPosition,
+      isReverse,
+    });
+  }, [sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition, isReverse]);
 
   const labelPos = useMemo(() => {
     const lp = data?.labelPos;
-    const base = {
+    return {
       x: Number.isFinite(lp?.x) ? lp.x : defaultLabelX,
       y: Number.isFinite(lp?.y) ? lp.y : defaultLabelY,
     };
-    return { x: base.x, y: base.y + (isAB ? -LABEL_SIDE_OFFSET : LABEL_SIDE_OFFSET) };
-  }, [data?.labelPos, defaultLabelX, defaultLabelY, isAB]);
+  }, [data?.labelPos, defaultLabelX, defaultLabelY]);
 
+  // Drag del label (usa coords de pane y notifica al contenedor para persistir)
   const onPointerDown = useCallback(
     (e) => {
       e.stopPropagation();
       e.preventDefault();
-      const startClient = { x: "touches" in e ? e.touches[0].clientX : e.clientX, y: "touches" in e ? e.touches[0].clientY : e.clientY };
+
+      const startClient = {
+        x: "touches" in e ? e.touches[0].clientX : e.clientX,
+        y: "touches" in e ? e.touches[0].clientY : e.clientY,
+      };
       const startPane = rf.project(startClient);
 
       dragRef.current.dragging = true;
@@ -98,13 +127,19 @@ export default function CustomDirectionalEdge(props) {
 
       const onMove = (ev) => {
         if (!dragRef.current.dragging) return;
-        const currClient = { x: "touches" in ev ? ev.touches[0].clientX : ev.clientX, y: "touches" in ev ? ev.touches[0].clientY : ev.clientY };
+        const currClient = {
+          x: "touches" in ev ? ev.touches[0].clientX : ev.clientX,
+          y: "touches" in ev ? ev.touches[0].clientY : ev.clientY,
+        };
         const currPane = rf.project(currClient);
-        const next = { x: currPane.x + dragRef.current.startOffset.x, y: currPane.y + dragRef.current.startOffset.y };
+        const next = {
+          x: currPane.x + dragRef.current.startOffset.x,
+          y: currPane.y + dragRef.current.startOffset.y,
+        };
 
         window.dispatchEvent(
           new CustomEvent("edge-data-change", {
-            detail: { edgeId: id, dataPatch: { labelPos: next, labelPinned: true } },
+            detail: { edgeId: id, dataPatch: { labelPos: next } },
           })
         );
       };

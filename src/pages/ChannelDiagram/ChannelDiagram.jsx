@@ -1,4 +1,3 @@
-// src/pages/ChannelDiagram/ChannelDiagram.jsx
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   ReactFlow,
@@ -40,10 +39,9 @@ const normalizeHandle = (h) => {
   return undefined;
 };
 
-const hasReverseIn = (arr, a, b) => arr.some((x) => String(x.source) === String(b) && String(x.target) === String(a));
-
-/* ─── enrutado por geometría + regla ida/vuelta ─────────────────────────── */
+/* ─── enrutado por geometría + regla ida/vuelta determinística ──────────── */
 const SIDE = { TOP: "top", RIGHT: "right", BOTTOM: "bottom", LEFT: "left" };
+
 const pickSide = (sx, sy, tx, ty, bias = 12, minDelta = 8) => {
   const dx = tx - sx, dy = ty - sy;
   const adx = Math.abs(dx), ady = Math.abs(dy);
@@ -53,8 +51,16 @@ const pickSide = (sx, sy, tx, ty, bias = 12, minDelta = 8) => {
   if (a < bias || a > 180 - bias) return dx < 0 ? SIDE.LEFT : SIDE.RIGHT;
   return ady > adx ? (dy < 0 ? SIDE.TOP : SIDE.BOTTOM) : (dx < 0 ? SIDE.LEFT : SIDE.RIGHT);
 };
+
 const buildHandle = (side, kind, idx = 1) => `${kind}-${side}-${idx}`;
 
+const isBidirectionalPair = (arr, a, b) =>
+  arr.some((x) => String(x.source) === String(a) && String(x.target) === String(b)) &&
+  arr.some((x) => String(x.source) === String(b) && String(x.target) === String(a));
+
+const isReturnEdge = (sourceId, targetId) => String(sourceId) > String(targetId);
+
+/** Regla: si hay par bidireccional, ida = idx1 (source<target), vuelta = idx3 (source>target) */
 const pickHandlesForNodes = (sNode, tNode, allEdges = []) => {
   const sx = sNode.position.x + (sNode.width ?? 0) / 2;
   const sy = sNode.position.y + (sNode.height ?? 0) / 2;
@@ -62,8 +68,8 @@ const pickHandlesForNodes = (sNode, tNode, allEdges = []) => {
   const ty = tNode.position.y + (tNode.height ?? 0) / 2;
 
   const side = pickSide(sx, sy, tx, ty);
-  const isReturn = hasReverseIn(allEdges, sNode.id, tNode.id);
-  const idx = isReturn ? 3 : 1;
+  const bidir = isBidirectionalPair(allEdges, sNode.id, tNode.id);
+  const idx = bidir ? (isReturnEdge(sNode.id, tNode.id) ? 3 : 1) : 1;
 
   if (side === SIDE.TOP || side === SIDE.BOTTOM) {
     return {
@@ -71,9 +77,16 @@ const pickHandlesForNodes = (sNode, tNode, allEdges = []) => {
       targetHandle: buildHandle(side === SIDE.TOP ? SIDE.BOTTOM : SIDE.TOP, "in", idx),
     };
   }
-  return isReturn
-    ? { sourceHandle: buildHandle(SIDE.RIGHT, "out", 3), targetHandle: buildHandle(SIDE.LEFT, "in", 3) }
-    : { sourceHandle: buildHandle(SIDE.LEFT, "out", 1), targetHandle: buildHandle(SIDE.RIGHT, "in", 1) };
+  if (bidir && idx === 3) {
+    return {
+      sourceHandle: buildHandle(SIDE.RIGHT, "out", 3),
+      targetHandle: buildHandle(SIDE.LEFT, "in", 3),
+    };
+  }
+  return {
+    sourceHandle: buildHandle(SIDE.LEFT, "out", 1),
+    targetHandle: buildHandle(SIDE.RIGHT, "in", 1),
+  };
 };
 
 const autoRouteEdge = (edge, nodesById, allEdges = []) => {
@@ -117,7 +130,7 @@ const ChannelDiagram = () => {
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
 
-  /* ─── BRIDGE: aplica patches desde edges (label drag, etc.) ───────────── */
+  /* ─── BRIDGE: aplica patches desde edges (label drag) ─────────────────── */
   useEffect(() => {
     const onEdgeDataChange = (ev) => {
       const { edgeId, dataPatch, edgePatch } = ev.detail || {};
@@ -142,7 +155,6 @@ const ChannelDiagram = () => {
     api.getChannelDiagramById(id).then((res) => {
       if (!mounted) return;
       const result = res.data || {};
-      console.log("[LOAD] result", result);
       setSignal(result);
 
       const rawNodes = Array.isArray(result.nodes) ? result.nodes : [];
@@ -179,12 +191,9 @@ const ChannelDiagram = () => {
           }
 
           const waypoints = Array.isArray(e?.data?.waypoints) ? e.data.waypoints : [];
-          const reversed = hasReverseIn(rawEdges, e.source, e.target);
-
           const baseStyle = {
             stroke: e?.style?.stroke || "#000",
             strokeWidth: e?.style?.strokeWidth ?? 2,
-            ...(reversed ? { strokeDasharray: "4 3" } : {}),
             ...e?.style,
           };
 
@@ -197,7 +206,7 @@ const ChannelDiagram = () => {
             sourceHandle,
             targetHandle,
             label: e.label,
-            data: { ...(e.data || {}), waypoints, __reversed: reversed, __autorouted: true },
+            data: { ...(e.data || {}), waypoints, __autorouted: true }, // __reversed se setea después
             type: finalType,
             animated: e.animated ?? true,
             style: baseStyle,
@@ -213,15 +222,13 @@ const ChannelDiagram = () => {
         );
 
       setNodes(normalizedNodes);
-      setEdges(normalizedEdges);
+      setEdges(recomputeReverseFlags(normalizedEdges));
     }).catch((err) => console.error("Error al cargar diagrama:", err));
     return () => { mounted = false; };
   }, [id, setNodes, setEdges]);
 
   /* ─── guardado ────────────────────────────────────────────────────────── */
   const doSave = useCallback(async (n, e) => {
-    console.log("[SAVE] nodes", n);
-    console.log("[SAVE] edges", e);
     try {
       await api.updateChannelFlow(id, {
         nodes: n.map((node) => ({
@@ -258,14 +265,30 @@ const ChannelDiagram = () => {
     requestSave(nodes, edges);
   }, [nodes, edges, requestSave]);
 
-  /* ─── helpers de recomputación ────────────────────────────────────────── */
+  /* ─── flags ida/vuelta por par (para dash y offset) ───────────────────── */
   const recomputeReverseFlags = (eds) => {
-    const pair = new Set(eds.map((e) => `${e.source}->${e.target}`));
+    const groups = new Map();
+    for (const e of eds) {
+      const a = String(e.source);
+      const b = String(e.target);
+      const key = a < b ? `${a}|${b}` : `${b}|${a}`;
+      if (!groups.has(key)) groups.set(key, []);
+      groups.get(key).push(e);
+    }
+
     return eds.map((e) => {
-      const rev = pair.has(`${e.target}->${e.source}`);
+      const a = String(e.source);
+      const b = String(e.target);
+      const key = a < b ? `${a}|${b}` : `${b}|${a}`;
+      const group = groups.get(key) || [];
+      const bidir = group.length >= 2;
+      const reversed = bidir && isReturnEdge(a, b);
+
       const nextStyle = { ...(e.style || {}) };
-      if (rev) nextStyle.strokeDasharray = nextStyle.strokeDasharray || "4 3";
-      return { ...e, data: { ...(e.data || {}), __reversed: rev }, style: nextStyle };
+      if (reversed) nextStyle.strokeDasharray = nextStyle.strokeDasharray || "4 3";
+      else if (nextStyle.strokeDasharray) delete nextStyle.strokeDasharray;
+
+      return { ...e, data: { ...(e.data || {}), __reversed: reversed }, style: nextStyle };
     });
   };
 
@@ -277,19 +300,15 @@ const ChannelDiagram = () => {
       const tNode = nodesIdx[String(connection.target)];
       const routed = sNode && tNode ? pickHandlesForNodes(sNode, tNode, eds) : {};
 
-      const reverseExists = eds.some(
-        (x) => String(x.source) === String(connection.target) && String(x.target) === String(connection.source)
-      );
-
       const newEdge = {
         ...connection,
         ...routed,
         id: makeEdgeId({ ...connection, ...routed }),
         type: "directional",
         animated: true,
-        style: { stroke: "#000", strokeWidth: 2, ...(reverseExists ? { strokeDasharray: "4 3" } : {}) },
+        style: { stroke: "#000", strokeWidth: 2 },
         markerEnd: { type: MarkerType.ArrowClosed, color: "#000" },
-        data: { label: `${connection.source}→${connection.target}`, waypoints: [], __reversed: reverseExists, __autorouted: true },
+        data: { label: `${connection.source}→${connection.target}`, waypoints: [], __autorouted: true },
         updatable: "both",
         interactionWidth: 24,
       };
@@ -366,7 +385,7 @@ const ChannelDiagram = () => {
         return { ...e, data: rest };
       });
 
-      // 3) actualizar flags de reverso (offset visual)
+      // 3) flags ida/vuelta (dash + offset)
       next = recomputeReverseFlags(next);
 
       return next;
@@ -378,7 +397,7 @@ const ChannelDiagram = () => {
     requestSave(nodes, edges);
   }, [nodes, edges, requestSave]);
 
-  /* ─── detalle equipo (igual que tenías) ───────────────────────────────── */
+  /* ─── detalle equipo ─────────────────────────────────────────────────── */
   const fetchEquipo = useCallback(async (equipoId) => {
     const idStr = toIdString(equipoId);
     if (!idStr) { setEquipo(null); setEquipoError("Nodo sin equipo asociado"); return; }
