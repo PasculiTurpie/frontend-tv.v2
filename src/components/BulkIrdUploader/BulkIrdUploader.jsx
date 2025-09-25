@@ -104,9 +104,19 @@ const BulkIrdUploader = () => {
   };
 
   return (
-    <div style={{ maxWidth: '800px', margin: '0 auto', padding: '20px' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-        <h2>Carga Masiva de IRDs</h2>
+    <div className="outlet-main" style={{ maxWidth: '800px', margin: '0 auto', padding: '20px' }}>
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          gap: '12px',
+          marginBottom: '20px',
+          textAlign: 'center',
+        }}
+      >
+        <h2 style={{ margin: 0 }}>Carga Masiva de IRDs</h2>
+
         <button
           onClick={downloadTemplate}
           style={{
@@ -116,12 +126,13 @@ const BulkIrdUploader = () => {
             border: 'none',
             borderRadius: '4px',
             cursor: 'pointer',
-            fontSize: '14px'
+            fontSize: '14px',
           }}
         >
           Descargar Template
         </button>
       </div>
+
 
       {step === 1 && (
         <div>

@@ -45,6 +45,9 @@ class Api {
                             .then((r) => {
                                 isRefreshing = false;
                                 onRefreshed();
+                                window.dispatchEvent(
+                                    new Event("auth:refreshed")
+                                );
                                 return r;
                             })
                             .catch((e) => {
