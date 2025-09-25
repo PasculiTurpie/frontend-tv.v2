@@ -45,6 +45,7 @@ import 'sweetalert2/dist/sweetalert2.min.css';
 
 // 🔔 Hook de aviso + auto-refresh con cookies (sin localStorage)
 import useSessionRefresher from "./hooks/useSessionRefresher";
+import BulkIrdUploader from "./components/BulkIrdUploader/BulkIrdUploader";
 
 
 const App = () => {
@@ -93,6 +94,7 @@ const App = () => {
                         <Route path="/signal-contact" element={<SignalContact />} />
 
                         <Route path="/audit-logs" element={<AuditLogPage />} />
+                        <Route path="/massive-loading" element={<BulkIrdUploader />} />
                     </Route>
                     <Route path="/channels/:id" element={<ChannelDiagram />} />
                 </Route>

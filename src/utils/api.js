@@ -77,7 +77,7 @@ class Api {
         return this._axios.post("/auth/login", values).then((res) => {
             window.dispatchEvent(new Event("auth:login"));
             return res.data;
-        })
+        });
     }
 
     logout() {
@@ -94,7 +94,7 @@ class Api {
             .catch(async (e) => {
                 // fallback por si tu backend aún usa /auth/profile
                 if (e?.response?.status === 404) {
-                    const r = await this._axios.get("/auth/profile");
+                    const r = await this._axios.get("/auth/me");
                     return r.data;
                 }
                 throw e;
@@ -171,6 +171,31 @@ class Api {
     }
     updateIrd(id, values) {
         return this._axios.put(`/ird/${id}`, values).then((r) => r.data);
+    }
+
+    // ====== CARGA MASIVA DE IRDs ======
+    validateExcelIrds(file) {
+        const formData = new FormData();
+        formData.append("file", file);
+        return this._axios
+            .post("/irds/validate-excel", formData, {
+                headers: {
+                    "Content-Type": "multipart/form-data",
+                },
+            })
+            .then((r) => r.data);
+    }
+
+    bulkCreateIrds(file) {
+        const formData = new FormData();
+        formData.append("file", file);
+        return this._axios
+            .post("/irds/bulk-create", formData, {
+                headers: {
+                    "Content-Type": "multipart/form-data",
+                },
+            })
+            .then((r) => r.data);
     }
 
     getEquipo() {

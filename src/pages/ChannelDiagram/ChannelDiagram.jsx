@@ -644,7 +644,7 @@ const ChannelDiagram = () => {
             onNodesChange={handleNodesChange}
             onEdgesChange={onEdgesChange}
             onConnect={canEdit ? onConnect : undefined}
-            onEdgeUpdate={canEdit ? onEdgeUpdate : undefined}
+            onReconnect={canEdit ? onEdgeUpdate : undefined}
             onNodeDragStop={canEdit ? onNodeDragStop : undefined}
             onNodeClick={handleNodeClick}
             onNodeDoubleClick={canEdit ? handleNodeDoubleClick : undefined}
