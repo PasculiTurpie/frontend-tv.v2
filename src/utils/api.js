@@ -341,5 +341,7 @@ class Api {
     }
 }
 
-const api = new Api("http://localhost:3000/api/v2");
+const api = new Api(
+    import.meta.env.VITE_API_URL || "http://localhost:3000/api/v2"
+);
 export default api;

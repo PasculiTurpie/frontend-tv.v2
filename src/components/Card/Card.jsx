@@ -122,7 +122,7 @@ const Card = () => {
                     No se encuentran datos. Comuníquese con el administrador.
                 </p>
             ) : (
-                <div className="card__layout">
+                        <div className="card__layout" style={{ marginTop: '30px' }}>
                             <h3>{totalCards} señales en total, {tipoTv} TV y {tipoRadio} Radios</h3>
 
                     <div className="card__grid">

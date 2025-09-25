@@ -1,7 +1,7 @@
 // ChannelForm.jsx
 import { Field, Formik, Form } from "formik";
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import api from "../../utils/api";
 import Select from "react-select";
 import Swal from "sweetalert2";
@@ -72,14 +72,28 @@ const tipoToKey = (tipoNombre) => {
     return key; // "ird", etc.
 };
 
+// Normaliza a id string
+const toId = (v) => {
+    if (!v) return null;
+    if (typeof v === "string") return v;
+    if (typeof v === "object" && v._id) return String(v._id);
+    return null;
+};
+
 const ChannelForm = () => {
+    const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
+
+    // === Señales (select) ===
     const [optionsSelectChannel, setOptionSelectChannel] = useState([]);
+    const [signalsLoading, setSignalsLoading] = useState(true);
+    const [signalsError, setSignalsError] = useState(null);
     const [isSearchable] = useState(true);
 
     const [selectedValue, setSelectedValue] = useState(null); // id señal
     const [selectedId, setSelectedId] = useState(null); // label señal
 
-    // Para react-select agrupado: [{label, options:[...]}]
+    // === Equipos (select agrupado) ===
     const [optionsSelectEquipo, setOptionSelectEquipo] = useState([]);
     const [selectedEquipoValue, setSelectedEquipoValue] = useState(null); // id equipo
     const [selectedIdEquipo, setSelectedIdEquipo] = useState(null); // label equipo
@@ -99,89 +113,149 @@ const ChannelForm = () => {
     ];
     const [edgeDirection, setEdgeDirection] = useState(edgeDirOptions[0]);
 
+    // =========== Carga señales + channels, filtra solo NO usados ===========
     useEffect(() => {
-        // Señales
-        api.getSignal().then((res) => {
-            const opts = res.data.map((opt) => ({
-                label: `${opt.nameChannel} - ${opt.tipoTecnologia}`,
-                value: opt._id,
-            }));
-            setOptionSelectChannel(opts);
-        });
+        let mounted = true;
+        (async () => {
+            setSignalsLoading(true);
+            setSignalsError(null);
+            try {
+                const [signalsRes, channelsRes] = await Promise.all([
+                    api.getSignal(),          // /signals
+                    api.getChannelDiagram(),  // /channels
+                ]);
 
-        // Equipos (agrupar por tipo: Satélite / IRD / Switch / Router / Otros)
-        api.getEquipo().then((res) => {
-            const arr = res.data || [];
+                const signals = Array.isArray(signalsRes?.data) ? signalsRes.data : [];
+                const channels = Array.isArray(channelsRes?.data) ? channelsRes.data : [];
 
-            const satelites = [];
-            const irds = [];
-            const switches = [];
-            const routers = [];
-            const otros = [];
+                // IDs de signals usados en channel.signal
+                const usedSet = new Set(
+                    channels
+                        .map((ch) => toId(ch?.signal))
+                        .filter(Boolean)
+                );
 
-            for (const eq of arr) {
-                const key = tipoToKey(eq?.tipoNombre); // 'satelite' | 'ird' | 'switch' | 'router' | ...
+                // Solo señales que NO estén en usedSet
+                const unusedSignals = signals.filter((s) => !usedSet.has(toId(s?._id)));
 
-                // valores base
-                const baseName = (eq?.nombre?.toUpperCase?.() || eq?.nombre || "").trim();
+                // Opciones para react-select
+                const opts = unusedSignals.map((opt) => ({
+                    label: `${opt.nameChannel ?? opt.nombre ?? "Sin nombre"} - ${opt.tipoTecnologia ?? opt.tipo ?? ""}`.trim(),
+                    value: opt._id,
+                    raw: opt,
+                }));
 
-                // si es satélite, intenta sacar la polarización del populate
-                const pol =
-                    eq?.satelliteRef?.satelliteType?.typePolarization
-                        ? String(eq.satelliteRef.satelliteType.typePolarization).trim()
-                        : null;
+                if (!mounted) return;
+                setOptionSelectChannel(opts);
 
-                // arma label según el tipo
-                const labelForSatellite = pol ? `${baseName} ${pol}` : baseName;
-
-                const option = {
-                    label: baseName, // default
-                    value: eq?._id,
-                };
-
-                if (key === "satelite") {
-                    option.label = labelForSatellite;   // <-- concatena polarización
-                    satelites.push(option);
-                } else if (key === "ird") {
-                    irds.push(option);
-                } else if (key === "switch") {
-                    switches.push(option);
-                } else if (key === "router") {
-                    routers.push(option);
+                // Preselección por ?signalId=... si viene en la URL
+                const preId = searchParams.get("signalId");
+                if (preId && opts.some((o) => String(o.value) === String(preId))) {
+                    const found = opts.find((o) => String(o.value) === String(preId));
+                    setSelectedValue(found.value);
+                    setSelectedId(found.label);
                 } else {
-                    otros.push(option);
+                    setSelectedValue(null);
+                    setSelectedId(null);
                 }
+            } catch (e) {
+                if (!mounted) return;
+                setSignalsError(e);
+            } finally {
+                if (mounted) setSignalsLoading(false);
             }
+        })();
 
-            // Orden alfabético por label
-            const byLabel = (a, b) => a.label.localeCompare(b.label, "es", { sensitivity: "base" });
-            satelites.sort(byLabel);
-            irds.sort(byLabel);
-            switches.sort(byLabel);
-            routers.sort(byLabel);
-            otros.sort(byLabel);
+        return () => {
+            mounted = false;
+        };
+    }, [searchParams]);
 
-            // Estructura agrupada para react-select
-            const grouped = [
-                { label: "Satélites", options: satelites },
-                { label: "IRD", options: irds },
-                { label: "Switches", options: switches },
-                { label: "Routers", options: routers },
-                { label: "Otros equipos", options: otros },
-            ].filter((g) => g.options.length > 0);
+    // =========== Carga de Equipos (agrupado) ===========
+    useEffect(() => {
+        let mounted = true;
+        (async () => {
+            try {
+                const res = await api.getEquipo();
+                const arr = res.data || [];
 
-            setOptionSelectEquipo(grouped);
-        });
+                const satelites = [];
+                const irds = [];
+                const switches = [];
+                const routers = [];
+                const otros = [];
+
+                for (const eq of arr) {
+                    const key = tipoToKey(eq?.tipoNombre); // 'satelite' | 'ird' | 'switch' | 'router' | ...
+
+                    // valores base
+                    const baseName = (eq?.nombre?.toUpperCase?.() || eq?.nombre || "").trim();
+
+                    // si es satélite, intenta sacar la polarización del populate
+                    const pol =
+                        eq?.satelliteRef?.satelliteType?.typePolarization
+                            ? String(eq.satelliteRef.satelliteType.typePolarization).trim()
+                            : null;
+
+                    // arma label según el tipo
+                    const labelForSatellite = pol ? `${baseName} ${pol}` : baseName;
+
+                    const option = {
+                        label: baseName, // default
+                        value: eq?._id,
+                    };
+
+                    if (key === "satelite") {
+                        option.label = labelForSatellite; // concatena polarización
+                        satelites.push(option);
+                    } else if (key === "ird") {
+                        irds.push(option);
+                    } else if (key === "switch") {
+                        switches.push(option);
+                    } else if (key === "router") {
+                        routers.push(option);
+                    } else {
+                        otros.push(option);
+                    }
+                }
+
+                // Orden alfabético por label
+                const byLabel = (a, b) => a.label.localeCompare(b.label, "es", { sensitivity: "base" });
+                satelites.sort(byLabel);
+                irds.sort(byLabel);
+                switches.sort(byLabel);
+                routers.sort(byLabel);
+                otros.sort(byLabel);
+
+                // Estructura agrupada para react-select
+                const grouped = [
+                    { label: "Satélites", options: satelites },
+                    { label: "IRD", options: irds },
+                    { label: "Switches", options: switches },
+                    { label: "Routers", options: routers },
+                    { label: "Otros equipos", options: otros },
+                ].filter((g) => g.options.length > 0);
+
+                if (mounted) setOptionSelectEquipo(grouped);
+            } catch (e) {
+                // Si quieres, puedes mostrar un toast aquí
+                console.warn("Error cargando equipos:", e?.message);
+            }
+        })();
+
+        return () => {
+            mounted = false;
+        };
     }, []);
 
     const handleSelectedChannel = (e) => {
-        setSelectedValue(e.value);
-        setSelectedId(e.label);
+        setSelectedValue(e?.value || null);
+        setSelectedId(e?.label || null);
     };
 
     const handleSelectedEquipo = (e) => {
-        setSelectedEquipoValue(e.value);
-        setSelectedIdEquipo(e.label);
+        setSelectedEquipoValue(e?.value || null);
+        setSelectedIdEquipo(e?.label || null);
     };
 
     // Opciones para selects Source/Target basadas en nodos agregados
@@ -251,7 +325,7 @@ const ChannelForm = () => {
                                 label: n.data?.label,
                                 data: {
                                     label: n.data?.label || n.id,
-                                    equipoId: n.data?.equipoId, // ← sólo id (opción id-únicamente)
+                                    equipoId: n.data?.equipoId, // ← sólo id
                                     equipoNombre: n.data?.equipoNombre,
                                     tooltip: n.data?.tooltip,
                                 },
@@ -304,6 +378,9 @@ const ChannelForm = () => {
                             setEdgeSourceSel(null);
                             setEdgeTargetSel(null);
                             setEdgeDirection(edgeDirOptions[0]);
+
+                            // volver al listado o donde estimes
+                            // navigate("/channel_diagram-list");
                         } catch (e) {
                             const data = e?.response?.data;
                             console.warn("Create flow error:", {
@@ -327,15 +404,93 @@ const ChannelForm = () => {
                 >
                     {({ values, setFieldValue }) => (
                         <div className="container__form">
+                            {!signalsLoading && !signalsError && optionsSelectChannel.length > 0 && (
+                                <div style={{ fontSize: 13, color: "#475569", margin: "4px 0 10px" }}>
+                                    Disponibles: <strong>{optionsSelectChannel.length}</strong> señal(es) sin usar
+                                </div>
+                            )}
+
                             <Form className="form__add">
-                                {/* Select Señal */}
-                                <Select
-                                    className="select-width"
-                                    isSearchable={isSearchable}
-                                    options={optionsSelectChannel}
-                                    onChange={handleSelectedChannel}
-                                    placeholder="Seleccione una señal"
-                                />
+                                {/* Select Señal (filtrado: solo NO usadas) */}
+                                <div style={{ marginBottom: 8 }}>
+                                    {signalsLoading ? (
+                                        <Select
+                                            className="select-width"
+                                            isLoading
+                                            isDisabled
+                                            placeholder="Cargando señales…"
+                                        />
+                                    ) : signalsError ? (
+                                        <div
+                                            style={{
+                                                border: "1px solid #fee2e2",
+                                                background: "#fef2f2",
+                                                color: "#991b1b",
+                                                padding: 12,
+                                                borderRadius: 10,
+                                            }}
+                                        >
+                                            <strong>Error al cargar señales.</strong>
+                                            <div style={{ marginTop: 6 }}>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => window.location.reload()}
+                                                    style={{
+                                                        border: "1px solid #d1d5db",
+                                                        borderRadius: 8,
+                                                        padding: "6px 10px",
+                                                        background: "#fff",
+                                                        cursor: "pointer",
+                                                        fontWeight: 600,
+                                                    }}
+                                                >
+                                                    Reintentar
+                                                </button>
+                                            </div>
+                                        </div>
+                                    ) : optionsSelectChannel.length === 0 ? (
+                                        // ===== Estado vacío: no hay señales sin usar =====
+                                        <div
+                                            style={{
+                                                border: "1px dashed #cbd5e1",
+                                                background: "#f8fafc",
+                                                padding: 16,
+                                                borderRadius: 12,
+                                            }}
+                                        >
+                                            <h4 style={{ margin: 0, marginBottom: 6 }}>No hay señales disponibles</h4>
+                                            <p style={{ margin: 0, marginBottom: 12, color: "#475569" }}>
+                                                Todas las señales ya se encuentran vinculadas a un diagrama. Crea una nueva señal para continuar.
+                                            </p>
+                                            <button
+                                                type="button"
+                                                onClick={() => navigate("/signals/new")}
+                                                style={{
+                                                    padding: "8px 12px",
+                                                    borderRadius: 8,
+                                                    border: "1px solid #2563eb",
+                                                    background: "#2563eb",
+                                                    color: "#fff",
+                                                    cursor: "pointer",
+                                                    fontWeight: 600,
+                                                }}
+                                            >
+                                                + Crear nueva señal
+                                            </button>
+                                        </div>
+                                    ) : (
+                                        // ===== Sí hay señales disponibles: mostrar Select =====
+                                        <Select
+                                            className="select-width"
+                                            isSearchable={isSearchable}
+                                            isLoading={signalsLoading}
+                                            options={optionsSelectChannel}
+                                            onChange={handleSelectedChannel}
+                                            placeholder="Seleccione una señal"
+                                            noOptionsMessage={() => "No hay señales disponibles"}
+                                        />
+                                    )}
+                                </div>
 
                                 <hr />
 
@@ -564,7 +719,8 @@ const ChannelForm = () => {
                                         <ul style={{ marginTop: 6 }}>
                                             {draftEdges.map((e) => (
                                                 <li key={e.id}>
-                                                    <code>{e.id}</code> — {e.source} ({e.sourceHandle}) → {e.target} ({e.targetHandle}) — {e.label} —{" "}
+                                                    <code>{e.id}</code> — {e.source} ({e.sourceHandle}) → {e.target} (
+                                                    {e.targetHandle}) — {e.label} —{" "}
                                                     <span style={{ color: e.style?.stroke }}>{e.data?.direction}</span>
                                                 </li>
                                             ))}
@@ -574,9 +730,15 @@ const ChannelForm = () => {
 
                                 <hr />
 
-                                <button className="button btn-primary" type="submit">
+                                <button
+                                    className="button btn-primary"
+                                    type="submit"
+                                    disabled={!selectedValue}
+                                    title={!selectedValue ? "Seleccione una señal para continuar" : "Crear flujo"}
+                                >
                                     Crear flujo
                                 </button>
+
                             </Form>
                         </div>
                     )}
