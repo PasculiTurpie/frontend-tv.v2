@@ -6,7 +6,6 @@
   flex-wrap      : wrap;
   gap            : 30px;
   padding        : 50px 0;
-  margin         : auto;
   min-height     : calc(100dvh - 301px);
 }
 
