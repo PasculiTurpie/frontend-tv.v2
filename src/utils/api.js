@@ -1,4 +1,3 @@
-// src/utils/api.js
 import axios from "axios";
 
 // --- Control de refresh único + cola ---
@@ -17,13 +16,10 @@ class Api {
     constructor(url) {
         this._axios = axios.create({ baseURL: url, withCredentials: true });
 
-        // ❌ Ya NO usamos Authorization ni localStorage
         this._axios.interceptors.request.use((config) => {
-            // Nada que hacer: el backend lee cookies httpOnly
-            return config;
+            return config; // backend lee cookies httpOnly
         });
 
-        // ✅ Interceptor de respuesta: si access expira, refresca y reintenta
         this._axios.interceptors.response.use(
             (res) => res,
             async (error) => {
@@ -76,7 +72,6 @@ class Api {
 
     // ====== AUTH ======
     login(values) {
-        // Backend setea cookies (access_token, refresh_token, at_exp)
         return this._axios.post("/auth/login", values).then((res) => {
             window.dispatchEvent(new Event("auth:login"));
             return res.data;
@@ -84,18 +79,14 @@ class Api {
     }
 
     logout() {
-        // Backend limpia cookies
         return this._axios.post("/auth/logout").then((res) => res.data);
     }
 
-    // Tu endpoint decía /auth/profile, pero nuestro backend típico usa /auth/me
-    // Deja ambos por compatibilidad:
     profile() {
         return this._axios
             .get("/auth/me")
             .then((res) => res.data)
             .catch(async (e) => {
-                // fallback por si tu backend aún usa /auth/profile
                 if (e?.response?.status === 404) {
                     const r = await this._axios.get("/auth/me");
                     return r.data;
@@ -104,7 +95,7 @@ class Api {
             });
     }
 
-    // ====== Rutas de tu API (sin cambios funcionales) ======
+    // ====== API ======
     createUser(values) {
         return this._axios.post("/user", values).then((r) => r.data);
     }
@@ -176,15 +167,12 @@ class Api {
         return this._axios.put(`/ird/${id}`, values).then((r) => r.data);
     }
 
-    // ====== CARGA MASIVA DE IRDs ======
     validateExcelIrds(file) {
         const formData = new FormData();
         formData.append("file", file);
         return this._axios
             .post("/irds/validate-excel", formData, {
-                headers: {
-                    "Content-Type": "multipart/form-data",
-                },
+                headers: { "Content-Type": "multipart/form-data" },
             })
             .then((r) => r.data);
     }
@@ -194,9 +182,7 @@ class Api {
         formData.append("file", file);
         return this._axios
             .post("/irds/bulk-create", formData, {
-                headers: {
-                    "Content-Type": "multipart/form-data",
-                },
+                headers: { "Content-Type": "multipart/form-data" },
             })
             .then((r) => r.data);
     }
@@ -280,6 +266,7 @@ class Api {
             .then((r) => r.data);
     }
 
+    // ====== AUDIT ======
     getAuditLogs(params = {}) {
         const qs = new URLSearchParams();
         const push = (k, v) => {
