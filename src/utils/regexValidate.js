@@ -11,7 +11,7 @@ const otherEmail= /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 
 const urlRegex = /^(https?:\/\/)?([\w\-]+\.)+[a-zA-Z]{2,}(:\d+)?(\/[^\s]*)?$/;
 
-const phoneValidate = /^\+56\d{8,9}(,\s?\+56\d{8,9})?$/;
+const phoneValidate = /^(\+\d{1,4}[-.\s]?)?[\d\s.-]{7,18}$/;
 
 
 export {
