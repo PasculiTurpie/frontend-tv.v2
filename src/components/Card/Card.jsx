@@ -123,7 +123,13 @@ const Card = () => {
                 </p>
             ) : (
                         <div className="card__layout">
-                            <h3>{totalCards} señales en total, {tipoTv} TV y {tipoRadio} Radios</h3>
+                            
+                             <h3 className="card__heading">
+                                   <span className="card__total">{totalCards}</span> señales en total
+                                   <span className="pill pill--tv">TV: {tipoTv}</span>
+                                   <span className="pill pill--radio">Radios: {tipoRadio}</span>
+                                 </h3>
+
 
                     <div className="card__grid">
                         {currentCards.map((signalItem) => {

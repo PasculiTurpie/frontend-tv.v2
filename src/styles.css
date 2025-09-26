@@ -1,5 +1,77 @@
 :root {
     --card-top-offset: 30px;
+    --tv     :#2563eb;
+/* azul */
+--radio  :#16a34a;
+/* verde */
+--text   :#1f2937;
+/* gris oscuro */
+--bg     :#ffffff;
+--pill-bg: rgba(0, 0, 0, .04);
+--ring   : rgba(0, 0, 0, .12);
+}
+
+.card__heading {
+    display    : flex;
+    align-items: center;
+    gap        : 10px;
+    margin     : 0 0 8px 0;
+    /* sin margen arriba; queda bien con el top 30px */
+    color      : var(--text);
+    font-weight: 600;
+    line-height: 1.2;
+    flex-wrap  : wrap;
+    /* para que en móviles baje a la línea siguiente */
+}
+
+.card__total {
+    font-weight         : 800;
+    padding             : 2px 6px;
+    border-radius       : 10px;
+    background          : var(--pill-bg);
+    border              : 1px solid var(--ring);
+    font-variant-numeric: tabular-nums;
+    /* alinea números mejor */
+}
+
+/* Píldoras */
+.pill {
+    display       : inline-flex;
+    align-items   : center;
+    gap           : 6px;
+    padding       : 4px 10px;
+    border-radius : 9999px;
+    font-size     : .875rem;
+    font-weight   : 700;
+    letter-spacing: .2px;
+    background    : var(--pill-bg);
+    border        : 1px solid var(--ring);
+}
+
+/* Colores por tipo */
+.pill--tv {
+    color       : var(--tv);
+    border-color: color-mix(in srgb, var(--tv) 45%, #0000);
+    background  : color-mix(in srgb, var(--tv) 12%, #fff);
+}
+
+.pill--radio {
+    color       : var(--radio);
+    border-color: color-mix(in srgb, var(--radio) 45%, #0000);
+    background  : color-mix(in srgb, var(--radio) 12%, #fff);
+}
+
+/* Fallback si el navegador no soporta color-mix */
+@supports not (color: color-mix(in srgb, #000 50%, #fff)) {
+    .pill--tv {
+        border-color: rgba(37, 99, 235, .45);
+        background  : rgba(37, 99, 235, .12);
+    }
+
+    .pill--radio {
+        border-color: rgba(22, 163, 74, .45);
+        background  : rgba(22, 163, 74, .12);
+    }
 }
 
 /* Fuerza el offset superior constante */
