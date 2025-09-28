@@ -2,23 +2,39 @@ import { Navigate, Outlet } from "react-router-dom";
 import { useEffect, useState } from "react";
 import api from "../../utils/api";
 
-// Ruta protegida basada en cookies httpOnly:
-// - Llama a /auth/me (o /auth/profile fallback en api.js) para verificar sesión.
-// - Si 200 => deja pasar; si no => redirige a /auth/login.
 export default function ProtectedRoute() {
   const [ok, setOk] = useState(null);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     let mounted = true;
-    api._axios
-      .get("/auth/me")
-      .then(() => mounted && setOk(true))
-      .catch(() => mounted && setOk(false));
+
+    const checkAuth = async () => {
+      try {
+        const response = await api.profile();
+        console.log('Usuario autenticado:', response);
+        if (mounted) setOk(true);
+      } catch (error) {
+        console.log('Error de autenticación:', error?.response?.status, error?.response?.data);
+        if (mounted) {
+          setOk(false);
+          setError(error?.response?.data?.error || 'No autorizado');
+        }
+      }
+    };
+
+    checkAuth();
+
     return () => {
       mounted = false;
     };
   }, []);
 
-  if (ok === null) return <div style={{ padding: 16 }}>Cargando...</div>;
+  if (ok === null) return <div style={{ padding: 16 }}>Verificando sesión...</div>;
+
+  if (error && error.includes('token_expired')) {
+    return <div style={{ padding: 16 }}>Sesión expirada, redirigiendo...</div>;
+  }
+
   return ok ? <Outlet /> : <Navigate to="/auth/login" replace />;
 }

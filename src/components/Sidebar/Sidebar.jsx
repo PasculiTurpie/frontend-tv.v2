@@ -8,6 +8,8 @@ import { UserContext } from '../context/UserContext';
 const Sidebar = () => {
   const { user } = useContext(UserContext);
 
+  console.log('Usuario en componente:', user);
+
   return (
     <div className="sidebar">
       {user?.profilePicture && (
@@ -77,6 +79,9 @@ const Sidebar = () => {
         </p>
         <li>
           <Link to="/audit-logs">Logs</Link>
+        </li>
+        <li>
+          <Link to="/massive-loading ">Carga Masiva IRD's</Link>
         </li>
         <hr />
         <li>

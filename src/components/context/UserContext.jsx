@@ -9,13 +9,16 @@ export const UserProvider = ({ children }) => {
   const [isAuth, setIsAuth] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  // Chequeo centralizado de sesión (lee cookie httpOnly desde el backend)
   const refreshAuth = useCallback(async () => {
     try {
-      const res = await api.profile(); // intenta /auth/me, fallback /auth/profile
-      setUser(res || null);
-      setIsAuth(true);
-    } catch {
+      const res = await api.profile();
+      // Guardar TODOS los datos del usuario, incluyendo imagen
+      const userData = res?.user || res || null;
+      console.log('Datos del usuario recuperados:', userData); // Debug
+      setUser(userData);
+      setIsAuth(!!userData);
+    } catch (error) {
+      console.log('Error al recuperar perfil:', error);
       setUser(null);
       setIsAuth(false);
     }
@@ -28,7 +31,6 @@ export const UserProvider = ({ children }) => {
       if (mounted) setLoading(false);
     })();
 
-    // Revalidar al volver a la pestaña (útil si expira o se renueva en segundo plano)
     const onVisibility = async () => {
       if (document.visibilityState === "visible") {
         await refreshAuth();
@@ -54,7 +56,7 @@ export const UserProvider = ({ children }) => {
         isAuth,
         setIsAuth,
         loading,
-        refreshAuth, // expuesto para que Nav u otros revaliden si lo necesitan
+        refreshAuth,
       }}
     >
       {children}

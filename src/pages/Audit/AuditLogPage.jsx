@@ -1,4 +1,3 @@
-// src/pages/Audit/AuditLogPage.jsx
 import React, { useEffect, useState } from "react";
 import api from "../../utils/api";
 import Swal from "sweetalert2";
@@ -8,10 +7,10 @@ const initialFilters = {
   userId: "",
   email: "",
   action: "",          // create|update|delete|login|logout|read
-  method: "",          // GET|POST|PUT|DELETE
+  method: "",          // GET|POST|PUT|DELETE|PATCH
   ip: "",
   resource: "",
-  status: "",          // número exacto (200, 401, ...)
+  status: "",
   statusMin: "",
   statusMax: "",
   dateFrom: "",
@@ -287,11 +286,14 @@ export default function AuditLogPage() {
                     {when}
                   </td>
                   <td style={{ padding: 8, borderBottom: "1px solid #f2f2f2" }}>
-                    <div><b>{r.userEmail || "-"}</b></div>
-                    <div style={{ fontSize: 12, color: "#555" }}>{r.userId || "-"}</div>
+                    <div style={{ fontWeight: 700 }}>
+                      {r.userEmail ? r.userEmail : "usuario no autenticado"}
+                    </div>
                   </td>
                   <td style={{ padding: 8, borderBottom: "1px solid #f2f2f2" }}>{r.action || "-"}</td>
-                  <td style={{ padding: 8, borderBottom: "1px solid #f2f2f2" }}>{r.method || "-"}</td>
+                  <td style={{ padding: 8, borderBottom: "1px solid " + (r.method ? "#f2f2f2" : "#f2f2f2") }}>
+                    {r.method || "-"}
+                  </td>
                   <td style={{ padding: 8, borderBottom: "1px solid #f2f2f2" }}>{r.resource || "-"}</td>
                   <td style={{ padding: 8, borderBottom: "1px solid #f2f2f2", maxWidth: 420 }}>
                     <div style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
