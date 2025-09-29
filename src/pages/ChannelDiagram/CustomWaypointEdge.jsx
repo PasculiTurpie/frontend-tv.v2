@@ -1,53 +1,12 @@
-import React, { useCallback, useMemo, useRef } from "react";
+import React, { useCallback, useContext, useMemo } from "react";
 import { BaseEdge, EdgeLabelRenderer, useReactFlow } from "@xyflow/react";
-
-const DraggableLabel = ({ x, y, children, onPointerDown }) => (
-  <EdgeLabelRenderer>
-    <div
-      onMouseDown={onPointerDown}
-      onTouchStart={onPointerDown}
-      style={{
-        position: "absolute",
-        transform: `translate(-50%, -50%) translate(${x}px, ${y}px)`,
-        pointerEvents: "all",
-        background: "#fff",
-        border: "1px solid #e5e7eb",
-        borderRadius: 6,
-        padding: "4px 8px",
-        fontSize: 12,
-        boxShadow: "0 1px 4px rgba(0,0,0,0.08)",
-        cursor: "grab",
-        userSelect: "none",
-        whiteSpace: "nowrap",
-      }}
-      className="nodrag nopan"
-    >
-      {children}
-    </div>
-  </EdgeLabelRenderer>
-);
+import { UserContext } from "../../components/context/UserContext"; // ⬅️ ruta real
 
 export default function CustomWaypointEdge(props) {
-  const {
-    id,
-    sourceX,
-    sourceY,
-    targetX,
-    targetY,
-    style,
-    markerEnd,
-    data = {},
-    label,
-  } = props;
-
+  const { id, sourceX, sourceY, targetX, targetY, style, markerEnd, data = {}, label } = props;
   const rf = useReactFlow();
-  const dragLabelRef = useRef({
-    dragging: false,
-    startPane: { x: 0, y: 0 },
-    startOffset: { x: 0, y: 0 },
-  });
+  const { isAuth } = useContext(UserContext);
 
-  // Construye un path poligonal con waypoints existentes (sin edición desde UI)
   const points = useMemo(() => {
     const wp = Array.isArray(data.waypoints) ? data.waypoints : [];
     return [{ x: sourceX, y: sourceY }, ...wp, { x: targetX, y: targetY }];
@@ -60,12 +19,11 @@ export default function CustomWaypointEdge(props) {
     return `M ${start.x} ${start.y} ${segs}`;
   }, [points]);
 
-  // Posición por defecto del label = mitad del largo total
+  const text = (data?.label ?? label) ?? "";
+
   const defaultLabelPos = useMemo(() => {
     let total = 0;
-    for (let i = 1; i < points.length; i++)
-      total += Math.hypot(points[i].x - points[i - 1].x, points[i].y - points[i - 1].y);
-
+    for (let i = 1; i < points.length; i++) total += Math.hypot(points[i].x - points[i - 1].x, points[i].y - points[i - 1].y);
     let half = total / 2;
     for (let i = 1; i < points.length; i++) {
       const a = points[i - 1], b = points[i];
@@ -80,73 +38,88 @@ export default function CustomWaypointEdge(props) {
 
   const labelPos = useMemo(() => {
     const lp = data?.labelPos;
-    return {
-      x: Number.isFinite(lp?.x) ? lp.x : defaultLabelPos.x,
-      y: Number.isFinite(lp?.y) ? lp.y : defaultLabelPos.y,
-    };
+    return { x: Number.isFinite(lp?.x) ? lp.x : defaultLabelPos.x, y: Number.isFinite(lp?.y) ? lp.y : defaultLabelPos.y };
   }, [data?.labelPos, defaultLabelPos]);
 
-  // Drag del label → persistir en data.labelPos
-  const onPointerDownLabel = useCallback(
-    (e) => {
-      e.stopPropagation();
-      e.preventDefault();
-      const startClient = {
-        x: "touches" in e ? e.touches[0].clientX : e.clientX,
-        y: "touches" in e ? e.touches[0].clientY : e.clientY,
-      };
-      const startPane = rf.project(startClient);
+  const onDragMove = useCallback((next) => {
+    if (!isAuth) return;
+    rf.setEdges((eds) =>
+      eds.map((e) =>
+        e.id === id ? { ...e, data: { ...(e.data || {}), labelPos: next } } : e
+      )
+    );
+  }, [rf, id, isAuth]);
 
-      dragLabelRef.current.dragging = true;
-      dragLabelRef.current.startPane = startPane;
-      dragLabelRef.current.startOffset = {
-        x: (data?.labelPos?.x ?? labelPos.x) - startPane.x,
-        y: (data?.labelPos?.y ?? labelPos.y) - startPane.y,
-      };
+  const startEdit = useCallback((e) => {
+    if (!isAuth) return;
+    e.stopPropagation(); e.preventDefault();
+    const v = window.prompt("Editar etiqueta", String(text));
+    if (v !== null) {
+      rf.setEdges((eds) =>
+        eds.map((e) =>
+          e.id === id ? { ...e, label: v, data: { ...(e.data || {}), label: v } } : e
+        )
+      );
+      window.dispatchEvent(new Event("flow:save"));
+    }
+  }, [rf, id, text, isAuth]);
 
-      const onMove = (ev) => {
-        if (!dragLabelRef.current.dragging) return;
-        const currClient = {
-          x: "touches" in ev ? ev.touches[0].clientX : ev.clientX,
-          y: "touches" in ev ? ev.touches[0].clientY : ev.clientY,
-        };
-        const currPane = rf.project(currClient);
-        const next = {
-          x: currPane.x + dragLabelRef.current.startOffset.x,
-          y: currPane.y + dragLabelRef.current.startOffset.y,
-        };
+  const onPointerDown = useCallback((e) => {
+    if (!isAuth) return;
+    e.stopPropagation(); e.preventDefault();
 
-        window.dispatchEvent(
-          new CustomEvent("edge-data-change", {
-            detail: { edgeId: id, dataPatch: { labelPos: next } },
-          })
-        );
-      };
+    const startClient = { x: "touches" in e ? e.touches[0].clientX : e.clientX, y: "touches" in e ? e.touches[0].clientY : e.clientY };
+    const startPane = rf.project(startClient);
+    const startOffset = { x: (labelPos.x ?? startPane.x) - startPane.x, y: (labelPos.y ?? startPane.y) - startPane.y };
 
-      const onUp = () => {
-        dragLabelRef.current.dragging = false;
-        window.removeEventListener("mousemove", onMove);
-        window.removeEventListener("mouseup", onUp);
-        window.removeEventListener("touchmove", onMove);
-        window.removeEventListener("touchend", onUp);
-      };
+    const onMove = (ev) => {
+      const currClient = { x: "touches" in ev ? ev.touches[0].clientX : ev.clientX, y: "touches" in ev ? ev.touches[0].clientY : ev.clientY };
+      const currPane = rf.project(currClient);
+      const next = { x: currPane.x + startOffset.x, y: currPane.y + startOffset.y };
+      onDragMove(next);
+    };
 
-      window.addEventListener("mousemove", onMove);
-      window.addEventListener("mouseup", onUp);
-      window.addEventListener("touchmove", onMove, { passive: false });
-      window.addEventListener("touchend", onUp);
-    },
-    [id, data, labelPos, rf]
-  );
+    const onUp = () => {
+      window.removeEventListener("mousemove", onMove);
+      window.removeEventListener("mouseup", onUp);
+      window.removeEventListener("touchmove", onMove);
+      window.removeEventListener("touchend", onUp);
+      window.dispatchEvent(new Event("flow:save")); // guarda al soltar
+    };
+
+    window.addEventListener("mousemove", onMove);
+    window.addEventListener("mouseup", onUp);
+    window.addEventListener("touchmove", onMove, { passive: false });
+    window.addEventListener("touchend", onUp);
+  }, [rf, labelPos, onDragMove, isAuth]);
 
   return (
     <>
       <BaseEdge id={id} path={pathD} style={style} markerEnd={markerEnd} />
-      {(label || data?.label) && (
-        <DraggableLabel x={labelPos.x} y={labelPos.y} onPointerDown={onPointerDownLabel}>
-          {label || data?.label}
-        </DraggableLabel>
-      )}
+      <EdgeLabelRenderer>
+        <div
+          onMouseDown={onPointerDown}
+          onDoubleClick={startEdit}
+          style={{
+            position: "absolute",
+            transform: `translate(-50%, -50%) translate(${labelPos.x}px, ${labelPos.y}px)`,
+            pointerEvents: "all",
+            background: "#fff",
+            border: "1px solid #e5e7eb",
+            borderRadius: 6,
+            padding: "4px 8px",
+            fontSize: 12,
+            boxShadow: "0 1px 4px rgba(0,0,0,0.08)",
+            cursor: isAuth ? "grab" : "default",
+            userSelect: "none",
+            whiteSpace: "nowrap",
+          }}
+          className="nodrag nopan"
+          title={isAuth ? "Doble click para editar. Arrastra para mover." : "Solo lectura"}
+        >
+          {text}
+        </div>
+      </EdgeLabelRenderer>
     </>
   );
 }
