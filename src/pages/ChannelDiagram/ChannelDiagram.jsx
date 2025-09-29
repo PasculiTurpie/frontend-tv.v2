@@ -1,8 +1,5 @@
-<<<<<<< HEAD
+// src/pages/ChannelDiagram/ChannelDiagram.jsx
 import React, { useCallback, useContext, useEffect, useRef, useState } from "react";
-=======
-import React, { useCallback, useEffect, useRef, useState, useContext } from "react";
->>>>>>> 8b18bc4b83d1cccd6394ca52bdc67137d1fa383f
 import {
   ReactFlow,
   Background,
@@ -15,13 +12,8 @@ import {
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import api from "../../utils/api";
-<<<<<<< HEAD
 import { useParams } from "react-router-dom";
-import { UserContext } from "../../components/context/UserContext"; // ⬅️ usa tu ruta real del UserContext
-=======
-import { useParams, useNavigate } from "react-router-dom";
-import { UserContext } from "../../components/context/UserContext"; // Ajusta la ruta según tu estructura
->>>>>>> 8b18bc4b83d1cccd6394ca52bdc67137d1fa383f
+import { UserContext } from "../../components/context/UserContext"; // ajusta la ruta si tu contexto está en otro lugar
 import CustomNode from "./CustomNode";
 import CustomDirectionalEdge from "./CustomDirectionalEdge";
 import CustomWaypointEdge from "./CustomWaypointEdge";
@@ -124,12 +116,6 @@ const useDebouncedSaver = (fn, delay = 600) => {
 const COLOR_OUT = "red";
 const COLOR_BACK = "green";
 
-<<<<<<< HEAD
-=======
-/**
- * Marca ida/vuelta por par (dash + __reversed) y aplica color auto si corresponde.
- */
->>>>>>> 8b18bc4b83d1cccd6394ca52bdc67137d1fa383f
 const recomputeReverseFlags = (eds) => {
   const groups = new Map();
   for (const e of eds) {
@@ -153,15 +139,6 @@ const recomputeReverseFlags = (eds) => {
     if (reversed) nextStyle.strokeDasharray = nextStyle.strokeDasharray || "4 3";
     else if (nextStyle.strokeDasharray) delete nextStyle.strokeDasharray;
 
-<<<<<<< HEAD
-=======
-    if (reversed) {
-      nextStyle.strokeDasharray = nextStyle.strokeDasharray || "4 3";
-    } else if (nextStyle.strokeDasharray) {
-      delete nextStyle.strokeDasharray;
-    }
-
->>>>>>> 8b18bc4b83d1cccd6394ca52bdc67137d1fa383f
     const wasAuto = !!e?.data?.__autoColor;
     const shouldAutoPaint = bidir && (wasAuto || !nextStyle.stroke);
     if (shouldAutoPaint) nextStyle.stroke = reversed ? COLOR_BACK : COLOR_OUT;
@@ -176,12 +153,7 @@ const recomputeReverseFlags = (eds) => {
 
 const ChannelDiagram = () => {
   const { id } = useParams();
-<<<<<<< HEAD
-  const { isAuth } = useContext(UserContext); // ⬅️ estado de login
-=======
-  const navigate = useNavigate();
-  const { user, isAuth } = useContext(UserContext); // Hook de autenticación
->>>>>>> 8b18bc4b83d1cccd6394ca52bdc67137d1fa383f
+  const { isAuth } = useContext(UserContext);
 
   const [signal, setSignal] = useState({});
   const [equipo, setEquipo] = useState(null);
@@ -199,36 +171,6 @@ const ChannelDiagram = () => {
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
 
-<<<<<<< HEAD
-=======
-  // Estado para la edición de labels
-  const [editingNode, setEditingNode] = useState(null);
-  const [editingEdge, setEditingEdge] = useState(null);
-  const [tempLabel, setTempLabel] = useState("");
-
-  // Verificar si el usuario puede editar
-  const canEdit = isAuth && user;
-
-  /* ─── BRIDGE: aplica patches desde edges (label drag) ─────────────────── */
-  useEffect(() => {
-    const onEdgeDataChange = (ev) => {
-      const { edgeId, dataPatch, edgePatch } = ev.detail || {};
-      if (!edgeId) return;
-      setEdges((eds) =>
-        eds.map((e) => {
-          if (e.id !== edgeId) return e;
-          const next = { ...e };
-          if (edgePatch) Object.assign(next, edgePatch);
-          if (dataPatch) next.data = { ...(next.data || {}), ...dataPatch };
-          return next;
-        })
-      );
-    };
-    window.addEventListener("edge-data-change", onEdgeDataChange);
-    return () => window.removeEventListener("edge-data-change", onEdgeDataChange);
-  }, [setEdges]);
-
->>>>>>> 8b18bc4b83d1cccd6394ca52bdc67137d1fa383f
   /* ─── carga inicial ───────────────────────────────────────────────────── */
   useEffect(() => {
     let mounted = true;
@@ -280,11 +222,7 @@ const ChannelDiagram = () => {
             target: String(e.target),
             sourceHandle,
             targetHandle,
-<<<<<<< HEAD
             label: e.label,
-=======
-            label: e.label || "",
->>>>>>> 8b18bc4b83d1cccd6394ca52bdc67137d1fa383f
             data: { ...(e.data || {}), waypoints, __autorouted: true },
             type: finalType,
             animated: e.animated ?? true,
@@ -323,11 +261,11 @@ const ChannelDiagram = () => {
           target: ed.target,
           sourceHandle: ed.sourceHandle,
           targetHandle: ed.targetHandle,
-          label: ed.label,                 // compat
+          label: ed.label,
           type: ed.type || "directional",
           style: ed.style,
           markerEnd: ed.markerEnd,
-          data: sanitizeData(ed.data),     // label, labelPos, etc.
+          data: sanitizeData(ed.data),
           animated: ed.animated ?? true,
         })),
       });
@@ -345,7 +283,6 @@ const ChannelDiagram = () => {
     requestSave(nodes, edges);
   }, [nodes, edges, requestSave]);
 
-<<<<<<< HEAD
   // save inmediato (emitido por editores)
   useEffect(() => {
     const handler = () => requestSave(nodes, edges);
@@ -356,61 +293,6 @@ const ChannelDiagram = () => {
   /* ─── conectar ───────────────────────────────────────────────────────── */
   const onConnect = useCallback((connection) => {
     if (!isAuth) return; // bloquea edición si no logueado
-=======
-  /* ─── Funciones para editar labels (solo si está autenticado) ──────────── */
-  const startEditingNodeLabel = useCallback((nodeId, currentLabel) => {
-    if (!canEdit) return;
-    setEditingNode(nodeId);
-    setTempLabel(currentLabel || "");
-  }, [canEdit]);
-
-  const startEditingEdgeLabel = useCallback((edgeId, currentLabel) => {
-    if (!canEdit) return;
-    setEditingEdge(edgeId);
-    setTempLabel(currentLabel || "");
-  }, [canEdit]);
-
-  const saveNodeLabel = useCallback(() => {
-    if (!editingNode || !canEdit) return;
-    setNodes((nds) =>
-      nds.map((node) => {
-        if (node.id === editingNode) {
-          return {
-            ...node,
-            data: { ...node.data, label: tempLabel }
-          };
-        }
-        return node;
-      })
-    );
-    setEditingNode(null);
-    setTempLabel("");
-  }, [editingNode, tempLabel, setNodes, canEdit]);
-
-  const saveEdgeLabel = useCallback(() => {
-    if (!editingEdge || !canEdit) return;
-    setEdges((eds) =>
-      eds.map((edge) => {
-        if (edge.id === editingEdge) {
-          return { ...edge, label: tempLabel };
-        }
-        return edge;
-      })
-    );
-    setEditingEdge(null);
-    setTempLabel("");
-  }, [editingEdge, tempLabel, setEdges, canEdit]);
-
-  const cancelEditing = useCallback(() => {
-    setEditingNode(null);
-    setEditingEdge(null);
-    setTempLabel("");
-  }, []);
-
-  /* ─── conectar (solo si está autenticado) ────────────────────────────── */
-  const onConnect = useCallback((connection) => {
-    if (!canEdit) return;
->>>>>>> 8b18bc4b83d1cccd6394ca52bdc67137d1fa383f
     setEdges((eds) => {
       const nodesIdx = indexNodes(nodes);
       const sNode = nodesIdx[String(connection.source)];
@@ -425,25 +307,16 @@ const ChannelDiagram = () => {
         style: { stroke: "#000", strokeWidth: 2 },
         markerEnd: { type: MarkerType.ArrowClosed, color: "#000" },
         data: { label: `${connection.source}→${connection.target}`, waypoints: [], __autorouted: true },
-        label: "",
         updatable: "both",
         interactionWidth: 24,
       };
       return recomputeReverseFlags(addEdge(newEdge, eds));
     });
-<<<<<<< HEAD
   }, [nodes, setEdges, isAuth]);
-=======
-  }, [nodes, setEdges, canEdit]);
->>>>>>> 8b18bc4b83d1cccd6394ca52bdc67137d1fa383f
 
-  /* ─── actualizar edge (solo si está autenticado) ──────────────────────── */
+  /* ─── actualizar edge (reconexión) ───────────────────────────────────── */
   const onEdgeUpdate = useCallback((oldEdge, connection) => {
-<<<<<<< HEAD
     if (!isAuth) return; // bloquea edición si no logueado
-=======
-    if (!canEdit) return;
->>>>>>> 8b18bc4b83d1cccd6394ca52bdc67137d1fa383f
     setEdges((eds) => {
       const idx = eds.findIndex((e) => e.id === oldEdge.id);
       if (idx === -1) return eds;
@@ -481,44 +354,22 @@ const ChannelDiagram = () => {
       next[idx] = updatedEdge;
       return recomputeReverseFlags(next);
     });
-<<<<<<< HEAD
   }, [nodes, setEdges, isAuth]);
 
   /* ─── mover nodos: re‐enrutar ─────────────────────────────────────────── */
   const handleNodesChange = useCallback((changes) => {
     if (!isAuth) return; // bloquea edición si no logueado
-=======
-  }, [nodes, setEdges, canEdit]);
-
-  /* ─── mover nodos: re‐enrutar edges (solo si está autenticado) ────────── */
-  const handleNodesChange = useCallback((changes) => {
-    // Permitir solo cambios de posición si no está autenticado
-    if (!canEdit) {
-      const onlyPositionChanges = changes.filter(c => c.type === 'position');
-      if (onlyPositionChanges.length === 0) return;
-      onNodesChange(onlyPositionChanges);
-      return;
-    }
-
->>>>>>> 8b18bc4b83d1cccd6394ca52bdc67137d1fa383f
     onNodesChange(changes);
     if (!changes.some((c) => c.type === "position")) return;
 
     setEdges((eds) => {
       const nodesIdx = indexNodes(nodes);
-<<<<<<< HEAD
-=======
-
->>>>>>> 8b18bc4b83d1cccd6394ca52bdc67137d1fa383f
       let next = eds.map((e) => {
         if (e.type === "waypoint" && Array.isArray(e?.data?.waypoints) && e.data.waypoints.length) return e;
         return autoRouteEdge(e, nodesIdx, eds);
       });
 
-<<<<<<< HEAD
       // si el label NO está “pinned”, limpiamos labelPos para recálculo
-=======
->>>>>>> 8b18bc4b83d1cccd6394ca52bdc67137d1fa383f
       next = next.map((e) => {
         if (e?.data?.labelPinned) return e;
         if (e?.data?.labelPos === undefined) return e;
@@ -529,7 +380,6 @@ const ChannelDiagram = () => {
       next = recomputeReverseFlags(next);
       return next;
     });
-<<<<<<< HEAD
   }, [nodes, onNodesChange, setEdges, isAuth]);
 
   /* ─── persistir al soltar ─────────────────────────────────────────────── */
@@ -537,15 +387,6 @@ const ChannelDiagram = () => {
     if (!isAuth) return;
     requestSave(nodes, edges);
   }, [nodes, edges, requestSave, isAuth]);
-=======
-  }, [nodes, onNodesChange, setEdges, canEdit]);
-
-  /* ─── persistir tras soltar un nodo (solo si está autenticado) ────────── */
-  const onNodeDragStop = useCallback(() => {
-    if (!canEdit) return;
-    requestSave(nodes, edges);
-  }, [nodes, edges, requestSave, canEdit]);
->>>>>>> 8b18bc4b83d1cccd6394ca52bdc67137d1fa383f
 
   /* ─── detalle equipo ─────────────────────────────────────────────────── */
   const fetchEquipo = useCallback(async (equipoId) => {
@@ -576,20 +417,6 @@ const ChannelDiagram = () => {
     const raw = node?.data?.equipoId ?? node?.data?.equipo?._id ?? node?.equipo ?? null;
     fetchEquipo(toIdString(raw));
   }, [fetchEquipo]);
-
-  // Manejar doble click en nodos para editar label (solo si está autenticado)
-  const handleNodeDoubleClick = useCallback((evt, node) => {
-    if (!canEdit) return;
-    evt.stopPropagation();
-    startEditingNodeLabel(node.id, node.data?.label || "");
-  }, [startEditingNodeLabel, canEdit]);
-
-  // Manejar doble click en edges para editar label (solo si está autenticado)
-  const handleEdgeDoubleClick = useCallback((evt, edge) => {
-    if (!canEdit) return;
-    evt.stopPropagation();
-    startEditingEdgeLabel(edge.id, edge.label || "");
-  }, [startEditingEdgeLabel, canEdit]);
 
   /* ─── auto-carga IRD / SAT ───────────────────────────────────────────── */
   useEffect(() => {
@@ -626,62 +453,9 @@ const ChannelDiagram = () => {
   return (
     <div className="outlet-main" style={{ display: "grid", gridTemplateColumns: "minmax(0, 1fr) 380px", gap: 16, width: "100%", minHeight: "70vh" }}>
       <div style={{ minWidth: 0, border: "1px solid #ddd", borderRadius: 8, overflow: "hidden", display: "flex", flexDirection: "column" }}>
-        {/* Header con título + botón Volver + instrucciones */}
-        <div
-          style={{
-            padding: "8px 12px",
-            borderBottom: "1px solid #eee",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            gap: 12,
-          }}
-        >
-          <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-            <div style={{ fontWeight: 600, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-              {signal?.signal?.nameChannel || "Diagrama de Canal"}{" "}
-              {signal?.signal?.tipoTecnologia && `(${String(signal.signal.tipoTecnologia).toUpperCase()})`}
-            </div>
-            <div style={{ fontSize: "0.75rem", color: "#6b7280", fontStyle: "italic" }}>
-              {canEdit
-                ? "Doble clic en nodos o conexiones para editar etiquetas"
-                : "Inicia sesión para editar el diagrama"
-              }
-            </div>
-          </div>
-          <button
-            type="button"
-            onClick={() => navigate(-1)}
-            title="Volver a la página anterior"
-            style={{
-              marginLeft: "auto",
-              padding: "8px 12px",
-              borderRadius: 8,
-              border: "1px solid #1e3a8a",
-              background: "#1e3a8a",
-              color: "#ffffff",
-              cursor: "pointer",
-              fontWeight: 600,
-              boxShadow: "0 1px 2px rgba(0,0,0,0.06)",
-              transition: "background 120ms ease, border-color 120ms ease, box-shadow 120ms ease",
-            }}
-            onMouseOver={(e) => {
-              e.currentTarget.style.background = "#1d4ed8";
-              e.currentTarget.style.borderColor = "#1d4ed8";
-            }}
-            onMouseOut={(e) => {
-              e.currentTarget.style.background = "#1e3a8a";
-              e.currentTarget.style.borderColor = "#1e3a8a";
-            }}
-            onFocus={(e) => {
-              e.currentTarget.style.boxShadow = "0 0 0 3px rgba(29,78,216,0.35)";
-            }}
-            onBlur={(e) => {
-              e.currentTarget.style.boxShadow = "0 1px 2px rgba(0,0,0,0.06)";
-            }}
-          >
-            ← Volver
-          </button>
+        <div style={{ padding: "8px 12px", borderBottom: "1px solid #eee", fontWeight: 600 }}>
+          {signal?.signal?.nameChannel || "Diagrama de Canal"}{" "}
+          {signal?.signal?.tipoTecnologia && `(${String(signal.signal.tipoTecnologia).toUpperCase()})`}
         </div>
 
         <div style={{ width: "100%", height: "72vh", position: "relative" }}>
@@ -707,146 +481,32 @@ const ChannelDiagram = () => {
             edgeTypes={edgeTypes}
             onNodesChange={handleNodesChange}
             onEdgesChange={onEdgesChange}
-            onConnect={canEdit ? onConnect : undefined}
-            onReconnect={canEdit ? onEdgeUpdate : undefined}
-            onNodeDragStop={canEdit ? onNodeDragStop : undefined}
+            onConnect={onConnect}
+            onEdgeUpdate={onEdgeUpdate}
+            onNodeDragStop={onNodeDragStop}
             onNodeClick={handleNodeClick}
-            onNodeDoubleClick={canEdit ? handleNodeDoubleClick : undefined}
-            onEdgeDoubleClick={canEdit ? handleEdgeDoubleClick : undefined}
             fitView
             fitViewOptions={{ padding: 0.2 }}
             style={{ width: "100%", height: "100%", background: "#DCDCDC" }}
             proOptions={{ hideAttribution: true }}
             connectionMode={ConnectionMode.Loose}
-            nodesDraggable={canEdit}
-            nodesConnectable={canEdit}
-            elementsSelectable={true}
             defaultEdgeOptions={{
               animated: true,
               markerEnd: { type: MarkerType.ArrowClosed, color: "#000" },
               style: { stroke: "#000", strokeWidth: 2 },
-              updatable: canEdit ? "both" : false,
+              updatable: "both",
               interactionWidth: 24,
             }}
             /* 🔒 restricciones de edición si no está logueado */
             nodesDraggable={!!isAuth}
             nodesConnectable={!!isAuth}
             elementsSelectable={!!isAuth}
-            panOnDrag={!isAuth}        // si no está logueado, permitir pan con drag
+            panOnDrag={!isAuth}
             zoomOnScroll
           >
             <Controls />
             <Background variant="dots" gap={18} />
           </ReactFlow>
-
-          {/* Indicador de solo lectura para usuarios no autenticados */}
-          {!canEdit && (
-            <div
-              style={{
-                position: "absolute",
-                top: "10px",
-                right: "10px",
-                background: "rgba(255, 193, 7, 0.9)",
-                color: "#856404",
-                padding: "8px 12px",
-                borderRadius: "6px",
-                fontSize: "0.875rem",
-                fontWeight: 500,
-                boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-                zIndex: 10,
-                display: "flex",
-                alignItems: "center",
-                gap: "6px",
-              }}
-            >
-              🔒 Modo solo lectura
-            </div>
-          )}
-
-          {/* Modal de edición de labels (solo si está autenticado) */}
-          {canEdit && (editingNode || editingEdge) && (
-            <div
-              style={{
-                position: "absolute",
-                inset: 0,
-                background: "rgba(0, 0, 0, 0.5)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                zIndex: 1000,
-              }}
-              onClick={cancelEditing}
-            >
-              <div
-                style={{
-                  background: "white",
-                  padding: "20px",
-                  borderRadius: "8px",
-                  boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
-                  minWidth: "300px",
-                }}
-                onClick={(e) => e.stopPropagation()}
-              >
-                <h3 style={{ margin: "0 0 16px 0", fontSize: "1.125rem", fontWeight: 600 }}>
-                  {editingNode ? "Editar etiqueta del nodo" : "Editar etiqueta de la conexión"}
-                </h3>
-
-                <input
-                  type="text"
-                  value={tempLabel}
-                  onChange={(e) => setTempLabel(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      editingNode ? saveNodeLabel() : saveEdgeLabel();
-                    } else if (e.key === "Escape") {
-                      cancelEditing();
-                    }
-                  }}
-                  placeholder="Ingresa la nueva etiqueta..."
-                  autoFocus
-                  style={{
-                    width: "100%",
-                    padding: "8px 12px",
-                    border: "1px solid #d1d5db",
-                    borderRadius: "4px",
-                    fontSize: "14px",
-                    marginBottom: "16px",
-                  }}
-                />
-
-                <div style={{ display: "flex", gap: "8px", justifyContent: "flex-end" }}>
-                  <button
-                    onClick={cancelEditing}
-                    style={{
-                      padding: "8px 16px",
-                      border: "1px solid #d1d5db",
-                      background: "#f9fafb",
-                      borderRadius: "4px",
-                      cursor: "pointer",
-                      fontSize: "14px",
-                    }}
-                  >
-                    Cancelar
-                  </button>
-                  <button
-                    onClick={editingNode ? saveNodeLabel : saveEdgeLabel}
-                    style={{
-                      padding: "8px 16px",
-                      border: "1px solid #1e3a8a",
-                      background: "#1e3a8a",
-                      color: "white",
-                      borderRadius: "4px",
-                      cursor: "pointer",
-                      fontSize: "14px",
-                      fontWeight: 500,
-                    }}
-                  >
-                    Guardar
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
         </div>
       </div>
 
