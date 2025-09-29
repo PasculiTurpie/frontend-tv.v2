@@ -1,186 +1,248 @@
+/* Layout */
+.card__layout {
+    display       : flex;
+    width         : 100%;
+    align-items   : center;
+    flex-direction: column;
+    margin        : auto;
+    margin-top    : 30px;
+}
 
+.loader__charge {
+    display        : flex;
+    width          : 100%;
+    justify-content: center;
+}
+
+/* Header resumen */
+.card__heading {
+    display       : flex;
+    align-items   : center;
+    gap           : 12px;
+    font-weight   : 700;
+    margin        : 0 0 12px 0;
+    letter-spacing: .2px;
+}
+
+.card__total {
+    display        : inline-flex;
+    align-items    : center;
+    justify-content: center;
+    min-width      : 34px;
+    height         : 34px;
+    padding        : 0 8px;
+    border-radius  : 10px;
+    background     : #f3f4f6;
+    border         : 1px solid #e5e7eb;
+    font-size      : 20px;
+}
+
+.pill {
+    display      : inline-flex;
+    align-items  : center;
+    gap          : 6px;
+    height       : 28px;
+    padding      : 0 10px;
+    border-radius: 999px;
+    font-size    : 13px;
+    font-weight  : 700;
+    border       : 1px solid rgba(0, 0, 0, .08);
+    background   : #f4f6fb;
+    box-shadow   : 0 1px 2px rgba(0, 0, 0, .04) inset;
+}
+
+.pill--tv {
+    background: #e9effc;
+    color     : #1f3b7b;
+}
+
+.pill--radio {
+    background: #e9f7ef;
+    color     : #145a32;
+}
+
+/* Grid */
 .card__grid {
     display        : flex;
-    width: 100%;
+    width          : 100%;
+    max-width      : 1140px;
     flex-wrap      : wrap;
     justify-content: center;
     gap            : 20px;
-    margin-top     : 20px;
+    margin-top     : 8px;
 }
 
-.card__layout{
-    display: flex;
-    width: 100%;
-    align-items: center;
-    flex-direction: column;
-    margin: auto;
-    margin-top: 30px;
-}
-.loader__charge{
-    display: flex;
-    width: 100%;
-    height: fit-content;
-    justify-content: center;
-}
-
-
+/* Tarjeta */
 .card__container {
+    --blue  : #375d9d;
+    --orange: #ec9702;
+
     display        : flex;
     flex-direction : column;
     justify-content: space-between;
-    align-items    : center;
-    width          : 100%;
-    max-width      : 250px;
-    height         : 320px;
-    box-shadow     : rgba(0, 0, 0, 0.19) 0px 10px 20px,
-        rgba(0, 0, 0, 0.23) 0px 6px 6px;
-    border          : 1px solid #4d4a4a69;
-    border-radius   : 8px;
-    cursor          : pointer;
-    overflow        : hidden;
-    background-color: white;
+    align-items    : stretch;
+
+    width    : 100%;
+    max-width: 250px;
+    height   : 320px;
+
+    background   : #fff;
+    border       : 1px solid rgba(0, 0, 0, .08);
+    border-radius: 12px;
+
+    box-shadow:
+        0 8px 18px rgba(55, 93, 157, .08),
+        0 2px 6px rgba(0, 0, 0, .05);
+
+    overflow  : hidden;
+    cursor    : pointer;
+    transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease;
 }
 
-/* Hover cards */
 .card__container:hover {
-    box-shadow: rgba(0, 0, 0, 0.12) 0px 1px 3px,
-        rgba(0, 0, 0, 0.24) 0px 1px 2px;
+    transform: translateY(-3px);
+    box-shadow:
+        0 14px 24px rgba(55, 93, 157, .12),
+        0 4px 10px rgba(0, 0, 0, .08);
+    border-color: rgba(0, 0, 0, .12);
 }
 
-/* Responsividad */
-
-/* 2 columnas en pantallas >= 768px (tablets) */
-@media (min-width: 768px) {
-    .card__container {
-        width: calc(50% - 20px);
-        /* 2 columnas con espacio */
-    }
+/* Cabecera (mantiene azul y tamaño) */
+.card__header {
+    background: linear-gradient(180deg, #3f69b2 0%, var(--blue) 100%);
+    color     : #fff;
+    padding   : 10px 12px 8px;
 }
 
-/* 3 columnas en pantallas >= 1024px (laptops) */
-@media (min-width: 1024px) {
-    .card__container {
-        width: calc(33.33% - 20px);
-    }
-}
-
-/* 4 columnas en pantallas >= 1327px (desktop grande) */
-@media (min-width: 1327px) {
-    .card__container {
-        width: calc(25% - 20px);
-    }
-}
-
-/* Resto de estilos tuyos sin cambios */
 .card__title {
-    text-align : center;
-    font-size  : 16px;
-    padding-top: 5px;
-}
-
-.card__logo {
-    width     : 100px;
-    object-fit: cover;
+    margin        : 0 0 6px 0;
+    text-align    : center;
+    font-size     : 15px;
+    font-weight   : 800;
+    letter-spacing: .3px;
+    text-transform: uppercase;
+    white-space   : nowrap;
+    overflow      : hidden;
+    text-overflow : ellipsis;
 }
 
 .card__number {
     display        : flex;
-    width          : 100%;
-    flex-direction : row;
-    justify-content: space-around;
+    justify-content: space-between;
+    gap            : 8px;
 }
 
-.card__number-item {
-    font-size: 16px;
+.badge {
+    background     : rgba(255, 255, 255, .18);
+    border         : 1px solid rgba(255, 255, 255, .35);
+    color          : #fff;
+    border-radius  : 8px;
+    padding        : 4px 8px;
+    font-size      : 12px;
+    font-weight    : 700;
+    line-height    : 1;
+    backdrop-filter: blur(2px);
 }
 
-.card__group-item {
-    width     : 100%;
-    background: #375d9d;
-    color     : #fff;
-    overflow  : hidden;
-}
-
-.card__severidad {
-    width        : 100%;
-    padding      : 20px 0;
-    background   : #ec9702;
-    text-align   : center;
-    font-weight  : bold;
-    color        : #fff;
-    border-radius: 0 0 8px 8px;
-    overflow     : hidden;
-}
-
-.error__data {
-    color     : red;
-    font-size : 22px;
-    box-sizing: border-box;
-    margin-top: 0;
-    text-align: center;
-    margin-top: 50px;
-}
-
+/* Imagen */
 .card__image-wrapper {
-    position       : relative;
-    width          : 100%;
-    height         : auto;
-    min-height     : 60px;
-    display        : flex;
-    justify-content: center;
-    align-items    : center;
+    flex       : 1 1 auto;
+    min-height : 120px;
+    display    : grid;
+    place-items: center;
+    background :
+        radial-gradient(40% 50% at 50% 10%, rgba(55, 93, 157, .06) 0%, rgba(55, 93, 157, 0) 100%),
+        #fff;
+    position: relative;
 }
 
+.card__logo {
+    width     : 110px;
+    max-height: 90px;
+    object-fit: contain;
+    filter    : drop-shadow(0 1px 1px rgba(0, 0, 0, .05));
+}
+
+/* Spinner de carga de imagen */
 .card__spinner {
-    border       : 4px solid rgba(0, 0, 0, 0.1);
-    border-top   : 4px solid #3498db;
-    border-radius: 50%;
-    width        : 30px;
-    height       : 30px;
-    animation    : spin 1s linear infinite;
-    z-index      : 2;
+    width           : 28px;
+    height          : 28px;
+    border-radius   : 50%;
+    border          : 3px solid rgba(0, 0, 0, .08);
+    border-top-color: var(--blue);
+    animation       : spin 1s linear infinite;
 }
 
-@keyframes spin {
-    0% {
-        transform: rotate(0deg);
-    }
-
-    100% {
-        transform: rotate(360deg);
-    }
+/* Pie (mantiene naranja y tamaño) */
+.card__footer {
+    background: linear-gradient(180deg, #f1a42a 0%, var(--orange) 100%);
+    color     : #fff;
+    padding   : 12px 10px;
+    text-align: center;
+    border-top: 1px solid rgba(255, 255, 255, .35);
 }
 
-/* ===== Estilos para paginación ===== */
+.card__footer .tech {
+    font-weight   : 800;
+    letter-spacing: .2px;
+}
+
+.card__footer .sev {
+    font-size: 13px;
+    opacity  : .95;
+}
+
+/* Mensaje de error */
+.error__data {
+    color     : #b91c1c;
+    font-size : 18px;
+    text-align: center;
+    margin-top: 40px;
+}
+
+/* Paginación */
 .pagination {
     display        : flex;
     justify-content: center;
-    margin         : 30px 0;
+    margin         : 22px 0 10px;
     gap            : 10px;
     flex-wrap      : wrap;
 }
 
 .pagination button {
-    background-color: #ddd;
-    border          : none;
-    padding         : 8px 14px;
-    cursor          : pointer;
-    border-radius   : 5px;
-    font-weight     : 600;
-    transition      : background-color 0.2s ease;
+    background   : #e5e7eb;
+    border       : 1px solid #e5e7eb;
+    padding      : 8px 14px;
+    cursor       : pointer;
+    border-radius: 10px;
+    font-weight  : 700;
+    transition   : background-color .15s ease, transform .05s ease;
 }
 
 .pagination button:hover:not(:disabled) {
-    background-color: #b0b0b0;
+    background-color: #d1d5db;
+}
+
+.pagination button:active:not(:disabled) {
+    transform: translateY(1px);
 }
 
 .pagination button.active {
     background-color: #375d9d;
-    color           : white;
+    border-color    : #375d9d;
+    color           : #fff;
+    box-shadow      : 0 0 0 2px rgba(55, 93, 157, .15);
 }
 
 .pagination button:disabled {
-    background-color: #eee;
-    color           : #999;
+    background-color: #f3f4f6;
+    color           : #9ca3af;
     cursor          : not-allowed;
+}
+
+/* Utilidades */
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
 }
