@@ -29,6 +29,11 @@ const Nav = () => {
                         Inicio
                     </Link>
                 </li>
+                <li className="nav__links">
+                    <Link className="nav__links-text" to="/">
+                        Inicio
+                    </Link>
+                </li>
 
                 {/* Si quieres un botón para revalidar manualmente en debug:
         <li className="nav__links">
