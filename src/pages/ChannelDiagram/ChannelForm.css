@@ -217,6 +217,9 @@
   color       : #375d9d;
   border-color: #cbd5e1;
 }
+.btn--enlace{
+  margin-top: 10px;
+}
 
 /* Responsive */
 @media (max-width: 920px) {

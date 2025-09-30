@@ -605,7 +605,7 @@ const ChannelForm = () => {
 
                             <div>
                                 <button
-                                    className="chf__btn chf__btn--secondary"
+                                    className="chf__btn chf__btn--secondary btn--enlace"
                                     type="button"
                                     onClick={() => {
                                         const id = values.edgeId?.trim();
