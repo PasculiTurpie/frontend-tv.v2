@@ -1,6 +1,6 @@
-import React, { useCallback, useContext, useState } from "react";
+import React, { useCallback, useContext, useRef, useState } from "react";
 import { Handle, Position, useReactFlow } from "@xyflow/react";
-import { UserContext } from "../../components/context/UserContext"; // ⬅️ ruta real
+import { UserContext } from "../../components/context/UserContext";
 
 const box = {
   padding: 10,
@@ -17,37 +17,53 @@ const pctTop = (p) => ({ top: `${p}%` });
 const pctLeft = (p) => ({ left: `${p}%` });
 
 export default function CustomNode({ id, data }) {
-  const { isAuth } = useContext(UserContext);
   const rf = useReactFlow();
+  const { isAuth } = useContext(UserContext);
+
   const [editing, setEditing] = useState(false);
   const [value, setValue] = useState(() => data?.label ?? "");
+  const inputRef = useRef(null);
 
-  const startEdit = useCallback((e) => {
-    if (!isAuth) return;
-    e.stopPropagation();
-    setValue(String(data?.label ?? ""));
-    setEditing(true);
-  }, [data?.label, isAuth]);
+  const startEdit = useCallback(
+    (e) => {
+      if (!isAuth) return; // solo usuarios logueados
+      e.stopPropagation();
+      setValue(String(data?.label ?? ""));
+      setEditing(true);
+    },
+    [data?.label, isAuth]
+  );
 
   const commit = useCallback(() => {
-    if (!isAuth) { setEditing(false); return; }
+    if (!isAuth) return;
     setEditing(false);
     rf.setNodes((nds) =>
       nds.map((n) =>
         n.id === id ? { ...n, data: { ...(n.data || {}), label: value } } : n
       )
     );
-    // guarda inmediatamente
+    // avisar para guardar
     window.dispatchEvent(new Event("flow:save"));
   }, [id, value, rf, isAuth]);
 
-  const onKeyDown = useCallback((e) => {
-    if (e.key === "Enter") commit();
-    if (e.key === "Escape") {
-      setEditing(false);
-      setValue(String(data?.label ?? ""));
+  const onKeyDown = useCallback(
+    (e) => {
+      if (e.key === "Enter") commit();
+      if (e.key === "Escape") {
+        setEditing(false);
+        setValue(String(data?.label ?? ""));
+      }
+    },
+    [commit, data?.label]
+  );
+
+  const onInputRef = useCallback((el) => {
+    if (el) {
+      el.focus();
+      el.select();
     }
-  }, [commit, data?.label]);
+    inputRef.current = el;
+  }, []);
 
   const leftSlots = [30, 70];
   const rightSlots = [30, 70];
@@ -56,23 +72,26 @@ export default function CustomNode({ id, data }) {
 
   return (
     <div title={data?.tooltip || data?.description || data?.label} style={box}>
+      {/* Header / Título editable */}
       {!editing ? (
         <div
-          style={{ fontWeight: "bold", cursor: isAuth ? "text" : "default", padding: "2px 4px", userSelect: "none" }}
-          title={isAuth ? "Doble click para editar el nombre" : "Solo lectura"}
+          style={{
+            fontWeight: "bold",
+            cursor: isAuth ? "text" : "default",
+            padding: "2px 4px",
+          }}
+          title={isAuth ? "Doble click para editar" : "Solo lectura"}
           onDoubleClick={startEdit}
-          className="nodrag nopan"
         >
           {data?.label}
         </div>
       ) : (
         <input
+          ref={onInputRef}
           value={value}
           onChange={(e) => setValue(e.target.value)}
           onBlur={commit}
           onKeyDown={onKeyDown}
-          onMouseDown={(e) => { e.stopPropagation(); }}
-          onClick={(e) => { e.stopPropagation(); }}
           style={{
             width: "100%",
             fontWeight: 700,
@@ -82,8 +101,6 @@ export default function CustomNode({ id, data }) {
             borderRadius: 6,
             outline: "none",
           }}
-          className="nodrag nopan"
-          autoFocus
         />
       )}
 

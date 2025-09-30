@@ -1,78 +1,51 @@
-// ChannelForm.jsx
+// src/pages/ChannelDiagram/ChannelForm.jsx
 import { Field, Formik, Form } from "formik";
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import api from "../../utils/api";
 import Select from "react-select";
 import Swal from "sweetalert2";
+import "./ChannelForm.css";
 
 // Fallback numérico para MarkerType.ArrowClosed (React Flow = 1)
 const ARROW_CLOSED = { type: 1 };
-
-// Tolerancia para considerar "misma X" (alineación vertical)
 const SAME_X_EPS = 8;
 
-/** Helpers de geometría para elegir handles según dirección y alineación */
-function pickHandlesByGeometry(srcNode, tgtNode, direction /* 'ida' | 'vuelta' */) {
-    const sx = Number(srcNode?.position?.x ?? 0);
-    const sy = Number(srcNode?.position?.y ?? 0);
-    const tx = Number(tgtNode?.position?.x ?? 0);
-    const ty = Number(tgtNode?.position?.y ?? 0);
+// ---- react-select estilos consistentes (altura 38px, ancho 100%) ----
+const selectStyles = {
+    container: (base) => ({ ...base, width: "100%" }),
+    control: (base, state) => ({
+        ...base,
+        minHeight: 38,
+        height: 38,
+        borderRadius: 8,
+        borderColor: state.isFocused ? "#375d9d" : "#d1d5db",
+        boxShadow: state.isFocused ? "0 0 0 3px rgba(55, 93, 157, 0.20)" : "none",
+        "&:hover": { borderColor: state.isFocused ? "#375d9d" : "#cbd5e1" },
+    }),
+    valueContainer: (base) => ({ ...base, padding: "2px 8px" }),
+    indicatorsContainer: (base) => ({ ...base, height: 38 }),
+    dropdownIndicator: (base) => ({ ...base, padding: "6px 8px" }),
+    clearIndicator: (base) => ({ ...base, padding: "6px 8px" }),
+    menu: (base) => ({ ...base, zIndex: 20 }),
+};
 
-    const sameX = Math.abs(sx - tx) <= SAME_X_EPS;
-
-    // Caso vertical (misma X, distinta Y)
-    if (sameX && sy !== ty) {
-        const srcIsUpper = sy < ty; // source por encima del target
-        if (direction === "ida") {
-            // Ida usa pista 1
-            if (srcIsUpper) {
-                // source arriba: bottom-1 -> top-1
-                return { sourceHandle: "out-bottom-1", targetHandle: "in-top-1" };
-            } else {
-                // source abajo: top-1 -> bottom-1
-                return { sourceHandle: "out-top-1", targetHandle: "in-bottom-1" };
-            }
-        } else {
-            // Vuelta usa pista 2
-            if (srcIsUpper) {
-                return { sourceHandle: "out-bottom-2", targetHandle: "in-top-2" };
-            } else {
-                return { sourceHandle: "out-top-2", targetHandle: "in-bottom-2" };
-            }
-        }
-    }
-
-    // No vertical: lados para no cruzar (ida y vuelta separadas)
-    if (direction === "ida") {
-        return { sourceHandle: "out-right", targetHandle: "in-left" };
-    } else {
-        return { sourceHandle: "out-left", targetHandle: "in-right" };
-    }
-}
-
-// Helper: número o default
+// Helpers
 const toNumberOr = (val, def = 0) => {
     const n = Number(val);
     return Number.isFinite(n) ? n : def;
 };
-
-// Normaliza tipoNombre del equipo (puede venir como string o como objeto { tipoNombre })
 const tipoToKey = (tipoNombre) => {
     const raw =
         (typeof tipoNombre === "object" && tipoNombre?.tipoNombre) ||
         (typeof tipoNombre === "string" && tipoNombre) ||
         "";
     const key = String(raw).trim().toLowerCase();
-
-    // Sinónimos / normalizaciones simples
     if (["satélite", "satelite"].includes(key)) return "satelite";
     if (["switch", "switches", "sw"].includes(key)) return "switch";
     if (["router", "routers", "rt", "rtr"].includes(key)) return "router";
-    return key; // "ird", etc.
+    return key;
 };
-
-// Normaliza a id string
 const toId = (v) => {
     if (!v) return null;
     if (typeof v === "string") return v;
@@ -80,40 +53,77 @@ const toId = (v) => {
     return null;
 };
 
+/**
+ * Elige handles por geometría y dirección ('ida' | 'vuelta').
+ * Regla adicional: si el SOURCE es un SATÉLITE, fuerza out-right -> in-left.
+ */
+function pickHandlesByGeometry(srcNode, tgtNode, direction /* 'ida' | 'vuelta' */) {
+    const srcTipo =
+        srcNode?.data?.equipoTipo ||
+        tipoToKey(srcNode?.data?.equipo?.tipoNombre?.tipoNombre);
+    if (srcTipo === "satelite") {
+        return { sourceHandle: "out-right", targetHandle: "in-left" };
+    }
+
+    const sx = Number(srcNode?.position?.x ?? 0);
+    const sy = Number(srcNode?.position?.y ?? 0);
+    const tx = Number(tgtNode?.position?.x ?? 0);
+    const ty = Number(tgtNode?.position?.y ?? 0);
+
+    const sameX = Math.abs(sx - tx) <= SAME_X_EPS;
+
+    if (sameX && sy !== ty) {
+        const srcIsUpper = sy < ty;
+        if (direction === "ida") {
+            return srcIsUpper
+                ? { sourceHandle: "out-bottom-1", targetHandle: "in-top-1" }
+                : { sourceHandle: "out-top-1", targetHandle: "in-bottom-1" };
+        } else {
+            return srcIsUpper
+                ? { sourceHandle: "out-bottom-2", targetHandle: "in-top-2" }
+                : { sourceHandle: "out-top-2", targetHandle: "in-bottom-2" };
+        }
+    }
+
+    return direction === "ida"
+        ? { sourceHandle: "out-right", targetHandle: "in-left" }
+        : { sourceHandle: "out-left", targetHandle: "in-right" };
+}
+
 const ChannelForm = () => {
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
 
-    // === Señales (select) ===
+    // Señales
     const [optionsSelectChannel, setOptionSelectChannel] = useState([]);
     const [signalsLoading, setSignalsLoading] = useState(true);
     const [signalsError, setSignalsError] = useState(null);
-    const [isSearchable] = useState(true);
 
-    const [selectedValue, setSelectedValue] = useState(null); // id señal
-    const [selectedId, setSelectedId] = useState(null); // label señal
+    const [selectedValue, setSelectedValue] = useState(null);
+    const [selectedId, setSelectedId] = useState(null);
 
-    // === Equipos (select agrupado) ===
+    // Equipos agrupados
     const [optionsSelectEquipo, setOptionSelectEquipo] = useState([]);
-    const [selectedEquipoValue, setSelectedEquipoValue] = useState(null); // id equipo
-    const [selectedIdEquipo, setSelectedIdEquipo] = useState(null); // label equipo
+    const [selectedEquipoValue, setSelectedEquipoValue] = useState(null);
+    const [selectedIdEquipo, setSelectedIdEquipo] = useState(null);
+    const [selectedEquipoTipo, setSelectedEquipoTipo] = useState(null);
 
-    // Acumuladores en memoria
+    // Borradores
     const [draftNodes, setDraftNodes] = useState([]);
     const [draftEdges, setDraftEdges] = useState([]);
 
-    // Selects dinámicos para edges
+    // Selects dinámicos de edges
     const [edgeSourceSel, setEdgeSourceSel] = useState(null);
     const [edgeTargetSel, setEdgeTargetSel] = useState(null);
 
-    // Dirección del enlace
+    // Dirección
     const edgeDirOptions = [
         { value: "ida", label: "Ida (source → target)" },
         { value: "vuelta", label: "Vuelta (target ← source)" },
     ];
     const [edgeDirection, setEdgeDirection] = useState(edgeDirOptions[0]);
 
-    // =========== Carga señales + channels, filtra solo NO usados ===========
+    // Cargar señales y filtrar disponibles
     useEffect(() => {
         let mounted = true;
         (async () => {
@@ -121,24 +131,17 @@ const ChannelForm = () => {
             setSignalsError(null);
             try {
                 const [signalsRes, channelsRes] = await Promise.all([
-                    api.getSignal(),          // /signals
-                    api.getChannelDiagram(),  // /channels
+                    api.getSignal(), // /signal
+                    api.getChannelDiagram(), // /channels
                 ]);
 
                 const signals = Array.isArray(signalsRes?.data) ? signalsRes.data : [];
                 const channels = Array.isArray(channelsRes?.data) ? channelsRes.data : [];
 
-                // IDs de signals usados en channel.signal
-                const usedSet = new Set(
-                    channels
-                        .map((ch) => toId(ch?.signal))
-                        .filter(Boolean)
-                );
+                const usedSet = new Set(channels.map((ch) => toId(ch?.signal)).filter(Boolean));
 
-                // Solo señales que NO estén en usedSet
                 const unusedSignals = signals.filter((s) => !usedSet.has(toId(s?._id)));
 
-                // Opciones para react-select
                 const opts = unusedSignals.map((opt) => ({
                     label: `${opt.nameChannel ?? opt.nombre ?? "Sin nombre"} - ${opt.tipoTecnologia ?? opt.tipo ?? ""}`.trim(),
                     value: opt._id,
@@ -148,7 +151,6 @@ const ChannelForm = () => {
                 if (!mounted) return;
                 setOptionSelectChannel(opts);
 
-                // Preselección por ?signalId=... si viene en la URL
                 const preId = searchParams.get("signalId");
                 if (preId && opts.some((o) => String(o.value) === String(preId))) {
                     const found = opts.find((o) => String(o.value) === String(preId));
@@ -171,7 +173,7 @@ const ChannelForm = () => {
         };
     }, [searchParams]);
 
-    // =========== Carga de Equipos (agrupado) ===========
+    // Cargar equipos
     useEffect(() => {
         let mounted = true;
         (async () => {
@@ -186,48 +188,29 @@ const ChannelForm = () => {
                 const otros = [];
 
                 for (const eq of arr) {
-                    const key = tipoToKey(eq?.tipoNombre); // 'satelite' | 'ird' | 'switch' | 'router' | ...
-
-                    // valores base
+                    const key = tipoToKey(eq?.tipoNombre);
                     const baseName = (eq?.nombre?.toUpperCase?.() || eq?.nombre || "").trim();
-
-                    // si es satélite, intenta sacar la polarización del populate
                     const pol =
                         eq?.satelliteRef?.satelliteType?.typePolarization
                             ? String(eq.satelliteRef.satelliteType.typePolarization).trim()
                             : null;
 
-                    // arma label según el tipo
-                    const labelForSatellite = pol ? `${baseName} ${pol}` : baseName;
-
                     const option = {
-                        label: baseName, // default
+                        label: key === "satelite" && pol ? `${baseName} ${pol}` : baseName,
                         value: eq?._id,
+                        meta: { tipo: key },
                     };
 
-                    if (key === "satelite") {
-                        option.label = labelForSatellite; // concatena polarización
-                        satelites.push(option);
-                    } else if (key === "ird") {
-                        irds.push(option);
-                    } else if (key === "switch") {
-                        switches.push(option);
-                    } else if (key === "router") {
-                        routers.push(option);
-                    } else {
-                        otros.push(option);
-                    }
+                    if (key === "satelite") satelites.push(option);
+                    else if (key === "ird") irds.push(option);
+                    else if (key === "switch") switches.push(option);
+                    else if (key === "router") routers.push(option);
+                    else otros.push(option);
                 }
 
-                // Orden alfabético por label
                 const byLabel = (a, b) => a.label.localeCompare(b.label, "es", { sensitivity: "base" });
-                satelites.sort(byLabel);
-                irds.sort(byLabel);
-                switches.sort(byLabel);
-                routers.sort(byLabel);
-                otros.sort(byLabel);
+                satelites.sort(byLabel); irds.sort(byLabel); switches.sort(byLabel); routers.sort(byLabel); otros.sort(byLabel);
 
-                // Estructura agrupada para react-select
                 const grouped = [
                     { label: "Satélites", options: satelites },
                     { label: "IRD", options: irds },
@@ -238,7 +221,6 @@ const ChannelForm = () => {
 
                 if (mounted) setOptionSelectEquipo(grouped);
             } catch (e) {
-                // Si quieres, puedes mostrar un toast aquí
                 console.warn("Error cargando equipos:", e?.message);
             }
         })();
@@ -252,13 +234,12 @@ const ChannelForm = () => {
         setSelectedValue(e?.value || null);
         setSelectedId(e?.label || null);
     };
-
     const handleSelectedEquipo = (e) => {
         setSelectedEquipoValue(e?.value || null);
         setSelectedIdEquipo(e?.label || null);
+        setSelectedEquipoTipo(e?.meta?.tipo || null);
     };
 
-    // Opciones para selects Source/Target basadas en nodos agregados
     const edgeNodeOptions = useMemo(
         () =>
             draftNodes.map((n) => ({
@@ -268,255 +249,225 @@ const ChannelForm = () => {
         [draftNodes]
     );
 
+    const availableSignals = optionsSelectChannel.length;
+
     return (
-        <>
-            <div className="outlet-main">
-                <nav aria-label="breadcrumb">
-                    <ol className="breadcrumb">
-                        <li className="breadcrumb-item">
-                            <Link to="/channel_diagram-list">Listar</Link>
-                        </li>
-                        <li className="breadcrumb-item active" aria-current="page">
-                            Formulario
-                        </li>
-                    </ol>
-                </nav>
+        <div className="chf__wrapper">
+            <nav aria-label="breadcrumb" className="chf__breadcrumb">
+                <ol className="breadcrumb">
+                    <li className="breadcrumb-item">
+                        <Link to="/channel_diagram-list">Listar</Link>
+                    </li>
+                    <li className="breadcrumb-item active" aria-current="page">
+                        Formulario
+                    </li>
+                </ol>
+            </nav>
 
-                <h2>Crear un diagrama</h2>
+            <h2 className="chf__title">Crear un diagrama</h2>
 
-                <Formik
-                    initialValues={{
-                        // Campos de nodo
-                        id: "",
-                        label: "",
-                        posX: "",
-                        posY: "",
-                        // Campos de enlace
-                        edgeId: "",
-                        source: "",
-                        target: "",
-                        edgeLabel: "",
-                    }}
-                    onSubmit={async () => {
-                        try {
-                            if (!selectedValue) {
-                                Swal.fire({
-                                    icon: "warning",
-                                    title: "Seleccione una señal",
-                                    text: "Debes elegir la señal a la que pertenecerá este flujo.",
-                                });
-                                return;
-                            }
-
-                            if (draftNodes.length === 0) {
-                                Swal.fire({
-                                    icon: "warning",
-                                    title: "Sin nodos",
-                                    text: "Agrega al menos un nodo antes de crear el flujo.",
-                                });
-                                return;
-                            }
-
-                            // Normaliza NODOS (usa CustomNode en el canvas: type 'custom')
-                            const normalizedNodes = draftNodes.map((n) => ({
-                                id: n.id,
-                                type: n.type || "custom",
-                                equipo: n.data?.equipoId, // si tu backend lo espera a nivel raíz
-                                label: n.data?.label,
-                                data: {
-                                    label: n.data?.label || n.id,
-                                    equipoId: n.data?.equipoId, // ← sólo id
-                                    equipoNombre: n.data?.equipoNombre,
-                                    tooltip: n.data?.tooltip,
-                                },
-                                position: {
-                                    x: Number.isFinite(+n.position?.x) ? +n.position.x : 0,
-                                    y: Number.isFinite(+n.position?.y) ? +n.position.y : 0,
-                                },
-                            }));
-
-                            // Normaliza EDGES (usa CustomDirectionalEdge en el canvas: type 'directional')
-                            const normalizedEdges = draftEdges.map((e) => ({
-                                id: e.id,
-                                source: e.source,
-                                target: e.target,
-                                sourceHandle: e.sourceHandle,
-                                targetHandle: e.targetHandle,
-                                label: e.label,
-                                type: e.type || "directional",
-                                style: e.style,
-                                markerEnd: e.markerEnd,
-                                markerStart: e.markerStart,
-                                data: { ...(e.data || {}) },
-                            }));
-
-                            const payload = {
-                                signal: selectedValue,
-                                channel: selectedValue,
-                                signalId: selectedValue,
-                                channelId: selectedValue,
-                                nodes: normalizedNodes,
-                                edges: normalizedEdges,
-                            };
-
-                            console.log("POST payload channel diagram:", payload);
-
-                            await api.createChannelDiagram(payload);
-
+            <Formik
+                initialValues={{
+                    // Nodo
+                    id: "",
+                    label: "",
+                    posX: "",
+                    posY: "",
+                    // Enlace
+                    edgeId: "",
+                    source: "",
+                    target: "",
+                    edgeLabel: "",
+                    edgeMulticast: "",
+                }}
+                onSubmit={async (_, { resetForm }) => {
+                    try {
+                        if (!selectedValue) {
                             Swal.fire({
-                                icon: "success",
-                                title: "Flujo creado",
-                                html: `
-                  <p><strong>Señal:</strong> ${selectedId}</p>
-                  <p><strong>Nodos:</strong> ${draftNodes.length}</p>
-                  <p><strong>Enlaces:</strong> ${draftEdges.length}</p>
-                `,
+                                icon: "warning",
+                                title: "Seleccione una señal",
+                                text: "Debes elegir la señal a la que pertenecerá este flujo.",
                             });
-
-                            setDraftNodes([]);
-                            setDraftEdges([]);
-                            setEdgeSourceSel(null);
-                            setEdgeTargetSel(null);
-                            setEdgeDirection(edgeDirOptions[0]);
-
-                            // volver al listado o donde estimes
-                            // navigate("/channel_diagram-list");
-                        } catch (e) {
-                            const data = e?.response?.data;
-                            console.warn("Create flow error:", {
-                                serverStatus: e?.response?.status,
-                                serverData: data,
-                            });
-                            Swal.fire({
-                                icon: "error",
-                                title: "Error al crear flujo",
-                                html: `
-                  <div style="text-align:left">
-                    <div><b>Status:</b> ${e?.response?.status || "?"}</div>
-                    <div><b>Mensaje:</b> ${data?.message || e.message || "Error desconocido"}</div>
-                    ${data?.missing ? `<div><b>Faltan:</b> ${JSON.stringify(data.missing)}</div>` : ""}
-                    ${data?.errors ? `<pre>${JSON.stringify(data.errors, null, 2)}</pre>` : ""}
-                  </div>
-                `,
-                            });
+                            return;
                         }
-                    }}
-                >
-                    {({ values, setFieldValue }) => (
-                        <div className="container__form">
-                            {!signalsLoading && !signalsError && optionsSelectChannel.length > 0 && (
-                                <div style={{ fontSize: 13, color: "#475569", margin: "4px 0 10px" }}>
-                                    Disponibles: <strong>{optionsSelectChannel.length}</strong> señal(es) sin usar
+
+                        if (draftNodes.length === 0) {
+                            Swal.fire({
+                                icon: "warning",
+                                title: "Sin nodos",
+                                text: "Agrega al menos un nodo antes de crear el flujo.",
+                            });
+                            return;
+                        }
+
+                        const normalizedNodes = draftNodes.map((n) => ({
+                            id: n.id,
+                            type: n.type || "custom",
+                            equipo: n.data?.equipoId,
+                            label: n.data?.label,
+                            data: {
+                                label: n.data?.label || n.id,
+                                equipoId: n.data?.equipoId,
+                                equipoNombre: n.data?.equipoNombre,
+                                equipoTipo: n.data?.equipoTipo,
+                            },
+                            position: {
+                                x: Number.isFinite(+n.position?.x) ? +n.position.x : 0,
+                                y: Number.isFinite(+n.position?.y) ? +n.position.y : 0,
+                            },
+                        }));
+
+                        const normalizedEdges = draftEdges.map((e) => ({
+                            id: e.id,
+                            source: e.source,
+                            target: e.target,
+                            sourceHandle: e.sourceHandle,
+                            targetHandle: e.targetHandle,
+                            label: e.label,
+                            type: e.type || "directional",
+                            style: e.style,
+                            markerEnd: e.markerEnd,
+                            markerStart: e.markerStart,
+                            data: { ...(e.data || {}) },
+                        }));
+
+                        const payload = {
+                            signal: selectedValue,
+                            channel: selectedValue,
+                            signalId: selectedValue,
+                            channelId: selectedValue,
+                            nodes: normalizedNodes,
+                            edges: normalizedEdges,
+                        };
+
+                        await api.createChannelDiagram(payload);
+
+                        Swal.fire({
+                            icon: "success",
+                            title: "Flujo creado",
+                            html: `
+                <p><strong>Señal:</strong> ${selectedId}</p>
+                <p><strong>Nodos:</strong> ${draftNodes.length}</p>
+                <p><strong>Enlaces:</strong> ${draftEdges.length}</p>
+              `,
+                        });
+
+                        setDraftNodes([]);
+                        setDraftEdges([]);
+                        setEdgeSourceSel(null);
+                        setEdgeTargetSel(null);
+                        setEdgeDirection(edgeDirOptions[0]);
+                        resetForm();
+                        // navigate("/channel_diagram-list");
+                    } catch (e) {
+                        const data = e?.response?.data;
+                        Swal.fire({
+                            icon: "error",
+                            title: "Error al crear flujo",
+                            html: `
+                <div style="text-align:left">
+                  <div><b>Status:</b> ${e?.response?.status || "?"}</div>
+                  <div><b>Mensaje:</b> ${data?.message || e.message || "Error desconocido"}</div>
+                  ${data?.missing ? `<div><b>Faltan:</b> ${JSON.stringify(data.missing)}</div>` : ""}
+                  ${data?.errors ? `<pre>${JSON.stringify(data.errors, null, 2)}</pre>` : ""}
+                </div>
+              `,
+                        });
+                    }
+                }}
+            >
+                {({ values, setFieldValue }) => (
+                    <Form className="chf__form">
+                        {/* ---- Señal ---- */}
+                        <fieldset className="chf__fieldset">
+                            <legend className="chf__legend">Señal</legend>
+
+                            {signalsLoading ? (
+                                <Select className="select-width" isLoading isDisabled placeholder="Cargando señales…" styles={selectStyles} />
+                            ) : signalsError ? (
+                                <div className="chf__alert chf__alert--error">
+                                    <strong>Error al cargar señales.</strong>
+                                    <div className="chf__alert-actions">
+                                        <button type="button" className="chf__btn" onClick={() => window.location.reload()}>
+                                            Reintentar
+                                        </button>
+                                    </div>
                                 </div>
+                            ) : optionsSelectChannel.length === 0 ? (
+                                <div className="chf__empty">
+                                    <h4>No hay señales disponibles</h4>
+                                    <p>Todas las señales ya están vinculadas a un diagrama. Crea una nueva señal para continuar.</p>
+                                    <button
+                                        type="button"
+                                        className="chf__btn chf__btn--primary"
+                                        onClick={() => navigate("/signals/new")}
+                                    >
+                                        + Crear nueva señal
+                                    </button>
+                                </div>
+                            ) : (
+                                <>
+                                    <div className="chf__row">
+                                        <div className="chf__select-inline">
+                                            <Select
+                                                className="select-width"
+                                                isSearchable
+                                                options={optionsSelectChannel}
+                                                onChange={handleSelectedChannel}
+                                                placeholder="Seleccione una señal"
+                                                noOptionsMessage={() => "No hay señales disponibles"}
+                                                styles={selectStyles}
+                                            />
+                                        </div>
+                                        <div className="chf__available">
+                                            <span className="chf__badge chf__badge--primary">
+                                                {availableSignals} disponibles
+                                            </span>
+                                        </div>
+                                    </div>
+                                </>
                             )}
+                        </fieldset>
 
-                            <Form className="form__add">
-                                {/* Select Señal (filtrado: solo NO usadas) */}
-                                <div style={{ marginBottom: 8 }}>
-                                    {signalsLoading ? (
-                                        <Select
-                                            className="select-width"
-                                            isLoading
-                                            isDisabled
-                                            placeholder="Cargando señales…"
-                                        />
-                                    ) : signalsError ? (
-                                        <div
-                                            style={{
-                                                border: "1px solid #fee2e2",
-                                                background: "#fef2f2",
-                                                color: "#991b1b",
-                                                padding: 12,
-                                                borderRadius: 10,
-                                            }}
-                                        >
-                                            <strong>Error al cargar señales.</strong>
-                                            <div style={{ marginTop: 6 }}>
-                                                <button
-                                                    type="button"
-                                                    onClick={() => window.location.reload()}
-                                                    style={{
-                                                        border: "1px solid #d1d5db",
-                                                        borderRadius: 8,
-                                                        padding: "6px 10px",
-                                                        background: "#fff",
-                                                        cursor: "pointer",
-                                                        fontWeight: 600,
-                                                    }}
-                                                >
-                                                    Reintentar
-                                                </button>
-                                            </div>
-                                        </div>
-                                    ) : optionsSelectChannel.length === 0 ? (
-                                        // ===== Estado vacío: no hay señales sin usar =====
-                                        <div
-                                            style={{
-                                                border: "1px dashed #cbd5e1",
-                                                background: "#f8fafc",
-                                                padding: 16,
-                                                borderRadius: 12,
-                                            }}
-                                        >
-                                            <h4 style={{ margin: 0, marginBottom: 6 }}>No hay señales disponibles</h4>
-                                            <p style={{ margin: 0, marginBottom: 12, color: "#475569" }}>
-                                                Todas las señales ya se encuentran vinculadas a un diagrama. Crea una nueva señal para continuar.
-                                            </p>
-                                            <button
-                                                type="button"
-                                                onClick={() => navigate("/signals/new")}
-                                                style={{
-                                                    padding: "8px 12px",
-                                                    borderRadius: 8,
-                                                    border: "1px solid #2563eb",
-                                                    background: "#2563eb",
-                                                    color: "#fff",
-                                                    cursor: "pointer",
-                                                    fontWeight: 600,
-                                                }}
-                                            >
-                                                + Crear nueva señal
-                                            </button>
-                                        </div>
-                                    ) : (
-                                        // ===== Sí hay señales disponibles: mostrar Select =====
-                                        <Select
-                                            className="select-width"
-                                            isSearchable={isSearchable}
-                                            isLoading={signalsLoading}
-                                            options={optionsSelectChannel}
-                                            onChange={handleSelectedChannel}
-                                            placeholder="Seleccione una señal"
-                                            noOptionsMessage={() => "No hay señales disponibles"}
-                                        />
-                                    )}
-                                </div>
+                        {/* ---- Nodo ---- */}
+                        <fieldset className="chf__fieldset">
+                            <legend className="chf__legend">Agregar nodo</legend>
 
-                                <hr />
+                            <div className="chf__grid chf__grid--3 chf__grid--align-end">
+                                <label className="chf__label">
+                                    Id Nodo
+                                    <Field className="chf__input" placeholder="Id Nodo" name="id" />
+                                </label>
 
-                                {/* ==================== NODO ==================== */}
-                                <h3>Agregar Nodo</h3>
-                                <div className="form__group-inputs">
-                                    <Field className="form__input" placeholder="Id Nodo" name="id" />
-
-                                    {/* Select de EQUIPO agrupado: Satélites / IRD / Switches / Routers / Otros */}
+                                <label className="chf__label">
+                                    Equipo
                                     <Select
-                                        className="select__input"
+                                        className="chf__select"
                                         name="equipo"
                                         placeholder="Equipos"
-                                        isSearchable={isSearchable}
-                                        options={optionsSelectEquipo} // [{label, options:[{label,value}]}]
+                                        options={optionsSelectEquipo}
                                         onChange={handleSelectedEquipo}
+                                        styles={selectStyles}
                                     />
+                                </label>
 
-                                    <Field className="form__input" placeholder="Etiqueta" name="label" />
+                                <label className="chf__label">
+                                    Etiqueta
+                                    <Field className="chf__input" placeholder="Etiqueta visible" name="label" />
+                                </label>
 
-                                    <Field className="form__input" placeholder="Pos X" name="posX" />
-                                    <Field className="form__input" placeholder="Pos Y" name="posY" />
-                                </div>
+                                <label className="chf__label">
+                                    Pos X
+                                    <Field className="chf__input" placeholder="Pos X" name="posX" />
+                                </label>
+
+                                <label className="chf__label">
+                                    Pos Y
+                                    <Field className="chf__input" placeholder="Pos Y" name="posY" />
+                                </label>
 
                                 <button
-                                    className="button btn-danger"
+                                    className="chf__btn chf__btn--secondary"
                                     type="button"
                                     onClick={() => {
                                         if (!values.id?.trim()) {
@@ -528,11 +479,12 @@ const ChannelForm = () => {
 
                                         const node = {
                                             id: values.id.trim(),
-                                            type: "custom", // se renderiza con CustomNode
+                                            type: "custom",
                                             data: {
                                                 label: values.label?.trim() || values.id.trim(),
-                                                equipoId: selectedEquipoValue, // SOLO id
-                                                equipoNombre: selectedIdEquipo, // opcional para preview
+                                                equipoId: selectedEquipoValue,
+                                                equipoNombre: selectedIdEquipo,
+                                                equipoTipo: selectedEquipoTipo,
                                             },
                                             position: {
                                                 x: toNumberOr(values.posX, 0),
@@ -549,8 +501,6 @@ const ChannelForm = () => {
                                         }
 
                                         setDraftNodes((prev) => [...prev, node]);
-
-                                        // limpiar inputs del bloque nodo (conserva el select de equipo)
                                         setFieldValue("id", "");
                                         setFieldValue("label", "");
                                         setFieldValue("posX", "");
@@ -559,34 +509,37 @@ const ChannelForm = () => {
                                 >
                                     + Agregar nodo
                                 </button>
+                            </div>
 
-                                {/* Vista previa de NODOS agregados */}
-                                {draftNodes.length > 0 && (
-                                    <div style={{ marginTop: 12 }}>
-                                        <strong>Nodos agregados:</strong>
-                                        <ul style={{ marginTop: 6 }}>
-                                            {draftNodes.map((n) => (
-                                                <li key={n.id}>
-                                                    <code>{n.id}</code> — {n.data?.label} — {n.data?.equipoNombre} — ({n.position.x},{" "}
-                                                    {n.position.y})
-                                                </li>
-                                            ))}
-                                        </ul>
-                                    </div>
-                                )}
+                            {draftNodes.length > 0 && (
+                                <ul className="chf__list">
+                                    {draftNodes.map((n) => (
+                                        <li key={n.id} className="chf__list-item">
+                                            <code>{n.id}</code> — {n.data?.label} — {n.data?.equipoNombre}{" "}
+                                            <span className="chf__badge">{n.data?.equipoTipo || "-"}</span>{" "}
+                                            <span className="chf__muted">({n.position.x}, {n.position.y})</span>
+                                        </li>
+                                    ))}
+                                </ul>
+                            )}
+                        </fieldset>
 
-                                <hr />
+                        {/* ---- Enlace ---- */}
+                        <fieldset className="chf__fieldset">
+                            <legend className="chf__legend">Agregar enlace</legend>
 
-                                {/* ==================== ENLACE ==================== */}
-                                <h3>Agregar Enlace</h3>
-                                <div className="form__group-inputs">
-                                    <Field className="form__input" placeholder="Id Enlace" name="edgeId" />
+                            {/* Fila con 4 selects (alineados) */}
+                            <div className="chf__grid chf__grid--4 chf__grid--align-end chf__row-gap">
+                                <label className="chf__label">
+                                    Id Enlace
+                                    <Field className="chf__input" placeholder="Id Enlace" name="edgeId" />
+                                </label>
 
-                                    {/* Select dinámico Source */}
+                                <label className="chf__label">
+                                    Source (Nodo)
                                     <Select
-                                        className="select__input"
-                                        placeholder="Source (Nodo)"
-                                        isSearchable={isSearchable}
+                                        className="chf__select"
+                                        placeholder="Source"
                                         isDisabled={edgeNodeOptions.length === 0}
                                         options={edgeNodeOptions}
                                         value={edgeSourceSel}
@@ -594,16 +547,18 @@ const ChannelForm = () => {
                                             setEdgeSourceSel(opt);
                                             setFieldValue("source", opt?.value || "");
                                         }}
+                                        styles={selectStyles}
                                         noOptionsMessage={() =>
                                             draftNodes.length === 0 ? "Agrega nodos primero" : "Sin coincidencias"
                                         }
                                     />
+                                </label>
 
-                                    {/* Select dinámico Target */}
+                                <label className="chf__label">
+                                    Target (Nodo)
                                     <Select
-                                        className="select__input"
-                                        placeholder="Target (Nodo)"
-                                        isSearchable={isSearchable}
+                                        className="chf__select"
+                                        placeholder="Target"
                                         isDisabled={edgeNodeOptions.length === 0}
                                         options={edgeNodeOptions}
                                         value={edgeTargetSel}
@@ -611,29 +566,46 @@ const ChannelForm = () => {
                                             setEdgeTargetSel(opt);
                                             setFieldValue("target", opt?.value || "");
                                         }}
+                                        styles={selectStyles}
                                         noOptionsMessage={() =>
                                             draftNodes.length === 0 ? "Agrega nodos primero" : "Sin coincidencias"
                                         }
                                     />
+                                </label>
 
-                                    {/* Dirección del enlace (color, flecha y handles) */}
+                                <label className="chf__label">
+                                    Dirección
                                     <Select
-                                        className="select__input"
+                                        className="chf__select"
                                         options={edgeDirOptions}
                                         value={edgeDirection}
                                         onChange={(opt) => setEdgeDirection(opt)}
                                         placeholder="Dirección"
+                                        styles={selectStyles}
                                     />
+                                </label>
+                            </div>
 
+                            {/* Fila con etiquetas */}
+                            <div className="chf__grid chf__grid--2 chf__grid--align-end">
+                                <label className="chf__label">
+                                    Etiqueta (centro)
                                     <Field
-                                        className="form__input form__input-special"
-                                        placeholder="Etiqueta enlace"
+                                        className="chf__input"
+                                        placeholder="p.ej. TV7 Gi1/0/2 - Vlan420"
                                         name="edgeLabel"
                                     />
-                                </div>
+                                </label>
 
+                                <label className="chf__label">
+                                    Multicast (origen)
+                                    <Field className="chf__input" placeholder="239.2.3.222" name="edgeMulticast" />
+                                </label>
+                            </div>
+
+                            <div>
                                 <button
-                                    className="button btn-warning"
+                                    className="chf__btn chf__btn--secondary"
                                     type="button"
                                     onClick={() => {
                                         const id = values.edgeId?.trim();
@@ -656,7 +628,6 @@ const ChannelForm = () => {
                                             });
                                         }
 
-                                        // Verifica que existan
                                         const srcNode = draftNodes.find((n) => n.id === src);
                                         const tgtNode = draftNodes.find((n) => n.id === tgt);
                                         if (!srcNode || !tgtNode) {
@@ -667,8 +638,7 @@ const ChannelForm = () => {
                                             });
                                         }
 
-                                        // Color + handles según dirección y geometría
-                                        const dir = edgeDirection.value; // 'ida' | 'vuelta'
+                                        const dir = edgeDirection.value;
                                         const color = dir === "vuelta" ? "green" : "red";
                                         const handleByDir = pickHandlesByGeometry(srcNode, tgtNode, dir);
 
@@ -679,16 +649,16 @@ const ChannelForm = () => {
                                             sourceHandle: handleByDir.sourceHandle,
                                             targetHandle: handleByDir.targetHandle,
                                             label: values.edgeLabel?.trim() || id,
-                                            type: "directional", // tu edge custom
+                                            type: "directional",
                                             style: { stroke: color, strokeWidth: 2 },
-                                            markerEnd: { ...ARROW_CLOSED }, // flecha al final
+                                            markerEnd: { ...ARROW_CLOSED },
                                             data: {
                                                 direction: dir,
                                                 label: values.edgeLabel?.trim() || id,
+                                                multicast: values.edgeMulticast?.trim() || "",
                                             },
                                         };
 
-                                        // Evitar duplicado por id
                                         if (draftEdges.some((e) => e.id === edge.id)) {
                                             return Swal.fire({
                                                 icon: "warning",
@@ -698,12 +668,11 @@ const ChannelForm = () => {
                                         }
 
                                         setDraftEdges((prev) => [...prev, edge]);
-
-                                        // limpiar bloque de enlace
                                         setFieldValue("edgeId", "");
                                         setFieldValue("source", "");
                                         setFieldValue("target", "");
                                         setFieldValue("edgeLabel", "");
+                                        setFieldValue("edgeMulticast", "");
                                         setEdgeSourceSel(null);
                                         setEdgeTargetSel(null);
                                         setEdgeDirection(edgeDirOptions[0]);
@@ -711,40 +680,42 @@ const ChannelForm = () => {
                                 >
                                     + Agregar enlace
                                 </button>
+                            </div>
 
-                                {/* Vista previa de ENLACES agregados */}
-                                {draftEdges.length > 0 && (
-                                    <div style={{ marginTop: 12 }}>
-                                        <strong>Enlaces agregados:</strong>
-                                        <ul style={{ marginTop: 6 }}>
-                                            {draftEdges.map((e) => (
-                                                <li key={e.id}>
-                                                    <code>{e.id}</code> — {e.source} ({e.sourceHandle}) → {e.target} (
-                                                    {e.targetHandle}) — {e.label} —{" "}
-                                                    <span style={{ color: e.style?.stroke }}>{e.data?.direction}</span>
-                                                </li>
-                                            ))}
-                                        </ul>
-                                    </div>
-                                )}
+                            {draftEdges.length > 0 && (
+                                <ul className="chf__list">
+                                    {draftEdges.map((e) => (
+                                        <li key={e.id} className="chf__list-item">
+                                            <code>{e.id}</code> — {e.source} ({e.sourceHandle}) → {e.target} ({e.targetHandle}) — {e.label}
+                                            {e?.data?.multicast ? (
+                                                <span className="chf__badge chf__badge--muted">mc: {e.data.multicast}</span>
+                                            ) : null}
+                                            <span className="chf__muted" style={{ marginLeft: 8, color: e.style?.stroke }}>
+                                                {e.data?.direction}
+                                            </span>
+                                        </li>
+                                    ))}
+                                </ul>
+                            )}
+                        </fieldset>
 
-                                <hr />
-
-                                <button
-                                    className="button btn-primary"
-                                    type="submit"
-                                    disabled={!selectedValue}
-                                    title={!selectedValue ? "Seleccione una señal para continuar" : "Crear flujo"}
-                                >
-                                    Crear flujo
-                                </button>
-
-                            </Form>
+                        <div className="chf__actions">
+                            <button
+                                className="chf__btn chf__btn--primary"
+                                type="submit"
+                                disabled={!selectedValue}
+                                title={!selectedValue ? "Seleccione una señal para continuar" : "Crear flujo"}
+                            >
+                                Crear flujo
+                            </button>
+                            <button className="chf__btn" type="button" onClick={() => navigate(-1)}>
+                                Cancelar
+                            </button>
                         </div>
-                    )}
-                </Formik>
-            </div>
-        </>
+                    </Form>
+                )}
+            </Formik>
+        </div>
     );
 };
 

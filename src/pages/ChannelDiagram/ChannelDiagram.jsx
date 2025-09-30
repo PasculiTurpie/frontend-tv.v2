@@ -13,7 +13,7 @@ import {
 import "@xyflow/react/dist/style.css";
 import api from "../../utils/api";
 import { useParams } from "react-router-dom";
-import { UserContext } from "../../components/context/UserContext"; // ajusta la ruta si tu contexto está en otro lugar
+import { UserContext } from "../../components/context/UserContext";
 import CustomNode from "./CustomNode";
 import CustomDirectionalEdge from "./CustomDirectionalEdge";
 import CustomWaypointEdge from "./CustomWaypointEdge";
@@ -21,15 +21,14 @@ import EquipoDetail from "../Equipment/EquipoDetail";
 import EquipoIrd from "../Equipment/EquipoIrd";
 import EquipoSatellite from "../Equipment/EquipoSatellite";
 
-/* ─── tipos ─────────────────────────────────────────────────────────────── */
+/* tipos */
 const nodeTypes = { custom: CustomNode };
 const edgeTypes = { directional: CustomDirectionalEdge, waypoint: CustomWaypointEdge };
 
-/* ─── utils ─────────────────────────────────────────────────────────────── */
+/* utils */
 const nn = (v) => { const n = Number(v); return Number.isFinite(n) ? n : 0; };
 const toIdString = (raw) => (typeof raw === "string" ? raw : raw && raw._id ? raw._id : null);
 const norm = (v) => (v || "").toString().normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
-
 const makeEdgeId = (e) => `${String(e.source)}:${e.sourceHandle || ""}->${String(e.target)}:${e.targetHandle || ""}`;
 
 const normalizeHandle = (h) => {
@@ -41,7 +40,7 @@ const normalizeHandle = (h) => {
   return undefined;
 };
 
-/* ─── enrutado por geometría + regla ida/vuelta determinística ──────────── */
+/* enrutado */
 const SIDE = { TOP: "top", RIGHT: "right", BOTTOM: "bottom", LEFT: "left" };
 
 const pickSide = (sx, sy, tx, ty, bias = 12, minDelta = 8) => {
@@ -53,7 +52,6 @@ const pickSide = (sx, sy, tx, ty, bias = 12, minDelta = 8) => {
   if (a < bias || a > 180 - bias) return dx < 0 ? SIDE.LEFT : SIDE.RIGHT;
   return ady > adx ? (dy < 0 ? SIDE.TOP : SIDE.BOTTOM) : (dx < 0 ? SIDE.LEFT : SIDE.RIGHT);
 };
-
 const buildHandle = (side, kind, idx = 1) => `${kind}-${side}-${idx}`;
 
 const isBidirectionalPair = (arr, a, b) =>
@@ -62,7 +60,24 @@ const isBidirectionalPair = (arr, a, b) =>
 
 const isReturnEdge = (sourceId, targetId) => String(sourceId) > String(targetId);
 
+const isSatellite = (node) => {
+  const t = norm(
+    typeof node?.data?.equipo?.tipoNombre === "object"
+      ? node?.data?.equipo?.tipoNombre?.tipoNombre
+      : node?.data?.equipo?.tipoNombre
+  );
+  return t === "satelite" || t === "satellite";
+};
+
 const pickHandlesForNodes = (sNode, tNode, allEdges = []) => {
+  // Regla satélite: out-right (source) -> in-left (target)
+  if (isSatellite(sNode)) {
+    return {
+      sourceHandle: buildHandle(SIDE.RIGHT, "out", 1),
+      targetHandle: buildHandle(SIDE.LEFT, "in", 1),
+    };
+  }
+
   const sx = sNode.position.x + (sNode.width ?? 0) / 2;
   const sy = sNode.position.y + (sNode.height ?? 0) / 2;
   const tx = tNode.position.x + (tNode.width ?? 0) / 2;
@@ -101,18 +116,7 @@ const indexNodes = (arr) => Object.fromEntries(arr.map((n) => [n.id, n]));
 const sanitizeData = (d) =>
   Object.fromEntries(Object.entries(d || {}).filter(([k, v]) => typeof v !== "function" && !String(k).startsWith("__")));
 
-/* ─── debounce ──────────────────────────────────────────────────────────── */
-const useDebouncedSaver = (fn, delay = 600) => {
-  const tRef = useRef(null);
-  const save = useCallback((...args) => {
-    if (tRef.current) clearTimeout(tRef.current);
-    tRef.current = setTimeout(() => fn(...args), delay);
-  }, [fn, delay]);
-  useEffect(() => () => tRef.current && clearTimeout(tRef.current), []);
-  return save;
-};
-
-/* ─── Colores deterministas para pares bidireccionales ──────────────────── */
+/* colores ida/vuelta */
 const COLOR_OUT = "red";
 const COLOR_BACK = "green";
 
@@ -171,7 +175,7 @@ const ChannelDiagram = () => {
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
 
-  /* ─── carga inicial ───────────────────────────────────────────────────── */
+  /* carga */
   useEffect(() => {
     let mounted = true;
     api.getChannelDiagramById(id).then((res) => {
@@ -206,6 +210,7 @@ const ChannelDiagram = () => {
         .map((e) => {
           let sourceHandle = normalizeHandle(e.sourceHandle);
           let targetHandle = normalizeHandle(e.targetHandle);
+
           if (!sourceHandle || !targetHandle) {
             const r = pickHandlesForNodes(nodesIndex[String(e.source)], nodesIndex[String(e.target)], rawEdges);
             sourceHandle = sourceHandle || r.sourceHandle;
@@ -223,7 +228,7 @@ const ChannelDiagram = () => {
             sourceHandle,
             targetHandle,
             label: e.label,
-            data: { ...(e.data || {}), waypoints, __autorouted: true },
+            data: { ...(e.data || {}), waypoints, __autorouted: true }, // incluye multicast si viene
             type: finalType,
             animated: e.animated ?? true,
             style: baseStyle,
@@ -243,7 +248,7 @@ const ChannelDiagram = () => {
     return () => { mounted = false; };
   }, [id, setNodes, setEdges]);
 
-  /* ─── guardado ────────────────────────────────────────────────────────── */
+  /* guardado */
   const doSave = useCallback(async (n, e) => {
     try {
       await api.updateChannelFlow(id, {
@@ -265,7 +270,7 @@ const ChannelDiagram = () => {
           type: ed.type || "directional",
           style: ed.style,
           markerEnd: ed.markerEnd,
-          data: sanitizeData(ed.data),
+          data: sanitizeData(ed.data), // <-- multicast vive aquí
           animated: ed.animated ?? true,
         })),
       });
@@ -274,25 +279,33 @@ const ChannelDiagram = () => {
     }
   }, [id]);
 
+  const useDebouncedSaver = (fn, delay = 500) => {
+    const tRef = useRef(null);
+    const save = useCallback((...args) => {
+      if (tRef.current) clearTimeout(tRef.current);
+      tRef.current = setTimeout(() => fn(...args), delay);
+    }, [fn, delay]);
+    useEffect(() => () => tRef.current && clearTimeout(tRef.current), []);
+    return save;
+  };
+
   const requestSave = useDebouncedSaver(doSave, 500);
 
-  // autosave por cambios
   const first = useRef(true);
   useEffect(() => {
     if (first.current) { first.current = false; return; }
     requestSave(nodes, edges);
   }, [nodes, edges, requestSave]);
 
-  // save inmediato (emitido por editores)
   useEffect(() => {
     const handler = () => requestSave(nodes, edges);
     window.addEventListener("flow:save", handler);
     return () => window.removeEventListener("flow:save", handler);
   }, [nodes, edges, requestSave]);
 
-  /* ─── conectar ───────────────────────────────────────────────────────── */
+  /* conectar */
   const onConnect = useCallback((connection) => {
-    if (!isAuth) return; // bloquea edición si no logueado
+    if (!isAuth) return;
     setEdges((eds) => {
       const nodesIdx = indexNodes(nodes);
       const sNode = nodesIdx[String(connection.source)];
@@ -314,9 +327,9 @@ const ChannelDiagram = () => {
     });
   }, [nodes, setEdges, isAuth]);
 
-  /* ─── actualizar edge (reconexión) ───────────────────────────────────── */
+  /* actualizar edge */
   const onEdgeUpdate = useCallback((oldEdge, connection) => {
-    if (!isAuth) return; // bloquea edición si no logueado
+    if (!isAuth) return;
     setEdges((eds) => {
       const idx = eds.findIndex((e) => e.id === oldEdge.id);
       if (idx === -1) return eds;
@@ -327,10 +340,7 @@ const ChannelDiagram = () => {
       if (!sNode || !tNode) return eds;
 
       const routed = pickHandlesForNodes(sNode, tNode, eds);
-      const keepWaypoints =
-        oldEdge.type === "waypoint" &&
-        Array.isArray(oldEdge?.data?.waypoints) &&
-        oldEdge.data.waypoints.length > 0;
+      const keepWaypoints = oldEdge.type === "waypoint" && Array.isArray(oldEdge?.data?.waypoints) && oldEdge.data.waypoints.length > 0;
 
       const nextType = keepWaypoints ? "waypoint" : (oldEdge.type || "directional");
       const nextId = makeEdgeId({ ...oldEdge, source: connection.source, target: connection.target, ...routed });
@@ -356,9 +366,9 @@ const ChannelDiagram = () => {
     });
   }, [nodes, setEdges, isAuth]);
 
-  /* ─── mover nodos: re‐enrutar ─────────────────────────────────────────── */
+  /* mover nodos */
   const handleNodesChange = useCallback((changes) => {
-    if (!isAuth) return; // bloquea edición si no logueado
+    if (!isAuth) return;
     onNodesChange(changes);
     if (!changes.some((c) => c.type === "position")) return;
 
@@ -382,13 +392,12 @@ const ChannelDiagram = () => {
     });
   }, [nodes, onNodesChange, setEdges, isAuth]);
 
-  /* ─── persistir al soltar ─────────────────────────────────────────────── */
   const onNodeDragStop = useCallback(() => {
     if (!isAuth) return;
     requestSave(nodes, edges);
   }, [nodes, edges, requestSave, isAuth]);
 
-  /* ─── detalle equipo ─────────────────────────────────────────────────── */
+  /* detalle equipo */
   const fetchEquipo = useCallback(async (equipoId) => {
     const idStr = toIdString(equipoId);
     if (!idStr) { setEquipo(null); setEquipoError("Nodo sin equipo asociado"); return; }
@@ -418,7 +427,6 @@ const ChannelDiagram = () => {
     fetchEquipo(toIdString(raw));
   }, [fetchEquipo]);
 
-  /* ─── auto-carga IRD / SAT ───────────────────────────────────────────── */
   useEffect(() => {
     const tipo = norm(typeof equipo?.tipoNombre === "object" ? equipo?.tipoNombre?.tipoNombre : equipo?.tipoNombre);
     if (!equipo || tipo !== "ird") { setIrd(null); setIrdError(null); setLoadingIrd(false); return; }
@@ -449,7 +457,6 @@ const ChannelDiagram = () => {
     })();
   }, [equipo]);
 
-  /* ─── render ──────────────────────────────────────────────────────────── */
   return (
     <div className="outlet-main" style={{ display: "grid", gridTemplateColumns: "minmax(0, 1fr) 380px", gap: 16, width: "100%", minHeight: "70vh" }}>
       <div style={{ minWidth: 0, border: "1px solid #ddd", borderRadius: 8, overflow: "hidden", display: "flex", flexDirection: "column" }}>
@@ -497,7 +504,6 @@ const ChannelDiagram = () => {
               updatable: "both",
               interactionWidth: 24,
             }}
-            /* 🔒 restricciones de edición si no está logueado */
             nodesDraggable={!!isAuth}
             nodesConnectable={!!isAuth}
             elementsSelectable={!!isAuth}
@@ -510,7 +516,6 @@ const ChannelDiagram = () => {
         </div>
       </div>
 
-      {/* panel lateral */}
       <div style={{ minWidth: 0, border: "1px solid #ddd", borderRadius: 8, padding: 12, overflowY: "auto", height: "72vh" }}>
         <h2 style={{ marginTop: 0, marginBottom: 8 }}>Detalle</h2>
         {(() => {
