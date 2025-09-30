@@ -4,6 +4,7 @@ import api from "../../utils/api";
 import ModalChannel from "./ModalChannel";
 import Loader from "../../components/Loader/Loader";
 import Swal from "sweetalert2";
+import "../../components/styles/tables.css";
 
 const ChannelList = () => {
     const [channels, setChannels] = useState([]);
@@ -247,13 +248,13 @@ const ChannelList = () => {
                                             <td>{channel.tipoTecnologia?.toUpperCase()}</td>
                                             <td className="button-action">
                                                 <button
-                                                    className="button btn-primary"
+                                                    className="table-btn table-btn-primary"
                                                     onClick={() => showModal(channel._id)}
                                                 >
                                                     Editar
                                                 </button>
                                                 <button
-                                                    className="button btn-danger"
+                                                    className="table-btn table-btn-danger"
                                                     onClick={() => deleteChannel(channel._id)}
                                                 >
                                                     Eliminar

@@ -6,6 +6,8 @@ import Swal from "sweetalert2";
 import ModalForm from "../../components/ModalForm/ModalForm";
 import api from "../../utils/api";
 
+import "../../components/styles/tables.css";
+
 export const SatelliteList = () => {
     const [satellites, setSatellites] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -15,13 +17,13 @@ export const SatelliteList = () => {
     const getAllSatellites = () => {
         api.getSatellites()
             .then((response) => {
-                 
+
                 setSatellites(response);
                 setIsLoading(false); // <- mover aquí
             })
             .catch((error) => {
-                 
-                 
+
+
                 Swal.fire({
                     icon: "error",
                     title: "Oops...",
@@ -72,7 +74,7 @@ export const SatelliteList = () => {
     };
 
     const showModal = (id) => {
-         
+
         setItemId(id);
         setIsModalOpen(true);
     };
@@ -146,7 +148,7 @@ export const SatelliteList = () => {
                                     </td>
                                     <td className="button-action">
                                         <button
-                                            className="button btn-primary"
+                                            className="table-btn table-btn-primary"
                                             onClick={() => {
                                                 showModal(satellite._id);
                                             }}
@@ -154,7 +156,7 @@ export const SatelliteList = () => {
                                             Editar
                                         </button>
                                         <button
-                                            className="button btn-danger"
+                                            className="table-btn table-btn-danger"
                                             onClick={() =>
                                                 deleteSatellite(satellite._id)
                                             }

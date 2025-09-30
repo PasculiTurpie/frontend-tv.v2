@@ -1,537 +1,826 @@
-// src/pages/ChannelDiagram/ChannelDiagram.jsx
-import React, { useCallback, useContext, useEffect, useRef, useState } from "react";
-import {
-  ReactFlow,
-  Background,
-  Controls,
-  addEdge,
-  useEdgesState,
-  useNodesState,
-  MarkerType,
-  ConnectionMode,
-} from "@xyflow/react";
-import "@xyflow/react/dist/style.css";
+// src/pages/ChannelDiagram/ChannelForm.jsx
+import { Field, Formik, Form, ErrorMessage } from "formik";
+import * as Yup from "yup";
+import { useEffect, useMemo, useState } from "react";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import api from "../../utils/api";
-import { useParams } from "react-router-dom";
-import { UserContext } from "../../components/context/UserContext";
-import CustomNode from "./CustomNode";
-import CustomDirectionalEdge from "./CustomDirectionalEdge";
-import CustomWaypointEdge from "./CustomWaypointEdge";
-import EquipoDetail from "../Equipment/EquipoDetail";
-import EquipoIrd from "../Equipment/EquipoIrd";
-import EquipoSatellite from "../Equipment/EquipoSatellite";
+import Select from "react-select";
+import Swal from "sweetalert2";
+import "./ChannelForm.css";
 
-/* tipos */
-const nodeTypes = { custom: CustomNode };
-const edgeTypes = { directional: CustomDirectionalEdge, waypoint: CustomWaypointEdge };
+// Fallback numérico para MarkerType.ArrowClosed (React Flow = 1)
+const ARROW_CLOSED = { type: 1 };
+const SAME_X_EPS = 8;
 
-/* utils */
-const nn = (v) => { const n = Number(v); return Number.isFinite(n) ? n : 0; };
-const toIdString = (raw) => (typeof raw === "string" ? raw : raw && raw._id ? raw._id : null);
-const norm = (v) => (v || "").toString().normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
-const makeEdgeId = (e) => `${String(e.source)}:${e.sourceHandle || ""}->${String(e.target)}:${e.targetHandle || ""}`;
-
-const normalizeHandle = (h) => {
-  if (!h) return undefined;
-  const rxIndexed = /^(in|out)-(top|bottom|left|right)-\d+$/;
-  const rxSideOnly = /^(in|out)-(top|bottom|left|right)$/;
-  if (rxIndexed.test(h)) return h;
-  if (rxSideOnly.test(h)) return `${h}-1`;
-  return undefined;
+// ---- react-select estilos consistentes (altura 38px, ancho 100%) ----
+const selectStyles = {
+  container: (base) => ({ ...base, width: "100%" }),
+  control: (base, state) => ({
+    ...base,
+    minHeight: 38,
+    height: 38,
+    borderRadius: 8,
+    borderColor: state.isFocused ? "#375d9d" : "#d1d5db",
+    boxShadow: state.isFocused ? "0 0 0 3px rgba(55, 93, 157, 0.20)" : "none",
+    "&:hover": { borderColor: state.isFocused ? "#375d9d" : "#cbd5e1" },
+  }),
+  valueContainer: (base) => ({ ...base, padding: "2px 8px" }),
+  indicatorsContainer: (base) => ({ ...base, height: 38 }),
+  dropdownIndicator: (base) => ({ ...base, padding: "6px 8px" }),
+  clearIndicator: (base) => ({ ...base, padding: "6px 8px" }),
+  menu: (base) => ({ ...base, zIndex: 20 }),
 };
 
-/* enrutado */
-const SIDE = { TOP: "top", RIGHT: "right", BOTTOM: "bottom", LEFT: "left" };
-
-const pickSide = (sx, sy, tx, ty, bias = 12, minDelta = 8) => {
-  const dx = tx - sx, dy = ty - sy;
-  const adx = Math.abs(dx), ady = Math.abs(dy);
-  if (adx < minDelta && ady < minDelta) return SIDE.RIGHT;
-  const a = Math.abs((Math.atan2(dy, dx) * 180) / Math.PI);
-  if (a > 90 - bias && a < 90 + bias) return dy < 0 ? SIDE.TOP : SIDE.BOTTOM;
-  if (a < bias || a > 180 - bias) return dx < 0 ? SIDE.LEFT : SIDE.RIGHT;
-  return ady > adx ? (dy < 0 ? SIDE.TOP : SIDE.BOTTOM) : (dx < 0 ? SIDE.LEFT : SIDE.RIGHT);
+// Helpers
+const toNumberOr = (val, def = 0) => {
+  const n = Number(val);
+  return Number.isFinite(n) ? n : def;
 };
-const buildHandle = (side, kind, idx = 1) => `${kind}-${side}-${idx}`;
-
-const isBidirectionalPair = (arr, a, b) =>
-  arr.some((x) => String(x.source) === String(a) && String(x.target) === String(b)) &&
-  arr.some((x) => String(x.source) === String(b) && String(x.target) === String(a));
-
-const isReturnEdge = (sourceId, targetId) => String(sourceId) > String(targetId);
-
-const isSatellite = (node) => {
-  const t = norm(
-    typeof node?.data?.equipo?.tipoNombre === "object"
-      ? node?.data?.equipo?.tipoNombre?.tipoNombre
-      : node?.data?.equipo?.tipoNombre
-  );
-  return t === "satelite" || t === "satellite";
+const tipoToKey = (tipoNombre) => {
+  const raw =
+    (typeof tipoNombre === "object" && tipoNombre?.tipoNombre) ||
+    (typeof tipoNombre === "string" && tipoNombre) ||
+    "";
+  const key = String(raw).trim().toLowerCase();
+  if (["satélite", "satelite"].includes(key)) return "satelite";
+  if (["switch", "switches", "sw"].includes(key)) return "switch";
+  if (["router", "routers", "rt", "rtr"].includes(key)) return "router";
+  return key;
+};
+const toId = (v) => {
+  if (!v) return null;
+  if (typeof v === "string") return v;
+  if (typeof v === "object" && v._id) return String(v._id);
+  return null;
 };
 
-const pickHandlesForNodes = (sNode, tNode, allEdges = []) => {
-  // Regla satélite: out-right (source) -> in-left (target)
-  if (isSatellite(sNode)) {
-    return {
-      sourceHandle: buildHandle(SIDE.RIGHT, "out", 1),
-      targetHandle: buildHandle(SIDE.LEFT, "in", 1),
-    };
+/**
+ * Elige handles por geometría y dirección ('ida' | 'vuelta').
+ * Regla adicional: si el SOURCE es un SATÉLITE, fuerza out-right -> in-left.
+ */
+function pickHandlesByGeometry(srcNode, tgtNode, direction /* 'ida' | 'vuelta' */) {
+  const srcTipo =
+    srcNode?.data?.equipoTipo ||
+    tipoToKey(srcNode?.data?.equipo?.tipoNombre?.tipoNombre);
+  if (srcTipo === "satelite") {
+    return { sourceHandle: "out-right", targetHandle: "in-left" };
   }
 
-  const sx = sNode.position.x + (sNode.width ?? 0) / 2;
-  const sy = sNode.position.y + (sNode.height ?? 0) / 2;
-  const tx = tNode.position.x + (tNode.width ?? 0) / 2;
-  const ty = tNode.position.y + (tNode.height ?? 0) / 2;
+  const sx = Number(srcNode?.position?.x ?? 0);
+  const sy = Number(srcNode?.position?.y ?? 0);
+  const tx = Number(tgtNode?.position?.x ?? 0);
+  const ty = Number(tgtNode?.position?.y ?? 0);
 
-  const side = pickSide(sx, sy, tx, ty);
-  const bidir = isBidirectionalPair(allEdges, sNode.id, tNode.id);
-  const idx = bidir ? (isReturnEdge(sNode.id, tNode.id) ? 3 : 1) : 1;
+  const sameX = Math.abs(sx - tx) <= SAME_X_EPS;
 
-  if (side === SIDE.TOP || side === SIDE.BOTTOM) {
-    return {
-      sourceHandle: buildHandle(side, "out", idx),
-      targetHandle: buildHandle(side === SIDE.TOP ? SIDE.BOTTOM : SIDE.TOP, "in", idx),
-    };
-  }
-  if (bidir && idx === 3) {
-    return {
-      sourceHandle: buildHandle(SIDE.RIGHT, "out", 3),
-      targetHandle: buildHandle(SIDE.LEFT, "in", 3),
-    };
-  }
-  return {
-    sourceHandle: buildHandle(SIDE.LEFT, "out", 1),
-    targetHandle: buildHandle(SIDE.RIGHT, "in", 1),
-  };
-};
-
-const autoRouteEdge = (edge, nodesById, allEdges = []) => {
-  const s = nodesById[edge.source], t = nodesById[edge.target];
-  if (!s || !t) return edge;
-  const { sourceHandle, targetHandle } = pickHandlesForNodes(s, t, allEdges);
-  return { ...edge, sourceHandle, targetHandle, id: makeEdgeId({ ...edge, sourceHandle, targetHandle }) };
-};
-
-const indexNodes = (arr) => Object.fromEntries(arr.map((n) => [n.id, n]));
-const sanitizeData = (d) =>
-  Object.fromEntries(Object.entries(d || {}).filter(([k, v]) => typeof v !== "function" && !String(k).startsWith("__")));
-
-/* colores ida/vuelta */
-const COLOR_OUT = "red";
-const COLOR_BACK = "green";
-
-const recomputeReverseFlags = (eds) => {
-  const groups = new Map();
-  for (const e of eds) {
-    const a = String(e.source);
-    const b = String(e.target);
-    const key = a < b ? `${a}|${b}` : `${b}|${a}`;
-    if (!groups.has(key)) groups.set(key, []);
-    groups.get(key).push(e);
+  if (sameX && sy !== ty) {
+    const srcIsUpper = sy < ty;
+    if (direction === "ida") {
+      return srcIsUpper
+        ? { sourceHandle: "out-bottom-1", targetHandle: "in-top-1" }
+        : { sourceHandle: "out-top-1", targetHandle: "in-bottom-1" };
+    } else {
+      return srcIsUpper
+        ? { sourceHandle: "out-bottom-2", targetHandle: "in-top-2" }
+        : { sourceHandle: "out-top-2", targetHandle: "in-bottom-2" };
+    }
   }
 
-  return eds.map((e) => {
-    const a = String(e.source);
-    const b = String(e.target);
-    const key = a < b ? `${a}|${b}` : `${b}|${a}`;
-    const group = groups.get(key) || [];
+  return direction === "ida"
+    ? { sourceHandle: "out-right", targetHandle: "in-left" }
+    : { sourceHandle: "out-left", targetHandle: "in-right" };
+}
 
-    const bidir = group.length >= 2;
-    const reversed = bidir && (a > b);
+/* =========================
+   Yup Validation Schemas
+========================= */
 
-    const nextStyle = { ...(e.style || {}) };
-    if (reversed) nextStyle.strokeDasharray = nextStyle.strokeDasharray || "4 3";
-    else if (nextStyle.strokeDasharray) delete nextStyle.strokeDasharray;
+// RegEx simple para IPv4 multicast: 224.0.0.0 – 239.255.255.255
+// (no validamos máscara/puerto; es un "formato razonable" opcional)
+const multicastRegex =
+  /^(22[4-9]|23[0-9])(?:\.(?:25[0-5]|2[0-4]\d|1?\d{1,2})){3}$/;
 
-    const wasAuto = !!e?.data?.__autoColor;
-    const shouldAutoPaint = bidir && (wasAuto || !nextStyle.stroke);
-    if (shouldAutoPaint) nextStyle.stroke = reversed ? COLOR_BACK : COLOR_OUT;
+// Validaciones del formulario (para inputs de NODO y ENLACE).
+// Ojo: el selector de Señal se valida en el submit (no es un Field de Formik).
+const validationSchema = Yup.object({
+  // Nodo
+  id: Yup.string()
+    .trim()
+    .max(64, "Máximo 64 caracteres")
+    .matches(/^[\w.-]+$/, "Sólo letras, números, guión y punto")
+    .when("$nodeAction", (nodeAction, schema) =>
+      nodeAction === "add" ? schema.required("Id del nodo es requerido") : schema.notRequired()
+    ),
+  label: Yup.string()
+    .trim()
+    .max(120, "Máximo 120 caracteres")
+    .nullable(),
+  posX: Yup.number()
+    .typeError("Pos X debe ser numérico")
+    .min(-100000, "Muy pequeño")
+    .max(100000, "Muy grande")
+    .nullable(),
+  posY: Yup.number()
+    .typeError("Pos Y debe ser numérico")
+    .min(-100000, "Muy pequeño")
+    .max(100000, "Muy grande")
+    .nullable(),
 
-    return {
-      ...e,
-      style: nextStyle,
-      data: { ...(e.data || {}), __reversed: reversed, __autoColor: shouldAutoPaint ? true : wasAuto },
-    };
-  });
-};
+  // Enlace
+  edgeId: Yup.string()
+    .trim()
+    .max(128, "Máximo 128 caracteres")
+    .matches(/^[\w.:->]+$/, "Use letras, números y separadores (:, ->, .)")
+    .when("$edgeAction", (edgeAction, schema) =>
+      edgeAction === "add" ? schema.required("Id del enlace es requerido") : schema.notRequired()
+    ),
+  source: Yup.string().when("$edgeAction", (edgeAction, schema) =>
+    edgeAction === "add" ? schema.required("Source es requerido") : schema.notRequired()
+  ),
+  target: Yup.string().when("$edgeAction", (edgeAction, schema) =>
+    edgeAction === "add" ? schema.required("Target es requerido") : schema.notRequired()
+  ),
+  edgeLabel: Yup.string().trim().max(200, "Máximo 200 caracteres").nullable(),
+  edgeMulticast: Yup.string()
+    .trim()
+    .matches(multicastRegex, "Multicast inválido (ej: 239.2.3.222)")
+    .nullable()
+    .notRequired(),
+});
 
-const ChannelDiagram = () => {
-  const { id } = useParams();
-  const { isAuth } = useContext(UserContext);
+const ChannelForm = () => {
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
-  const [signal, setSignal] = useState({});
-  const [equipo, setEquipo] = useState(null);
-  const [loadingEquipo, setLoadingEquipo] = useState(false);
-  const [equipoError, setEquipoError] = useState(null);
+  // Señales
+  const [optionsSelectChannel, setOptionSelectChannel] = useState([]);
+  const [signalsLoading, setSignalsLoading] = useState(true);
+  const [signalsError, setSignalsError] = useState(null);
 
-  const [ird, setIrd] = useState(null);
-  const [loadingIrd, setLoadingIrd] = useState(false);
-  const [irdError, setIrdError] = useState(null);
+  const [selectedValue, setSelectedValue] = useState(null);
+  const [selectedId, setSelectedId] = useState(null);
 
-  const [sat, setSat] = useState(null);
-  const [loadingSat, setLoadingSat] = useState(false);
-  const [satError, setSatError] = useState(null);
+  // Equipos agrupados
+  const [optionsSelectEquipo, setOptionSelectEquipo] = useState([]);
+  const [selectedEquipoValue, setSelectedEquipoValue] = useState(null);
+  const [selectedIdEquipo, setSelectedIdEquipo] = useState(null);
+  const [selectedEquipoTipo, setSelectedEquipoTipo] = useState(null);
 
-  const [nodes, setNodes, onNodesChange] = useNodesState([]);
-  const [edges, setEdges, onEdgesChange] = useEdgesState([]);
+  // Borradores
+  const [draftNodes, setDraftNodes] = useState([]);
+  const [draftEdges, setDraftEdges] = useState([]);
 
-  /* carga */
+  // Selects dinámicos de edges
+  const [edgeSourceSel, setEdgeSourceSel] = useState(null);
+  const [edgeTargetSel, setEdgeTargetSel] = useState(null);
+
+  // Dirección
+  const edgeDirOptions = [
+    { value: "ida", label: "Ida (source → target)" },
+    { value: "vuelta", label: "Vuelta (target ← source)" },
+  ];
+  const [edgeDirection, setEdgeDirection] = useState(edgeDirOptions[0]);
+
+  // Cargar señales y filtrar disponibles
   useEffect(() => {
     let mounted = true;
-    api.getChannelDiagramById(id).then((res) => {
-      if (!mounted) return;
-      const result = res.data || {};
-      setSignal(result);
+    (async () => {
+      setSignalsLoading(true);
+      setSignalsError(null);
+      try {
+        const [signalsRes, channelsRes] = await Promise.all([
+          api.getSignal(), // /signal
+          api.getChannelDiagram(), // /channels
+        ]);
 
-      const rawNodes = Array.isArray(result.nodes) ? result.nodes : [];
-      let normalizedNodes = rawNodes.map((n, i) => {
-        const baseData = n.data || {};
-        const label = baseData.label ?? n.label ?? String(n.id ?? i + 1);
-        const rawEquipoId = baseData.equipoId ?? n.equipoId ?? n.equipo ?? null;
-        const embedEquipo = baseData.equipo ?? n.equipo ?? n.equipoObject ?? null;
-        const equipoId = toIdString(rawEquipoId);
+        const signals = Array.isArray(signalsRes?.data) ? signalsRes.data : [];
+        const channels = Array.isArray(channelsRes?.data) ? channelsRes.data : [];
 
-        return {
-          id: String(n.id ?? i + 1),
-          type: n.type || "custom",
-          data: { ...baseData, label, ...(equipoId ? { equipoId } : {}), ...(embedEquipo ? { equipo: embedEquipo } : {}) },
-          position: { x: nn(n?.position?.x), y: nn(n?.position?.y) },
-        };
-      });
+        const usedSet = new Set(channels.map((ch) => toId(ch?.signal)).filter(Boolean));
 
-      if (normalizedNodes.length && normalizedNodes.every((n) => n.position.x === 0 && n.position.y === 0)) {
-        normalizedNodes = normalizedNodes.map((n, idx) => ({ ...n, position: { x: idx * 220, y: 100 } }));
+        const unusedSignals = signals.filter((s) => !usedSet.has(toId(s?._id)));
+
+        const opts = unusedSignals.map((opt) => ({
+          label: `${opt.nameChannel ?? opt.nombre ?? "Sin nombre"} - ${opt.tipoTecnologia ?? opt.tipo ?? ""}`.trim(),
+          value: opt._id,
+          raw: opt,
+        }));
+
+        if (!mounted) return;
+        setOptionSelectChannel(opts);
+
+        const preId = searchParams.get("signalId");
+        if (preId && opts.some((o) => String(o.value) === String(preId))) {
+          const found = opts.find((o) => String(o.value) === String(preId));
+          setSelectedValue(found.value);
+          setSelectedId(found.label);
+        } else {
+          setSelectedValue(null);
+          setSelectedId(null);
+        }
+      } catch (e) {
+        if (!mounted) return;
+        setSignalsError(e);
+      } finally {
+        if (mounted) setSignalsLoading(false);
       }
+    })();
 
-      const rawEdges = Array.isArray(result.edges) ? result.edges : [];
-      const nodesIndex = indexNodes(normalizedNodes);
+    return () => {
+      mounted = false;
+    };
+  }, [searchParams]);
 
-      const normalizedEdges = rawEdges
-        .map((e) => {
-          let sourceHandle = normalizeHandle(e.sourceHandle);
-          let targetHandle = normalizeHandle(e.targetHandle);
+  // Cargar equipos
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const res = await api.getEquipo();
+        const arr = res.data || [];
 
-          if (!sourceHandle || !targetHandle) {
-            const r = pickHandlesForNodes(nodesIndex[String(e.source)], nodesIndex[String(e.target)], rawEdges);
-            sourceHandle = sourceHandle || r.sourceHandle;
-            targetHandle = targetHandle || r.targetHandle;
-          }
+        const satelites = [];
+        const irds = [];
+        const switches = [];
+        const routers = [];
+        const otros = [];
 
-          const waypoints = Array.isArray(e?.data?.waypoints) ? e.data.waypoints : [];
-          const baseStyle = { stroke: e?.style?.stroke || "#000", strokeWidth: e?.style?.strokeWidth ?? 2, ...e?.style };
-          const finalType = waypoints.length ? "waypoint" : (e.type === "waypoint" ? "waypoint" : "directional");
+        for (const eq of arr) {
+          const key = tipoToKey(eq?.tipoNombre);
+          const baseName = (eq?.nombre?.toUpperCase?.() || eq?.nombre || "").trim();
+          const pol =
+            eq?.satelliteRef?.satelliteType?.typePolarization
+              ? String(eq.satelliteRef.satelliteType.typePolarization).trim()
+              : null;
 
-          return {
-            id: String(e.id ?? makeEdgeId({ ...e, sourceHandle, targetHandle })),
-            source: String(e.source),
-            target: String(e.target),
-            sourceHandle,
-            targetHandle,
-            label: e.label,
-            data: { ...(e.data || {}), waypoints, __autorouted: true }, // incluye multicast si viene
-            type: finalType,
-            animated: e.animated ?? true,
-            style: baseStyle,
-            markerEnd: e.markerEnd || { type: MarkerType.ArrowClosed, color: baseStyle.stroke || "#000" },
-            updatable: "both",
-            interactionWidth: 24,
+          const option = {
+            label: key === "satelite" && pol ? `${baseName} ${pol}` : baseName,
+            value: eq?._id,
+            meta: { tipo: key },
           };
-        })
-        .filter((e) =>
-          normalizedNodes.some((n) => n.id === e.source) &&
-          normalizedNodes.some((n) => n.id === e.target)
-        );
 
-      setNodes(normalizedNodes);
-      setEdges(recomputeReverseFlags(normalizedEdges));
-    }).catch((err) => console.error("Error al cargar diagrama:", err));
-    return () => { mounted = false; };
-  }, [id, setNodes, setEdges]);
+          if (key === "satelite") satelites.push(option);
+          else if (key === "ird") irds.push(option);
+          else if (key === "switch") switches.push(option);
+          else if (key === "router") routers.push(option);
+          else otros.push(option);
+        }
 
-  /* guardado */
-  const doSave = useCallback(async (n, e) => {
-    try {
-      await api.updateChannelFlow(id, {
-        nodes: n.map((node) => ({
-          id: node.id,
-          type: node.type || "custom",
-          data: node.data || {},
-          position: node.position || { x: 0, y: 0 },
-          label: node.data?.label || node.label,
-          equipo: node.data?.equipoId || node.equipo,
-        })),
-        edges: e.map((ed) => ({
-          id: ed.id,
-          source: ed.source,
-          target: ed.target,
-          sourceHandle: ed.sourceHandle,
-          targetHandle: ed.targetHandle,
-          label: ed.label,
-          type: ed.type || "directional",
-          style: ed.style,
-          markerEnd: ed.markerEnd,
-          data: sanitizeData(ed.data), // <-- multicast vive aquí
-          animated: ed.animated ?? true,
-        })),
-      });
-    } catch (err) {
-      console.warn("No se pudo guardar el flujo:", err?.response?.data || err);
-    }
-  }, [id]);
+        const byLabel = (a, b) => a.label.localeCompare(b.label, "es", { sensitivity: "base" });
+        satelites.sort(byLabel); irds.sort(byLabel); switches.sort(byLabel); routers.sort(byLabel); otros.sort(byLabel);
 
-  const useDebouncedSaver = (fn, delay = 500) => {
-    const tRef = useRef(null);
-    const save = useCallback((...args) => {
-      if (tRef.current) clearTimeout(tRef.current);
-      tRef.current = setTimeout(() => fn(...args), delay);
-    }, [fn, delay]);
-    useEffect(() => () => tRef.current && clearTimeout(tRef.current), []);
-    return save;
-  };
+        const grouped = [
+          { label: "Satélites", options: satelites },
+          { label: "IRD", options: irds },
+          { label: "Switches", options: switches },
+          { label: "Routers", options: routers },
+          { label: "Otros equipos", options: otros },
+        ].filter((g) => g.options.length > 0);
 
-  const requestSave = useDebouncedSaver(doSave, 500);
+        if (mounted) setOptionSelectEquipo(grouped);
+      } catch (e) {
+        console.warn("Error cargando equipos:", e?.message);
+      }
+    })();
 
-  const first = useRef(true);
-  useEffect(() => {
-    if (first.current) { first.current = false; return; }
-    requestSave(nodes, edges);
-  }, [nodes, edges, requestSave]);
-
-  useEffect(() => {
-    const handler = () => requestSave(nodes, edges);
-    window.addEventListener("flow:save", handler);
-    return () => window.removeEventListener("flow:save", handler);
-  }, [nodes, edges, requestSave]);
-
-  /* conectar */
-  const onConnect = useCallback((connection) => {
-    if (!isAuth) return;
-    setEdges((eds) => {
-      const nodesIdx = indexNodes(nodes);
-      const sNode = nodesIdx[String(connection.source)];
-      const tNode = nodesIdx[String(connection.target)];
-      const routed = sNode && tNode ? pickHandlesForNodes(sNode, tNode, eds) : {};
-      const newEdge = {
-        ...connection,
-        ...routed,
-        id: makeEdgeId({ ...connection, ...routed }),
-        type: "directional",
-        animated: true,
-        style: { stroke: "#000", strokeWidth: 2 },
-        markerEnd: { type: MarkerType.ArrowClosed, color: "#000" },
-        data: { label: `${connection.source}→${connection.target}`, waypoints: [], __autorouted: true },
-        updatable: "both",
-        interactionWidth: 24,
-      };
-      return recomputeReverseFlags(addEdge(newEdge, eds));
-    });
-  }, [nodes, setEdges, isAuth]);
-
-  /* actualizar edge */
-  const onEdgeUpdate = useCallback((oldEdge, connection) => {
-    if (!isAuth) return;
-    setEdges((eds) => {
-      const idx = eds.findIndex((e) => e.id === oldEdge.id);
-      if (idx === -1) return eds;
-
-      const nodesIdx = indexNodes(nodes);
-      const sNode = nodesIdx[String(connection.source)];
-      const tNode = nodesIdx[String(connection.target)];
-      if (!sNode || !tNode) return eds;
-
-      const routed = pickHandlesForNodes(sNode, tNode, eds);
-      const keepWaypoints = oldEdge.type === "waypoint" && Array.isArray(oldEdge?.data?.waypoints) && oldEdge.data.waypoints.length > 0;
-
-      const nextType = keepWaypoints ? "waypoint" : (oldEdge.type || "directional");
-      const nextId = makeEdgeId({ ...oldEdge, source: connection.source, target: connection.target, ...routed });
-
-      const updatedEdge = {
-        ...oldEdge,
-        id: nextId,
-        source: connection.source,
-        target: connection.target,
-        ...routed,
-        type: nextType,
-        animated: oldEdge.animated ?? true,
-        style: oldEdge.style || { stroke: "#000", strokeWidth: 2 },
-        markerEnd: oldEdge.markerEnd || { type: MarkerType.ArrowClosed, color: "#000" },
-        data: { ...(oldEdge.data || {}), __autorouted: true },
-        updatable: "both",
-        interactionWidth: oldEdge.interactionWidth ?? 24,
-      };
-
-      const next = [...eds];
-      next[idx] = updatedEdge;
-      return recomputeReverseFlags(next);
-    });
-  }, [nodes, setEdges, isAuth]);
-
-  /* mover nodos */
-  const handleNodesChange = useCallback((changes) => {
-    if (!isAuth) return;
-    onNodesChange(changes);
-    if (!changes.some((c) => c.type === "position")) return;
-
-    setEdges((eds) => {
-      const nodesIdx = indexNodes(nodes);
-      let next = eds.map((e) => {
-        if (e.type === "waypoint" && Array.isArray(e?.data?.waypoints) && e.data.waypoints.length) return e;
-        return autoRouteEdge(e, nodesIdx, eds);
-      });
-
-      // si el label NO está “pinned”, limpiamos labelPos para recálculo
-      next = next.map((e) => {
-        if (e?.data?.labelPinned) return e;
-        if (e?.data?.labelPos === undefined) return e;
-        const { labelPos, ...rest } = e.data || {};
-        return { ...e, data: rest };
-      });
-
-      next = recomputeReverseFlags(next);
-      return next;
-    });
-  }, [nodes, onNodesChange, setEdges, isAuth]);
-
-  const onNodeDragStop = useCallback(() => {
-    if (!isAuth) return;
-    requestSave(nodes, edges);
-  }, [nodes, edges, requestSave, isAuth]);
-
-  /* detalle equipo */
-  const fetchEquipo = useCallback(async (equipoId) => {
-    const idStr = toIdString(equipoId);
-    if (!idStr) { setEquipo(null); setEquipoError("Nodo sin equipo asociado"); return; }
-    try {
-      setLoadingEquipo(true);
-      setEquipoError(null);
-      setEquipo(null);
-      setIrd(null); setIrdError(null); setLoadingIrd(false);
-      setSat(null); setSatError(null); setLoadingSat(false);
-      const res = await api.getIdEquipo(encodeURIComponent(idStr));
-      setEquipo(res?.data || null);
-    } catch (err) {
-      setEquipo(null);
-      setEquipoError(err?.response?.data?.message || err.message || "Error al cargar equipo");
-    } finally { setLoadingEquipo(false); }
+    return () => {
+      mounted = false;
+    };
   }, []);
 
-  const handleNodeClick = useCallback((evt, node) => {
-    const equipoObj = node?.data?.equipo ?? node?.equipo ?? null;
-    if (equipoObj && typeof equipoObj === "object") {
-      setIrd(null); setIrdError(null); setLoadingIrd(false);
-      setSat(null); setSatError(null); setLoadingSat(false);
-      setEquipo({ ...equipoObj });
-      return;
-    }
-    const raw = node?.data?.equipoId ?? node?.data?.equipo?._id ?? node?.equipo ?? null;
-    fetchEquipo(toIdString(raw));
-  }, [fetchEquipo]);
+  const handleSelectedChannel = (e) => {
+    setSelectedValue(e?.value || null);
+    setSelectedId(e?.label || null);
+  };
+  const handleSelectedEquipo = (e) => {
+    setSelectedEquipoValue(e?.value || null);
+    setSelectedIdEquipo(e?.label || null);
+    setSelectedEquipoTipo(e?.meta?.tipo || null);
+  };
 
-  useEffect(() => {
-    const tipo = norm(typeof equipo?.tipoNombre === "object" ? equipo?.tipoNombre?.tipoNombre : equipo?.tipoNombre);
-    if (!equipo || tipo !== "ird") { setIrd(null); setIrdError(null); setLoadingIrd(false); return; }
-    if (equipo?.irdRef && typeof equipo.irdRef === "object") { setIrd(equipo.irdRef); setIrdError(null); setLoadingIrd(false); return; }
-    const irdId = typeof equipo?.irdRef === "string" ? equipo.irdRef : toIdString(equipo?.irdRef);
-    if (!irdId) { setIrd(null); setIrdError("Equipo IRD sin irdRef"); setLoadingIrd(false); return; }
-    (async () => {
-      try {
-        setLoadingIrd(true); setIrdError(null); setIrd(null);
-        const res = await api.getIdIrd(encodeURIComponent(irdId)); setIrd(res?.data || null);
-      } catch (err) { setIrd(null); setIrdError(err?.response?.data?.message || err.message || "Error al cargar IRD"); }
-      finally { setLoadingIrd(false); }
-    })();
-  }, [equipo]);
+  const edgeNodeOptions = useMemo(
+    () =>
+      draftNodes.map((n) => ({
+        value: n.id,
+        label: `${n.id} — ${n.data?.label || ""}`.trim(),
+      })),
+    [draftNodes]
+  );
 
-  useEffect(() => {
-    const tipo = norm(typeof equipo?.tipoNombre === "object" ? equipo?.tipoNombre?.tipoNombre : equipo?.tipoNombre);
-    if (!equipo || (tipo !== "satelite" && tipo !== "satellite")) { setSat(null); setSatError(null); setLoadingSat(false); return; }
-    if (equipo?.satelliteRef && typeof equipo.satelliteRef === "object") { setSat(equipo.satelliteRef); setSatError(null); setLoadingSat(false); return; }
-    const satId = typeof equipo?.satelliteRef === "string" ? equipo.satelliteRef : toIdString(equipo?.satelliteRef);
-    if (!satId) { setSat(null); setSatError("Equipo satélite sin satelliteRef"); setLoadingSat(false); return; }
-    (async () => {
-      try {
-        setLoadingSat(true); setSatError(null); setSat(null);
-        const res = await api.getSatelliteId(encodeURIComponent(satId)); setSat(res?.data || null);
-      } catch (err) { setSat(null); setSatError(err?.response?.data?.message || err.message || "Error al cargar Satélite"); }
-      finally { setLoadingSat(false); }
-    })();
-  }, [equipo]);
+  const availableSignals = optionsSelectChannel.length;
 
   return (
-    <div className="outlet-main" style={{ display: "grid", gridTemplateColumns: "minmax(0, 1fr) 380px", gap: 16, width: "100%", minHeight: "70vh" }}>
-      <div style={{ minWidth: 0, border: "1px solid #ddd", borderRadius: 8, overflow: "hidden", display: "flex", flexDirection: "column" }}>
-        <div style={{ padding: "8px 12px", borderBottom: "1px solid #eee", fontWeight: 600 }}>
-          {signal?.signal?.nameChannel || "Diagrama de Canal"}{" "}
-          {signal?.signal?.tipoTecnologia && `(${String(signal.signal.tipoTecnologia).toUpperCase()})`}
-        </div>
+    <div className="chf__wrapper">
+      <nav aria-label="breadcrumb" className="chf__breadcrumb">
+        <ol className="breadcrumb">
+          <li className="breadcrumb-item">
+            <Link to="/channel_diagram-list">Listar</Link>
+          </li>
+          <li className="breadcrumb-item active" aria-current="page">
+            Formulario
+          </li>
+        </ol>
+      </nav>
 
-        <div style={{ width: "100%", height: "72vh", position: "relative" }}>
-          {!isAuth && (
-            <div style={{
-              position: "absolute", right: 12, top: 8, zIndex: 5,
-              background: "#1f2937", color: "#fff", padding: "4px 8px", borderRadius: 6, fontSize: 12
-            }}>
-              Vista de solo lectura (inicia sesión para editar)
+      <h2 className="chf__title">Crear un diagrama</h2>
+
+      <Formik
+        initialValues={{
+          // Nodo
+          id: "",
+          label: "",
+          posX: "",
+          posY: "",
+          // Enlace
+          edgeId: "",
+          source: "",
+          target: "",
+          edgeLabel: "",
+          edgeMulticast: "",
+        }}
+        // Pasamos "context" a Yup para saber en qué bloque se validará
+        validationSchema={validationSchema}
+        validateOnBlur
+        validateOnChange={false}
+        onSubmit={async (_, { resetForm }) => {
+          try {
+            if (!selectedValue) {
+              Swal.fire({
+                icon: "warning",
+                title: "Seleccione una señal",
+                text: "Debes elegir la señal a la que pertenecerá este flujo.",
+              });
+              return;
+            }
+
+            if (draftNodes.length === 0) {
+              Swal.fire({
+                icon: "warning",
+                title: "Sin nodos",
+                text: "Agrega al menos un nodo antes de crear el flujo.",
+              });
+              return;
+            }
+
+            const normalizedNodes = draftNodes.map((n) => ({
+              id: n.id,
+              type: n.type || "custom",
+              equipo: n.data?.equipoId,
+              label: n.data?.label,
+              data: {
+                label: n.data?.label || n.id,
+                equipoId: n.data?.equipoId,
+                equipoNombre: n.data?.equipoNombre,
+                equipoTipo: n.data?.equipoTipo,
+              },
+              position: {
+                x: Number.isFinite(+n.position?.x) ? +n.position.x : 0,
+                y: Number.isFinite(+n.position?.y) ? +n.position.y : 0,
+              },
+            }));
+
+            const normalizedEdges = draftEdges.map((e) => ({
+              id: e.id,
+              source: e.source,
+              target: e.target,
+              sourceHandle: e.sourceHandle,
+              targetHandle: e.targetHandle,
+              label: e.label,
+              type: e.type || "directional",
+              style: e.style,
+              markerEnd: e.markerEnd,
+              markerStart: e.markerStart,
+              data: { ...(e.data || {}) },
+            }));
+
+            const payload = {
+              signal: selectedValue,
+              channel: selectedValue,
+              signalId: selectedValue,
+              channelId: selectedValue,
+              nodes: normalizedNodes,
+              edges: normalizedEdges,
+            };
+
+            await api.createChannelDiagram(payload);
+
+            Swal.fire({
+              icon: "success",
+              title: "Flujo creado",
+              html: `
+                <p><strong>Señal:</strong> ${selectedId}</p>
+                <p><strong>Nodos:</strong> ${draftNodes.length}</p>
+                <p><strong>Enlaces:</strong> ${draftEdges.length}</p>
+              `,
+            });
+
+            setDraftNodes([]);
+            setDraftEdges([]);
+            setEdgeSourceSel(null);
+            setEdgeTargetSel(null);
+            setEdgeDirection(edgeDirOptions[0]);
+            resetForm();
+          } catch (e) {
+            const data = e?.response?.data;
+            Swal.fire({
+              icon: "error",
+              title: "Error al crear flujo",
+              html: `
+                <div style="text-align:left">
+                  <div><b>Status:</b> ${e?.response?.status || "?"}</div>
+                  <div><b>Mensaje:</b> ${data?.message || e.message || "Error desconocido"}</div>
+                  ${data?.missing ? `<div><b>Faltan:</b> ${JSON.stringify(data.missing)}</div>` : ""}
+                  ${data?.errors ? `<pre>${JSON.stringify(data.errors, null, 2)}</pre>` : ""}
+                </div>
+              `,
+            });
+          }
+        }}
+      >
+        {({ values, setFieldValue, validateForm, setErrors, setTouched }) => (
+          <Form className="chf__form">
+            {/* ---- Señal ---- */}
+            <fieldset className="chf__fieldset">
+              <legend className="chf__legend">Señal</legend>
+
+              {signalsLoading ? (
+                <Select className="select-width" isLoading isDisabled placeholder="Cargando señales…" styles={selectStyles} />
+              ) : signalsError ? (
+                <div className="chf__alert chf__alert--error">
+                  <strong>Error al cargar señales.</strong>
+                  <div className="chf__alert-actions">
+                    <button type="button" className="chf__btn" onClick={() => window.location.reload()}>
+                      Reintentar
+                    </button>
+                  </div>
+                </div>
+              ) : optionsSelectChannel.length === 0 ? (
+                <div className="chf__empty">
+                  <h4>No hay señales disponibles</h4>
+                  <p>Todas las señales ya están vinculadas a un diagrama. Crea una nueva señal para continuar.</p>
+                  <button
+                    type="button"
+                    className="chf__btn chf__btn--primary"
+                    onClick={() => navigate("/signals/new")}
+                  >
+                    + Crear nueva señal
+                  </button>
+                </div>
+              ) : (
+                <>
+                  <div className="chf__row">
+                    <div className="chf__select-inline">
+                      <Select
+                        className="select-width"
+                        isSearchable
+                        options={optionsSelectChannel}
+                        onChange={handleSelectedChannel}
+                        placeholder="Seleccione una señal"
+                        noOptionsMessage={() => "No hay señales disponibles"}
+                        styles={selectStyles}
+                      />
+                    </div>
+                    <div className="chf__available">
+                      <span className="chf__badge chf__badge--primary">
+                        {optionsSelectChannel.length} disponibles
+                      </span>
+                    </div>
+                  </div>
+                  {!selectedValue && (
+                    <div className="chf__error">Debes seleccionar una señal antes de crear el flujo.</div>
+                  )}
+                </>
+              )}
+            </fieldset>
+
+            {/* ---- Nodo ---- */}
+            <fieldset className="chf__fieldset">
+              <legend className="chf__legend">Agregar nodo</legend>
+
+              <div className="chf__grid chf__grid--3 chf__grid--align-end">
+                <label className="chf__label">
+                  Id Nodo
+                  <Field className="chf__input" placeholder="Id Nodo" name="id" />
+                  <ErrorMessage name="id" component="div" className="chf__error" />
+                </label>
+
+                <label className="chf__label">
+                  Equipo
+                  <Select
+                    className="chf__select"
+                    name="equipo"
+                    placeholder="Equipos"
+                    options={optionsSelectEquipo}
+                    onChange={handleSelectedEquipo}
+                    styles={selectStyles}
+                  />
+                  {!selectedEquipoValue && (
+                    <div className="chf__error">Seleccione un equipo/tipo.</div>
+                  )}
+                </label>
+
+                <label className="chf__label">
+                  Etiqueta
+                  <Field className="chf__input" placeholder="Etiqueta visible" name="label" />
+                  <ErrorMessage name="label" component="div" className="chf__error" />
+                </label>
+
+                <label className="chf__label">
+                  Pos X
+                  <Field className="chf__input" placeholder="Pos X" name="posX" />
+                  <ErrorMessage name="posX" component="div" className="chf__error" />
+                </label>
+
+                <label className="chf__label">
+                  Pos Y
+                  <Field className="chf__input" placeholder="Pos Y" name="posY" />
+                  <ErrorMessage name="posY" component="div" className="chf__error" />
+                </label>
+
+                <button
+                  className="chf__btn chf__btn--secondary"
+                  type="button"
+                  onClick={async () => {
+                    // Validamos SÓLO el bloque de nodo con contexto
+                    const errors = await validationSchema.validate(values, {
+                      abortEarly: false,
+                      context: { nodeAction: "add" },
+                    }).then(() => ({})).catch((yerr) => {
+                      const errMap = {};
+                      if (yerr?.inner?.length) {
+                        yerr.inner.forEach((e) => { errMap[e.path] = e.message; });
+                      } else if (yerr?.path) {
+                        errMap[yerr.path] = yerr.message;
+                      }
+                      return errMap;
+                    });
+
+                    // Equipo es un select externo a Yup (porque no es Field)
+                    if (!selectedEquipoValue) {
+                      errors.equipo = "Seleccione un equipo/tipo.";
+                    }
+
+                    if (Object.keys(errors).length) {
+                      setErrors(errors);
+                      setTouched({
+                        id: true,
+                        label: true,
+                        posX: true,
+                        posY: true,
+                      });
+                      return;
+                    }
+
+                    const node = {
+                      id: values.id.trim(),
+                      type: "custom",
+                      data: {
+                        label: values.label?.trim() || values.id.trim(),
+                        equipoId: selectedEquipoValue,
+                        equipoNombre: selectedIdEquipo,
+                        equipoTipo: selectedEquipoTipo,
+                      },
+                      position: {
+                        x: toNumberOr(values.posX, 0),
+                        y: toNumberOr(values.posY, 0),
+                      },
+                    };
+
+                    if (draftNodes.some((n) => n.id === node.id)) {
+                      return Swal.fire({
+                        icon: "warning",
+                        title: "Nodo duplicado",
+                        text: `Ya existe un nodo con id "${node.id}".`,
+                      });
+                    }
+
+                    setDraftNodes((prev) => [...prev, node]);
+                    setFieldValue("id", "");
+                    setFieldValue("label", "");
+                    setFieldValue("posX", "");
+                    setFieldValue("posY", "");
+                  }}
+                >
+                  + Agregar nodo
+                </button>
+              </div>
+
+              {draftNodes.length > 0 && (
+                <ul className="chf__list">
+                  {draftNodes.map((n) => (
+                    <li key={n.id} className="chf__list-item">
+                      <code>{n.id}</code> — {n.data?.label} — {n.data?.equipoNombre}{" "}
+                      <span className="chf__badge">{n.data?.equipoTipo || "-"}</span>{" "}
+                      <span className="chf__muted">({n.position.x}, {n.position.y})</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </fieldset>
+
+            {/* ---- Enlace ---- */}
+            <fieldset className="chf__fieldset">
+              <legend className="chf__legend">Agregar enlace</legend>
+
+              <div className="chf__grid chf__grid--4 chf__grid--align-end chf__row-gap">
+                <label className="chf__label">
+                  Id Enlace
+                  <Field className="chf__input" placeholder="Id Enlace" name="edgeId" />
+                  <ErrorMessage name="edgeId" component="div" className="chf__error" />
+                </label>
+
+                <label className="chf__label">
+                  Source (Nodo)
+                  <Select
+                    className="chf__select"
+                    placeholder="Source"
+                    isDisabled={edgeNodeOptions.length === 0}
+                    options={edgeNodeOptions}
+                    value={edgeSourceSel}
+                    onChange={(opt) => {
+                      setEdgeSourceSel(opt);
+                      setFieldValue("source", opt?.value || "");
+                    }}
+                    styles={selectStyles}
+                    noOptionsMessage={() =>
+                      draftNodes.length === 0 ? "Agrega nodos primero" : "Sin coincidencias"
+                    }
+                  />
+                  <ErrorMessage name="source" component="div" className="chf__error" />
+                </label>
+
+                <label className="chf__label">
+                  Target (Nodo)
+                  <Select
+                    className="chf__select"
+                    placeholder="Target"
+                    isDisabled={edgeNodeOptions.length === 0}
+                    options={edgeNodeOptions}
+                    value={edgeTargetSel}
+                    onChange={(opt) => {
+                      setEdgeTargetSel(opt);
+                      setFieldValue("target", opt?.value || "");
+                    }}
+                    styles={selectStyles}
+                    noOptionsMessage={() =>
+                      draftNodes.length === 0 ? "Agrega nodos primero" : "Sin coincidencias"
+                    }
+                  />
+                  <ErrorMessage name="target" component="div" className="chf__error" />
+                </label>
+
+                <label className="chf__label">
+                  Dirección
+                  <Select
+                    className="chf__select"
+                    options={edgeDirOptions}
+                    value={edgeDirection}
+                    onChange={(opt) => setEdgeDirection(opt)}
+                    placeholder="Dirección"
+                    styles={selectStyles}
+                  />
+                </label>
+              </div>
+
+              <div className="chf__grid chf__grid--2 chf__grid--align-end">
+                <label className="chf__label">
+                  Etiqueta (centro)
+                  <Field
+                    className="chf__input"
+                    placeholder="p.ej. TV7 Gi1/0/2 - Vlan420"
+                    name="edgeLabel"
+                  />
+                  <ErrorMessage name="edgeLabel" component="div" className="chf__error" />
+                </label>
+
+                <label className="chf__label">
+                  Multicast (origen)
+                  <Field className="chf__input" placeholder="239.2.3.222" name="edgeMulticast" />
+                  <ErrorMessage name="edgeMulticast" component="div" className="chf__error" />
+                </label>
+              </div>
+
+              <div>
+                <button
+                  className="chf__btn chf__btn--secondary"
+                  type="button"
+                  onClick={async () => {
+                    // Validamos SÓLO el bloque de enlaces con contexto
+                    const errors = await validationSchema.validate(values, {
+                      abortEarly: false,
+                      context: { edgeAction: "add" },
+                    }).then(() => ({})).catch((yerr) => {
+                      const errMap = {};
+                      if (yerr?.inner?.length) {
+                        yerr.inner.forEach((e) => { errMap[e.path] = e.message; });
+                      } else if (yerr?.path) {
+                        errMap[yerr.path] = yerr.message;
+                      }
+                      return errMap;
+                    });
+
+                    // Validaciones extra (lógica de negocio)
+                    if (values.source && values.target && values.source === values.target) {
+                      errors.target = "Source y Target no pueden ser el mismo nodo.";
+                    }
+                    const srcNode = draftNodes.find((n) => n.id === values.source);
+                    const tgtNode = draftNodes.find((n) => n.id === values.target);
+                    if (!srcNode || !tgtNode) {
+                      errors.source = errors.source || (!srcNode ? "Source no existe en borrador." : undefined);
+                      errors.target = errors.target || (!tgtNode ? "Target no existe en borrador." : undefined);
+                    }
+
+                    if (Object.keys(errors).length) {
+                      setErrors(errors);
+                      setTouched({
+                        edgeId: true,
+                        source: true,
+                        target: true,
+                        edgeLabel: true,
+                        edgeMulticast: true,
+                      });
+                      return;
+                    }
+
+                    const dir = edgeDirection.value;
+                    const color = dir === "vuelta" ? "green" : "red";
+                    const handleByDir = pickHandlesByGeometry(srcNode, tgtNode, dir);
+
+                    const edge = {
+                      id: values.edgeId.trim(),
+                      source: values.source.trim(),
+                      target: values.target.trim(),
+                      sourceHandle: handleByDir.sourceHandle,
+                      targetHandle: handleByDir.targetHandle,
+                      label: values.edgeLabel?.trim() || values.edgeId.trim(),
+                      type: "directional",
+                      style: { stroke: color, strokeWidth: 2 },
+                      markerEnd: { ...ARROW_CLOSED },
+                      data: {
+                        direction: dir,
+                        label: values.edgeLabel?.trim() || values.edgeId.trim(),
+                        multicast: values.edgeMulticast?.trim() || "",
+                      },
+                    };
+
+                    if (draftEdges.some((e) => e.id === edge.id)) {
+                      return Swal.fire({
+                        icon: "warning",
+                        title: "Enlace duplicado",
+                        text: `Ya existe un enlace con id "${edge.id}".`,
+                      });
+                    }
+
+                    setDraftEdges((prev) => [...prev, edge]);
+                    setFieldValue("edgeId", "");
+                    setFieldValue("source", "");
+                    setFieldValue("target", "");
+                    setFieldValue("edgeLabel", "");
+                    setFieldValue("edgeMulticast", "");
+                    setEdgeSourceSel(null);
+                    setEdgeTargetSel(null);
+                    setEdgeDirection(edgeDirOptions[0]);
+                  }}
+                >
+                  + Agregar enlace
+                </button>
+              </div>
+
+              {draftEdges.length > 0 && (
+                <ul className="chf__list">
+                  {draftEdges.map((e) => (
+                    <li key={e.id} className="chf__list-item">
+                      <code>{e.id}</code> — {e.source} ({e.sourceHandle}) → {e.target} ({e.targetHandle}) — {e.label}
+                      {e?.data?.multicast ? (
+                        <span className="chf__badge chf__badge--muted">mc: {e.data.multicast}</span>
+                      ) : null}
+                      <span className="chf__muted" style={{ marginLeft: 8, color: e.style?.stroke }}>
+                        {e.data?.direction}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </fieldset>
+
+            <div className="chf__actions">
+              <button
+                className="chf__btn chf__btn--primary"
+                type="submit"
+                disabled={!selectedValue}
+                title={!selectedValue ? "Seleccione una señal para continuar" : "Crear flujo"}
+              >
+                Crear flujo
+              </button>
+              <button className="chf__btn" type="button" onClick={() => navigate(-1)}>
+                Cancelar
+              </button>
             </div>
-          )}
-
-          {nodes.length === 0 && (
-            <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", color: "#6b7280", zIndex: 1 }}>
-              No hay nodos para mostrar.
-            </div>
-          )}
-
-          <ReactFlow
-            nodes={nodes}
-            edges={edges}
-            nodeTypes={nodeTypes}
-            edgeTypes={edgeTypes}
-            onNodesChange={handleNodesChange}
-            onEdgesChange={onEdgesChange}
-            onConnect={onConnect}
-            onEdgeUpdate={onEdgeUpdate}
-            onNodeDragStop={onNodeDragStop}
-            onNodeClick={handleNodeClick}
-            fitView
-            fitViewOptions={{ padding: 0.2 }}
-            style={{ width: "100%", height: "100%", background: "#DCDCDC" }}
-            proOptions={{ hideAttribution: true }}
-            connectionMode={ConnectionMode.Loose}
-            defaultEdgeOptions={{
-              animated: true,
-              markerEnd: { type: MarkerType.ArrowClosed, color: "#000" },
-              style: { stroke: "#000", strokeWidth: 2 },
-              updatable: "both",
-              interactionWidth: 24,
-            }}
-            nodesDraggable={!!isAuth}
-            nodesConnectable={!!isAuth}
-            elementsSelectable={!!isAuth}
-            panOnDrag={!isAuth}
-            zoomOnScroll
-          >
-            <Controls />
-            <Background variant="dots" gap={18} />
-          </ReactFlow>
-        </div>
-      </div>
-
-      <div style={{ minWidth: 0, border: "1px solid #ddd", borderRadius: 8, padding: 12, overflowY: "auto", height: "72vh" }}>
-        <h2 style={{ marginTop: 0, marginBottom: 8 }}>Detalle</h2>
-        {(() => {
-          const tipo = norm(typeof equipo?.tipoNombre === "object" ? equipo?.tipoNombre?.tipoNombre : equipo?.tipoNombre);
-          const isIrd = tipo === "ird";
-          const hasIrdRef = (typeof equipo?.irdRef === "object" && equipo?.irdRef?._id) || typeof equipo?.irdRef === "string";
-          const isSat = tipo === "satelite" || tipo === "satellite";
-          const hasSatRef = (typeof equipo?.satelliteRef === "object" && equipo?.satelliteRef?._id) || typeof equipo?.satelliteRef === "string";
-
-          if (isSat && hasSatRef) return <EquipoSatellite title="Detalle Satélite" satellite={sat} loading={loadingSat || loadingEquipo} error={satError || equipoError} />;
-          if (isIrd && hasIrdRef) return <EquipoIrd title="Detalle IRD" ird={ird} loading={loadingIrd || loadingEquipo} error={irdError || equipoError} />;
-          return <EquipoDetail title="Detalle de Equipo" equipo={equipo} loading={loadingEquipo} error={equipoError} />;
-        })()}
-      </div>
+          </Form>
+        )}
+      </Formik>
     </div>
   );
 };
 
-export default ChannelDiagram;
+export default ChannelForm;

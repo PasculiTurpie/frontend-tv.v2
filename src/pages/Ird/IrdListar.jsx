@@ -4,6 +4,7 @@ import Loader from "../../components/Loader/Loader";
 import api from "../../utils/api";
 import Swal from "sweetalert2";
 import ModalIrd from "./ModalIrd";
+import "../../components/styles/tables.css";
 
 const IrdListar = () => {
     const [ird, setIrd] = useState([]);
@@ -251,13 +252,13 @@ const IrdListar = () => {
                                             </td>
                                             <td className="button-action">
                                                 <button
-                                                    className="button btn-primary"
+                                                    className="table-btn table-btn-primary"
                                                     onClick={() => showModal(x._id)}
                                                 >
                                                     Editar
                                                 </button>
                                                 <button
-                                                    className="button btn-danger"
+                                                    className="table-btn table-btn-danger"
                                                     onClick={() => deleteEncoderIrd(x._id)}
                                                 >
                                                     Eliminar

@@ -1,12 +1,12 @@
 import { Form, Formik } from "formik";
 import React, { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { ipGestionRegex } from "../../utils/regexValidate";
 import * as Yup from "yup";
 import Swal from "sweetalert2";
 import api from "../../utils/api";
 import Loader from "../../components/Loader/Loader";
 import ModalEquipment from "./ModalEquipment";
+import "../../components/styles/tables.css";
 
 const ListEquipment = () => {
     const [equipos, setEquipos] = useState([]);
@@ -254,13 +254,13 @@ const ListEquipment = () => {
                                             <td>{equipo.ip_gestion || "-"}</td>
                                             <td className="button-action">
                                                 <button
-                                                    className="button btn-primary"
+                                                    className="table-btn table-btn-primary"
                                                     onClick={() => showModal(equipo._id)}
                                                 >
                                                     Editar
                                                 </button>
                                                 <button
-                                                    className="button btn-danger"
+                                                    className="table-btn table-btn-danger"
                                                     onClick={() => deleteEquipment(equipo._id)}
                                                 >
                                                     Eliminar

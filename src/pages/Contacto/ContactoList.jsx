@@ -4,6 +4,7 @@ import api from "../../utils/api";
 import Swal from "sweetalert2";
 import Loader from "../../components/Loader/Loader";
 import ModalContacto from "./ModalContacto";
+import "../../components/styles/tables.css";
 
 const ContactoList = () => {
     const [contacts, setContacts] = useState([]);
@@ -244,13 +245,13 @@ const ContactoList = () => {
                                             <td>{contact.telefono}</td>
                                             <td className="button-action">
                                                 <button
-                                                    className="button btn-primary"
+                                                    className="table-btn table-btn-primary"
                                                     onClick={() => showModal(contact._id)}
                                                 >
                                                     Editar
                                                 </button>
                                                 <button
-                                                    className="button btn-danger"
+                                                    className="table-btn table-btn-danger"
                                                     onClick={() => deleteContact(contact._id)}
                                                 >
                                                     Eliminar

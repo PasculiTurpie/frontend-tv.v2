@@ -5,6 +5,10 @@ import { Formik, Form, Field } from "formik";
 import * as Yup from "yup";
 import Swal from "sweetalert2";
 import api from "../../utils/api";
+import "../../components/styles/theme.css";
+import "../../components/styles/forms.css";
+import "../../components/styles/tables.css";
+
 
 const SatelliteSchema = Yup.object().shape({
     satelliteName: Yup.string().required("Campo obligatorio"),
