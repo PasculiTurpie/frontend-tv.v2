@@ -260,6 +260,14 @@ class Api {
     getChannelDiagram() {
         return this._axios.get(`/channels`).then((r) => r);
     }
+    getChannelDiagramBySignal(signalId) {
+        if (!signalId) {
+            return this.getChannelDiagram();
+        }
+        return this._axios
+            .get(`/channels`, { params: { signal: signalId } })
+            .then((r) => r);
+    }
     updateChannelFlow(id, payload) {
         return this._axios
             .put(`/channels/${id}/flow`, payload)

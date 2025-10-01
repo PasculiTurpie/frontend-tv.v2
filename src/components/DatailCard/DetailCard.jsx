@@ -46,48 +46,16 @@ const DetailCard = () => {
     }, [id]);
 
     // Ir a diagrama asociado a la signal
-    const handleClickDiagram = async () => {
-        try {
-            // Si tu API ya acepta filtrar por signalId, lo ideal es tener un endpoint como:
-            // GET /api/v2/channels?signal=<id>
-            // y traer directamente el channel (sin buscar en un array).
-            const res = await api.getChannelDiagram(id);
-
-            // Defensa: si devuelve arreglo, buscamos por signal._id === id (string estricto)
-            let foundChannel = null;
-            if (Array.isArray(res.data)) {
-                foundChannel = res.data.find((item) => item?.signal?._id === id);
-            } else if (res.data && res.data.signal?._id === id) {
-                foundChannel = res.data;
-            }
-
-            if (foundChannel?._id) {
-                navigate(`/channels/${foundChannel._id}`);
-            } else {
-                // Aquí puedes redirigir a crear diagrama con el id de la señal preseleccionado si quieres
-                // navigate(`/channels/new?signal=${id}`);
-                Swal.fire({
-                    title: "No existe flujo para este canal",
-                    showClass: {
-                        popup: `
-      animate__animated
-      animate__fadeInUp
-      animate__faster
-    `
-                    },
-                    hideClass: {
-                        popup: `
-      animate__animated
-      animate__fadeOutDown
-      animate__faster
-    `
-                    }
-                });
-            }
-        } catch (err) {
-            console.error("Error obteniendo el diagrama:", err);
-            alert("No se pudo obtener el diagrama.");
+    const handleClickDiagram = () => {
+        if (!id) {
+            Swal.fire({
+                title: "Señal no disponible",
+                text: "No se pudo determinar el identificador de la señal.",
+                icon: "error"
+            });
+            return;
         }
+        navigate(`/channels/${id}`);
     };
 
     const handleBackSubmit = () => navigate(-1);
