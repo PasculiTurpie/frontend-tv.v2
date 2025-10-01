@@ -2,7 +2,7 @@
 import { Field, Formik, Form, ErrorMessage } from "formik";
 import * as Yup from "yup";
 import { useEffect, useMemo, useState } from "react";
-import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import api from "../../utils/api";
 import Select from "react-select";
 import Swal from "sweetalert2";
@@ -52,6 +52,89 @@ const toId = (v) => {
   if (typeof v === "string") return v;
   if (typeof v === "object" && v._id) return String(v._id);
   return null;
+};
+
+const toSignalOption = (signal) => {
+  if (!signal) return null;
+  const value = toId(signal);
+  if (!value) return null;
+  const raw = typeof signal === "object" ? signal : { _id: value };
+  const name = raw?.nameChannel ?? raw?.nombre ?? String(value);
+  const tech = raw?.tipoTecnologia ?? raw?.tipo ?? "";
+  const label = [name, tech].filter(Boolean).join(" - ") || name;
+  return { value: String(value), label, raw };
+};
+
+const mapNodeFromApi = (node) => {
+  if (!node) return null;
+  const id = node.id ?? node._id ?? node.key;
+  if (!id) return null;
+
+  const rawData = node.data || {};
+  const rawEquipo = node.equipo || node.equipment || {};
+  const equipoId =
+    rawData.equipoId ??
+    node.equipoId ??
+    (typeof rawEquipo === "object"
+      ? rawEquipo?._id || rawEquipo?.id || rawEquipo?.value
+      : rawEquipo);
+  const equipoNombre =
+    rawData.equipoNombre ??
+    node.equipoNombre ??
+    (typeof rawEquipo === "object" ? rawEquipo?.nombre : null);
+  const equipoTipo =
+    rawData.equipoTipo ??
+    node.equipoTipo ??
+    (typeof rawEquipo === "object" ? tipoToKey(rawEquipo?.tipoNombre) : null);
+
+  const getPos = (val, index) => {
+    if (val !== undefined && val !== null) return val;
+    if (Array.isArray(node.position)) return node.position[index];
+    return undefined;
+  };
+
+  return {
+    id: String(id),
+    type: node.type || "custom",
+    data: {
+      label: rawData.label || node.label || String(id),
+      equipoId: equipoId ? String(equipoId) : null,
+      equipoNombre: equipoNombre || rawData.label || String(id),
+      equipoTipo: equipoTipo || null,
+    },
+    position: {
+      x: toNumberOr(getPos(node.position?.x, 0), 0),
+      y: toNumberOr(getPos(node.position?.y, 1), 0),
+    },
+  };
+};
+
+const mapEdgeFromApi = (edge) => {
+  if (!edge) return null;
+  const id = edge.id ?? edge._id;
+  if (!id || !edge.source || !edge.target) return null;
+
+  const rawData = edge.data || {};
+  const direction = rawData.direction || (edge.style?.stroke === "green" ? "vuelta" : "ida");
+  const label = edge.label || rawData.label || String(id);
+
+  return {
+    id: String(id),
+    source: String(edge.source),
+    target: String(edge.target),
+    sourceHandle: edge.sourceHandle,
+    targetHandle: edge.targetHandle,
+    label,
+    type: edge.type || "directional",
+    style:
+      edge.style || {
+        stroke: direction === "vuelta" ? "green" : "red",
+        strokeWidth: 2,
+      },
+    markerEnd: edge.markerEnd || { ...ARROW_CLOSED },
+    markerStart: edge.markerStart,
+    data: { ...rawData, label, direction },
+  };
 };
 
 /**
@@ -151,6 +234,12 @@ const validationSchema = Yup.object({
 const ChannelForm = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const { id: channelId } = useParams();
+  const isEditMode = Boolean(channelId);
+
+  const [channelLoading, setChannelLoading] = useState(isEditMode);
+  const [channelError, setChannelError] = useState(null);
+  const [currentChannel, setCurrentChannel] = useState(null);
 
   // Señales
   const [optionsSelectChannel, setOptionSelectChannel] = useState([]);
@@ -181,8 +270,67 @@ const ChannelForm = () => {
   ];
   const [edgeDirection, setEdgeDirection] = useState(edgeDirOptions[0]);
 
+  useEffect(() => {
+    if (!isEditMode) return;
+
+    let cancelled = false;
+    setCurrentChannel(null);
+    setDraftNodes([]);
+    setDraftEdges([]);
+    const loadChannel = async () => {
+      setChannelLoading(true);
+      setChannelError(null);
+      try {
+        const res = await api.getChannelDiagramById(channelId);
+        const channelData = res?.data;
+        if (!channelData?._id) {
+          throw new Error("No se encontró el diagrama solicitado");
+        }
+
+        if (cancelled) return;
+
+        setCurrentChannel(channelData);
+
+        const nodesFromApi = Array.isArray(channelData.nodes)
+          ? channelData.nodes.map(mapNodeFromApi).filter(Boolean)
+          : [];
+        const edgesFromApi = Array.isArray(channelData.edges)
+          ? channelData.edges.map(mapEdgeFromApi).filter(Boolean)
+          : [];
+
+        setDraftNodes(nodesFromApi);
+        setDraftEdges(edgesFromApi);
+
+        const signalOption = toSignalOption(channelData.signal);
+        if (signalOption) {
+          setSelectedValue(String(signalOption.value));
+          setSelectedId(signalOption.label);
+        } else {
+          setSelectedValue(null);
+          setSelectedId(null);
+        }
+      } catch (error) {
+        if (cancelled) return;
+        console.error("Error al cargar el diagrama", error);
+        setChannelError(error);
+      } finally {
+        if (!cancelled) setChannelLoading(false);
+      }
+    };
+
+    loadChannel();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isEditMode, channelId]);
+
   // Cargar señales y filtrar disponibles
   useEffect(() => {
+    if (isEditMode && !currentChannel) {
+      return;
+    }
+
     let mounted = true;
     (async () => {
       setSignalsLoading(true);
@@ -196,27 +344,51 @@ const ChannelForm = () => {
         const signals = Array.isArray(signalsRes?.data) ? signalsRes.data : [];
         const channels = Array.isArray(channelsRes?.data) ? channelsRes.data : [];
 
-        const usedSet = new Set(channels.map((ch) => toId(ch?.signal)).filter(Boolean));
+        const usedSet = new Set();
+        channels.forEach((ch) => {
+          const sid = toId(ch?.signal);
+          if (sid) usedSet.add(String(sid));
+        });
 
-        const unusedSignals = signals.filter((s) => !usedSet.has(toId(s?._id)));
+        const allOptions = signals.map(toSignalOption).filter(Boolean);
+        let opts = [];
 
-        const opts = unusedSignals.map((opt) => ({
-          label: `${opt.nameChannel ?? opt.nombre ?? "Sin nombre"} - ${opt.tipoTecnologia ?? opt.tipo ?? ""}`.trim(),
-          value: opt._id,
-          raw: opt,
-        }));
+        if (isEditMode) {
+          const currentSignalId = toId(currentChannel?.signal);
+          opts = allOptions.filter((opt) => !usedSet.has(String(opt.value)) || String(opt.value) === String(currentSignalId));
 
-        if (!mounted) return;
-        setOptionSelectChannel(opts);
+          if (currentSignalId && !opts.some((opt) => String(opt.value) === String(currentSignalId))) {
+            const fallback = toSignalOption(currentChannel?.signal);
+            if (fallback) {
+              opts = [fallback, ...opts];
+            }
+          }
 
-        const preId = searchParams.get("signalId");
-        if (preId && opts.some((o) => String(o.value) === String(preId))) {
-          const found = opts.find((o) => String(o.value) === String(preId));
-          setSelectedValue(found.value);
-          setSelectedId(found.label);
+          if (mounted && currentSignalId) {
+            setSelectedValue(String(currentSignalId));
+            const selectedOpt = opts.find((opt) => String(opt.value) === String(currentSignalId));
+            if (selectedOpt) {
+              setSelectedId(selectedOpt.label);
+            }
+          }
         } else {
-          setSelectedValue(null);
-          setSelectedId(null);
+          opts = allOptions.filter((opt) => !usedSet.has(String(opt.value)));
+
+          if (mounted) {
+            const preId = searchParams.get("signalId");
+            if (preId && opts.some((o) => String(o.value) === String(preId))) {
+              const found = opts.find((o) => String(o.value) === String(preId));
+              setSelectedValue(String(found.value));
+              setSelectedId(found.label);
+            } else {
+              setSelectedValue(null);
+              setSelectedId(null);
+            }
+          }
+        }
+
+        if (mounted) {
+          setOptionSelectChannel(opts);
         }
       } catch (e) {
         if (!mounted) return;
@@ -229,7 +401,7 @@ const ChannelForm = () => {
     return () => {
       mounted = false;
     };
-  }, [searchParams]);
+  }, [searchParams, isEditMode, currentChannel, channelId]);
 
   // Cargar equipos
   useEffect(() => {
@@ -289,11 +461,11 @@ const ChannelForm = () => {
   }, []);
 
   const handleSelectedChannel = (e) => {
-    setSelectedValue(e?.value || null);
+    setSelectedValue(e?.value != null ? String(e.value) : null);
     setSelectedId(e?.label || null);
   };
   const handleSelectedEquipo = (e) => {
-    setSelectedEquipoValue(e?.value || null);
+    setSelectedEquipoValue(e?.value != null ? String(e.value) : null);
     setSelectedIdEquipo(e?.label || null);
     setSelectedEquipoTipo(e?.meta?.tipo || null);
   };
@@ -307,7 +479,48 @@ const ChannelForm = () => {
     [draftNodes]
   );
 
-  const availableSignals = optionsSelectChannel.length;
+  const selectedSignalOption = useMemo(
+    () =>
+      optionsSelectChannel.find((opt) => String(opt.value) === String(selectedValue)) || null,
+    [optionsSelectChannel, selectedValue]
+  );
+
+  const pageTitle = isEditMode ? "Editar diagrama" : "Crear un diagrama";
+  const submitLabel = isEditMode ? "Guardar cambios" : "Crear flujo";
+  const submitTitle = !selectedValue ? "Seleccione una señal para continuar" : submitLabel;
+  const selectedSignalName =
+    selectedSignalOption?.label ||
+    selectedId ||
+    (typeof currentChannel?.signal === "object"
+      ? currentChannel.signal?.nameChannel || currentChannel.signal?.nombre
+      : currentChannel?.signal) ||
+    "";
+
+  if (isEditMode && channelLoading) {
+    return (
+      <div className="chf__wrapper">
+        <p className="chf__muted">Cargando diagrama…</p>
+      </div>
+    );
+  }
+
+  if (isEditMode && channelError) {
+    return (
+      <div className="chf__wrapper">
+        <div className="chf__alert chf__alert--error">
+          <strong>No se pudo cargar el diagrama.</strong>
+          <div className="chf__muted">
+            {channelError?.response?.data?.message || channelError.message || "Intente nuevamente más tarde."}
+          </div>
+        </div>
+        <div className="chf__actions">
+          <button className="chf__btn chf__btn--primary" type="button" onClick={() => navigate(-1)}>
+            Volver
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="chf__wrapper">
@@ -317,12 +530,17 @@ const ChannelForm = () => {
             <Link to="/channel_diagram-list">Listar</Link>
           </li>
           <li className="breadcrumb-item active" aria-current="page">
-            Formulario
+            {isEditMode ? "Edición" : "Formulario"}
           </li>
         </ol>
       </nav>
 
-      <h2 className="chf__title">Crear un diagrama</h2>
+      <h2 className="chf__title">{pageTitle}</h2>
+      {isEditMode && selectedSignalName && (
+        <p className="chf__muted" style={{ marginBottom: "1.5rem" }}>
+          Señal asociada: <strong>{selectedSignalName}</strong>
+        </p>
+      )}
 
       <Formik
         initialValues={{
@@ -393,14 +611,46 @@ const ChannelForm = () => {
               data: { ...(e.data || {}) },
             }));
 
+            const signalId = String(selectedValue);
+
             const payload = {
-              signal: selectedValue,
-              channel: selectedValue,
-              signalId: selectedValue,
-              channelId: selectedValue,
+              signal: signalId,
+              channel: signalId,
+              signalId,
+              channelId: isEditMode ? channelId : signalId,
               nodes: normalizedNodes,
               edges: normalizedEdges,
             };
+
+            const selectedOption = selectedSignalOption;
+
+            if (isEditMode) {
+              await api.updateChannelFlow(channelId, payload);
+
+              Swal.fire({
+                icon: "success",
+                title: "Flujo actualizado",
+                html: `
+                  <p><strong>Señal:</strong> ${selectedOption?.label || selectedId || selectedSignalName}</p>
+                  <p><strong>Nodos:</strong> ${draftNodes.length}</p>
+                  <p><strong>Enlaces:</strong> ${draftEdges.length}</p>
+                `,
+              });
+
+              setCurrentChannel((prev) => {
+                const updatedSignal = selectedOption?.raw || prev?.signal;
+                return prev
+                  ? {
+                      ...prev,
+                      signal: updatedSignal,
+                      nodes: normalizedNodes,
+                      edges: normalizedEdges,
+                    }
+                  : prev;
+              });
+
+              return;
+            }
 
             await api.createChannelDiagram(payload);
 
@@ -408,7 +658,7 @@ const ChannelForm = () => {
               icon: "success",
               title: "Flujo creado",
               html: `
-                <p><strong>Señal:</strong> ${selectedId}</p>
+                <p><strong>Señal:</strong> ${selectedOption?.label || selectedId}</p>
                 <p><strong>Nodos:</strong> ${draftNodes.length}</p>
                 <p><strong>Enlaces:</strong> ${draftEdges.length}</p>
               `,
@@ -424,7 +674,7 @@ const ChannelForm = () => {
             const data = e?.response?.data;
             Swal.fire({
               icon: "error",
-              title: "Error al crear flujo",
+              title: isEditMode ? "Error al actualizar flujo" : "Error al crear flujo",
               html: `
                 <div style="text-align:left">
                   <div><b>Status:</b> ${e?.response?.status || "?"}</div>
@@ -454,7 +704,7 @@ const ChannelForm = () => {
                     </button>
                   </div>
                 </div>
-              ) : optionsSelectChannel.length === 0 ? (
+              ) : !isEditMode && optionsSelectChannel.length === 0 ? (
                 <div className="chf__empty">
                   <h4>No hay señales disponibles</h4>
                   <p>Todas las señales ya están vinculadas a un diagrama. Crea una nueva señal para continuar.</p>
@@ -474,6 +724,7 @@ const ChannelForm = () => {
                         className="select-width"
                         isSearchable
                         options={optionsSelectChannel}
+                        value={selectedSignalOption}
                         onChange={handleSelectedChannel}
                         placeholder="Seleccione una señal"
                         noOptionsMessage={() => "No hay señales disponibles"}
@@ -595,6 +846,9 @@ const ChannelForm = () => {
                     }
 
                     setDraftNodes((prev) => [...prev, node]);
+                    setSelectedEquipoValue(null);
+                    setSelectedIdEquipo(null);
+                    setSelectedEquipoTipo(null);
                     setFieldValue("id", "");
                     setFieldValue("label", "");
                     setFieldValue("posX", "");
@@ -808,9 +1062,9 @@ const ChannelForm = () => {
                 className="chf__btn chf__btn--primary"
                 type="submit"
                 disabled={!selectedValue}
-                title={!selectedValue ? "Seleccione una señal para continuar" : "Crear flujo"}
+                title={submitTitle}
               >
-                Crear flujo
+                {submitLabel}
               </button>
               <button className="chf__btn" type="button" onClick={() => navigate(-1)}>
                 Cancelar
