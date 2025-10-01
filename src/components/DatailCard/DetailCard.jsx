@@ -48,45 +48,55 @@ const DetailCard = () => {
     // Ir a diagrama asociado a la signal
     const handleClickDiagram = async () => {
         try {
-            // Si tu API ya acepta filtrar por signalId, lo ideal es tener un endpoint como:
-            // GET /api/v2/channels?signal=<id>
-            // y traer directamente el channel (sin buscar en un array).
-            const res = await api.getChannelDiagram(id);
+            const res = await api.getChannelDiagramBySignal(id);
+            const payload = res?.data;
+            const asArray = Array.isArray(payload)
+                ? payload
+                : payload
+                    ? [payload]
+                    : [];
 
-            // Defensa: si devuelve arreglo, buscamos por signal._id === id (string estricto)
-            let foundChannel = null;
-            if (Array.isArray(res.data)) {
-                foundChannel = res.data.find((item) => item?.signal?._id === id);
-            } else if (res.data && res.data.signal?._id === id) {
-                foundChannel = res.data;
-            }
+            const foundChannel = asArray.find((item) => {
+                const signal = item?.signal;
+                if (!signal) return false;
+                if (typeof signal === "string") {
+                    return signal === id;
+                }
+                const signalId = signal?._id || signal?.id;
+                return signalId ? String(signalId) === String(id) : false;
+            });
 
             if (foundChannel?._id) {
                 navigate(`/channels/${foundChannel._id}`);
-            } else {
-                // Aquí puedes redirigir a crear diagrama con el id de la señal preseleccionado si quieres
-                // navigate(`/channels/new?signal=${id}`);
-                Swal.fire({
-                    title: "No existe flujo para este canal",
-                    showClass: {
-                        popup: `
+                return;
+            }
+
+            Swal.fire({
+                title: "No existe flujo para este canal",
+                text: "Aún no hay un diagrama asociado a esta señal.",
+                icon: "info",
+                showClass: {
+                    popup: `
       animate__animated
       animate__fadeInUp
       animate__faster
     `
-                    },
-                    hideClass: {
-                        popup: `
+                },
+                hideClass: {
+                    popup: `
       animate__animated
       animate__fadeOutDown
       animate__faster
     `
-                    }
-                });
-            }
+                }
+            });
         } catch (err) {
             console.error("Error obteniendo el diagrama:", err);
-            alert("No se pudo obtener el diagrama.");
+            Swal.fire({
+                title: "Error",
+                text: "No se pudo obtener el diagrama asociado.",
+                icon: "error"
+            });
         }
     };
 
