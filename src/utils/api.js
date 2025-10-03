@@ -262,11 +262,11 @@ class Api {
     }
     getChannelDiagramBySignal(signalId) {
         if (!signalId) {
-            return this.getChannelDiagram();
+            return this.getChannelDiagramById(id);
         }
         return this._axios
             .get(`/channels`, { params: { signal: signalId } })
-            .then((r) => r);
+            .then((r) => r.data);
     }
     updateChannelFlow(id, payload) {
         return this._axios

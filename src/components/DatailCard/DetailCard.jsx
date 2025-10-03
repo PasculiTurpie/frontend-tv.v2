@@ -46,7 +46,7 @@ const DetailCard = () => {
   }, [id]);
 
   // Ir a diagrama asociado a la signal
-  const handleClickDiagram = async () => {
+    const handleClickDiagram = async () => {
     if (!id) {
       Swal.fire({
         title: "Señal no disponible",
@@ -58,7 +58,9 @@ const DetailCard = () => {
 
     try {
       const res = await api.getChannelDiagramBySignal(id);
-      const payload = res?.data;
+      console.log(res)
+        const payload = res;
+        console.log(payload)
 
       // Normalizar posible respuesta (objeto o array)
       const asArray = Array.isArray(payload) ? payload : payload ? [payload] : [];
@@ -66,7 +68,8 @@ const DetailCard = () => {
       // Buscar un channel cuyo campo "signal" coincida con el id de la señal
       const foundChannel = asArray.find((item) => {
         const signal = item?.signal;
-        if (!signal) return false;
+          if (!signal) return false;
+          console.log(signal)
 
         if (typeof signal === "string") {
           return String(signal) === String(id);
@@ -76,6 +79,7 @@ const DetailCard = () => {
       });
 
       if (foundChannel?._id) {
+        console.log(foundChannel._id)
         navigate(`/channels/${foundChannel._id}`);
         return;
       }

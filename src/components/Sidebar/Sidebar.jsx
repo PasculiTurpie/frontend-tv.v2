@@ -8,7 +8,6 @@ import { UserContext } from '../context/UserContext';
 const Sidebar = () => {
   const { user } = useContext(UserContext);
 
-  console.log('Usuario en componente:', user);
 
   return (
     <div className="sidebar">

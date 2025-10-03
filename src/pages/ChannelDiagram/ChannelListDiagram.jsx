@@ -68,7 +68,9 @@ const ChannelListDiagram = () => {
 
   // Ir a editar el diagrama por ID de la señal
   const handleEdit = (channel) => {
+    console.log(channel._id)
     const signal = channel?.signal;
+    console.log(signal)
     const signalId =
       (typeof signal === "string" && signal) ||
       (typeof signal === "object" && (signal._id || signal.id));
@@ -78,7 +80,7 @@ const ChannelListDiagram = () => {
       return;
     }
 
-    navigate(`/channels/${String(signalId)}?mode=edit`);
+    navigate(`/channels/${String(signalId)}`);
   };
 
   const totalPages = Math.ceil(filteredChannels.length / PAGE_SIZE);
