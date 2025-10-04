@@ -47,6 +47,8 @@ import 'sweetalert2/dist/sweetalert2.min.css';
 import useSessionRefresher from "./hooks/useSessionRefresher";
 import BulkIrdUploader from "./components/BulkIrdUploader/BulkIrdUploader";
 
+import ServicesMultiHost from "./components/ServicesMultiHost/ServicesMultiHost";
+
 
 const App = () => {
     useSessionRefresher();
@@ -57,6 +59,7 @@ const App = () => {
             <Routes>
                 <Route path="/" element={<Layout />}>
                     <Route index element={<Home />} />
+                    <Route path='/titans' element={<ServicesMultiHost />} />
                     <Route path="/auth/login" element={<Login />} />
                     <Route path="/search" element={<SearchFilter />} />
                     <Route path="/signal/:id" element={<DetailCard />} />
