@@ -420,7 +420,7 @@ export default function ServicesMultiHost() {
 
   return (
     <div style={{ padding: 16 }}>
-      {/* estilos de botones unificados */}
+      {/* estilos de botones + buscador */}
       <style>{`
         .btn {
           appearance: none;
@@ -446,7 +446,6 @@ export default function ServicesMultiHost() {
           opacity: 0.85;
         }
 
-        /* Primario (azul) */
         .btn-primary {
           background: #0969da;
           color: #ffffff;
@@ -454,7 +453,6 @@ export default function ServicesMultiHost() {
         }
         .btn-primary:hover:not(:disabled) { background: #085ec2; border-color: #085ec2; }
 
-        /* Contorno neutro */
         .btn-outline {
           background: #ffffff;
           color: #24292f;
@@ -462,9 +460,8 @@ export default function ServicesMultiHost() {
         }
         .btn-outline:hover:not(:disabled) { background: #f6f8fa; border-color: #c2c8ce; }
 
-        /* Naranjo (Limpiar): activo naranjo, desactivado gris */
         .btn-orange {
-          background: #f59e0b;    /* naranjo */
+          background: #f59e0b;
           color: #ffffff;
           border-color: #f59e0b;
         }
@@ -473,12 +470,35 @@ export default function ServicesMultiHost() {
         .btn-orange:disabled {
           background: #d1d5db !important;  /* gris */
           border-color: #d1d5db !important;
-          color: #4b5563 !important;       /* gris más oscuro para contraste */
-          opacity: 1;                       /* sin transparencia para que se vea bien el gris */
+          color: #4b5563 !important;
+          opacity: 1;
         }
 
-        /* Alias para compatibilidad con la versión anterior */
+        /* Alias */
         .btn-clear { }
+
+        /* Buscador: borde gris suave y foco azul suave */
+        .search-input {
+          flex: 1 1 auto;
+          padding: 8px 10px;
+          border: 1px solid #d1d5db;           /* gris suave */
+          border-radius: 8px;
+          background: #ffffff;
+          color: #111827;
+          transition: border-color 120ms ease, box-shadow 120ms ease, background 120ms ease;
+        }
+        .search-input::placeholder { color: #6b7280; } /* gris placeholder */
+        .search-input:hover { border-color: #c7ccd1; }
+        .search-input:focus {
+          outline: none;
+          border-color: #60a5fa;                /* azul suave */
+          box-shadow: 0 0 0 3px rgba(96,165,250,0.35); /* halo azul suave */
+        }
+        .search-input:focus-visible {
+          outline: none;
+          border-color: #60a5fa;
+          box-shadow: 0 0 0 3px rgba(96,165,250,0.35);
+        }
       `}</style>
 
       <h2 style={{ margin: 0, marginBottom: 8 }}>Listado de señales (Titan)</h2>
@@ -489,7 +509,7 @@ export default function ServicesMultiHost() {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Buscar (host, IP, nombre, url, fuente, estado, outputs...)"
-          style={{ flex: 1, padding: 8 }}
+          className="search-input"
         />
         <button
           onClick={handleClear}
