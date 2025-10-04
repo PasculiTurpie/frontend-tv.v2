@@ -332,6 +332,9 @@ export default function ServicesMultiHost() {
   const [autoRefresh, setAutoRefresh] = useState(false);
   const timerRef = useRef(null);
 
+  // Ref para el input de búsqueda
+  const searchRef = useRef(null);
+
   const loadAll = useCallback(async () => {
     setLoading(true);
     setErrors([]);
@@ -388,7 +391,9 @@ export default function ServicesMultiHost() {
     const q = query.trim().toLowerCase();
     if (!q) return rows;
     return rows.filter((r) =>
-      [r.host, r.ip, r.name, r.inputUrl, r.outputs, r.sourceText, r.state].filter(Boolean).some((v) => String(v).toLowerCase().includes(q))
+      [r.host, r.ip, r.name, r.inputUrl, r.outputs, r.sourceText, r.state]
+        .filter(Boolean)
+        .some((v) => String(v).toLowerCase().includes(q))
     );
   }, [rows, query]);
 
@@ -403,25 +408,106 @@ export default function ServicesMultiHost() {
     downloadText(`titan_signals_${stamp}.csv`, csv);
   }, [filtered]);
 
+  const handleClear = useCallback(() => {
+    setQuery("");
+    if (searchRef.current) {
+      searchRef.current.focus();
+      if (typeof searchRef.current.select === "function") {
+        searchRef.current.select();
+      }
+    }
+  }, []);
+
   return (
     <div style={{ padding: 16 }}>
+      {/* estilos de botones unificados */}
+      <style>{`
+        .btn {
+          appearance: none;
+          border-radius: 8px;
+          padding: 8px 12px;
+          font-size: 14px;
+          line-height: 1;
+          cursor: pointer;
+          border: 1px solid transparent;
+          transition: background 120ms ease, border-color 120ms ease, box-shadow 120ms ease, transform 50ms ease, color 120ms ease;
+          background: #f6f8fa;
+          color: #24292f;
+        }
+        .btn:hover:not(:disabled) { background: #eef1f4; }
+        .btn:active:not(:disabled) { transform: translateY(1px); }
+        .btn:focus-visible {
+          outline: none;
+          box-shadow: 0 0 0 3px rgba(9,105,218,0.3);
+          border-color: #0969da;
+        }
+        .btn:disabled {
+          cursor: not-allowed;
+          opacity: 0.85;
+        }
+
+        /* Primario (azul) */
+        .btn-primary {
+          background: #0969da;
+          color: #ffffff;
+          border-color: #0969da;
+        }
+        .btn-primary:hover:not(:disabled) { background: #085ec2; border-color: #085ec2; }
+
+        /* Contorno neutro */
+        .btn-outline {
+          background: #ffffff;
+          color: #24292f;
+          border-color: #d0d7de;
+        }
+        .btn-outline:hover:not(:disabled) { background: #f6f8fa; border-color: #c2c8ce; }
+
+        /* Naranjo (Limpiar): activo naranjo, desactivado gris */
+        .btn-orange {
+          background: #f59e0b;    /* naranjo */
+          color: #ffffff;
+          border-color: #f59e0b;
+        }
+        .btn-orange:hover:not(:disabled) { background: #d97706; border-color: #d97706; }
+        .btn-orange:active:not(:disabled) { background: #c76a05; border-color: #c76a05; }
+        .btn-orange:disabled {
+          background: #d1d5db !important;  /* gris */
+          border-color: #d1d5db !important;
+          color: #4b5563 !important;       /* gris más oscuro para contraste */
+          opacity: 1;                       /* sin transparencia para que se vea bien el gris */
+        }
+
+        /* Alias para compatibilidad con la versión anterior */
+        .btn-clear { }
+      `}</style>
+
       <h2 style={{ margin: 0, marginBottom: 8 }}>Listado de señales (Titan)</h2>
 
       <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 12 }}>
         <input
+          ref={searchRef}
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Buscar (host, IP, nombre, url, fuente, estado, outputs...)"
           style={{ flex: 1, padding: 8 }}
         />
-        <button onClick={loadAll} disabled={loading}>
+        <button
+          onClick={handleClear}
+          disabled={!query}
+          className="btn btn-orange btn-clear"
+          aria-label="Limpiar búsqueda"
+          title="Limpiar búsqueda"
+        >
+          Limpiar
+        </button>
+        <button onClick={loadAll} disabled={loading} className="btn btn-primary">
           {loading ? "Cargando..." : "Refrescar"}
         </button>
         <label style={{ display: "flex", gap: 6, alignItems: "center" }}>
           <input type="checkbox" checked={autoRefresh} onChange={(e) => setAutoRefresh(e.target.checked)} />
           Auto 30s
         </label>
-        <button onClick={handleExportCsv} disabled={filtered.length === 0}>
+        <button onClick={handleExportCsv} disabled={filtered.length === 0} className="btn btn-outline">
           Exportar CSV
         </button>
       </div>
@@ -437,7 +523,7 @@ export default function ServicesMultiHost() {
         </div>
       )}
 
-      {/* Tabla de señales en falla (AJUSTE A CONTENIDO + incluye Fuente e IP como link) */}
+      {/* Tabla de señales en falla */}
       {failingRows.length > 0 && (
         <div style={{ marginBottom: 12 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
@@ -562,7 +648,7 @@ export default function ServicesMultiHost() {
                       {typeof r.outputs === "string" ? r.outputs : JSON.stringify(r.outputs)}
                     </td>
 
-                    {/* FUENTE: rojo solo si fail; en caso contrario VERDE */}
+                    {/* FUENTE */}
                     <td
                       style={{
                         ...td,
@@ -597,7 +683,7 @@ export default function ServicesMultiHost() {
                       </div>
                     </td>
 
-                    {/* ESTADO: rojo si fail o si texto es Stopped; lo demás en VERDE */}
+                    {/* ESTADO */}
                     <td
                       style={{
                         ...td,
@@ -664,7 +750,7 @@ const td = {
 
 /* Encabezados/celdas compactas para la tabla de fallas (contenido ajustado) */
 const thCompact = {
-  textAlign: "center", // centrado en encabezados compactos también
+  textAlign: "center",
   padding: "8px 8px",
   borderBottom: "1px solid #f0c4c4",
   whiteSpace: "nowrap",
@@ -675,4 +761,3 @@ const tdCompact = {
   borderBottom: "1px solid #fdeeee",
   whiteSpace: "nowrap",
 };
- 
