@@ -5,7 +5,7 @@ import React, { useEffect, useMemo, useRef, useState, useCallback } from "react"
  * Listado de Señales desde múltiples hosts Titan
  * - Consulta en paralelo http://<IP>/api/v1/servicesmngt/services
  * - Basic Auth: Operator / titan
- * - Columnas: Name, Input.IPInputList.Url, Outputs[0].Outputs, State.State
+ * - Columnas: Name, Input.IPInputList.Url, Outputs[0].Outputs, Fuente (pattern/still/live/fail), State.State
  * - Proxy ACTIVADO por defecto (PROXY_BASE = "/proxy/services")
  * - Botón Exportar CSV (aplica al filtrado)
  */
@@ -13,9 +13,9 @@ import React, { useEffect, useMemo, useRef, useState, useCallback } from "react"
 // Protocolo para llamadas directas (solo si USE_PROXY=false)
 const PROTOCOL = "http";
 
-// Usa proxy por defecto (Vite reenvía a backend:3001)
+// Usa proxy por defecto (Vite reenvía a backend)
 const USE_PROXY = true;
-const PROXY_BASE = "/proxy/services"; // en prod, Nginx/ingress puede apuntar al backend
+const PROXY_BASE = "/proxy/services";
 
 // Hosts proporcionados
 const HOSTS = [
@@ -31,7 +31,6 @@ const HOSTS = [
   { label: "TL-HOST_156", ip: "172.19.14.156" },
   { label: "TL-HOST_157", ip: "172.19.14.157" },
   { label: "TL-HOST_158", ip: "172.19.14.158" },
-  { label: "TL-HOST_164", ip: "172.19.14.164" }
 ];
 
 // Credenciales (mueve a .env en producción)
@@ -41,6 +40,14 @@ const BASIC_PASS = "titan";
 // Timeout y reintentos por host
 const REQUEST_TIMEOUT_MS = 10_000;
 const RETRIES_PER_HOST = 1;
+
+// Anchos fijos de columnas críticas (tabla principal)
+const COL_WIDTHS = {
+  fuente: 260,
+  estado: 140,
+};
+
+/* ───────────────────────── utils ───────────────────────── */
 
 function b64Basic(user, pass) {
   return typeof btoa === "function"
@@ -53,6 +60,20 @@ function pickFirst(...cands) {
   return undefined;
 }
 
+/** get(obj, 'Outputs[0][0].Outputs[0].Url') seguro (soporta [idx] y .prop) */
+function get(obj, path, def = undefined) {
+  if (!obj || !path) return def;
+  const norm = String(path)
+    .replace(/\[(\w+)\]/g, ".$1") // [0] -> .0
+    .replace(/^\./, "");
+  const out = norm.split(".").reduce((acc, key) => {
+    if (acc == null) return undefined;
+    return acc[key];
+  }, obj);
+  return out === undefined ? def : out;
+}
+
+/** extrae el array de servicios desde múltiples formas de respuesta */
 function extractServicesArray(resp) {
   const r = resp ?? {};
   if (Array.isArray(r)) return r;
@@ -64,48 +85,166 @@ function extractServicesArray(resp) {
   return [];
 }
 
-function extractRow(hostLabel, ip, svc) {
-  const name = pickFirst(svc?.Name, svc?.name, svc?.ServiceName, svc?.serviceName);
+/* ───────────────────────── detección de fuente ─────────────────────────
+   FAIL solo con: "Video Signal Missing" | "Audio Signal Silent" | "Video Signal Frozen" | "Input Source Loss"
+   Luego: PATTERN si EmulationMode.Mode === "Pattern"
+          STILL si VideoTracks[0].Variants[0].StillPicture === true
+          LIVE en otro caso
+*/
+const FAIL_NAMES = new Set([
+  "Video Signal Missing",
+  "Audio Signal Silent",
+  "Video Signal Frozen",
+  "Input Source Loss",
+]);
 
-  // Input.IPInputList.Url (varias formas)
-  const inputUrl = pickFirst(
-    svc?.Input?.IPInputList?.[0]?.Url,
-    svc?.Input?.IPInputList?.Url,
-    svc?.IPInputList?.[0]?.Url,
-    svc?.IPInputList?.Url,
-    svc?.Input?.Url,
-    svc?.InputUrl
+function detectVideoSource(svc) {
+  const state = get(svc, "State.State");
+  const streaming = !!get(svc, "State.Streaming", false);
+
+  // 1) FALLA solo por nombres específicos
+  const msgs = get(svc, "State.Messages", []);
+  const failMsgs = Array.isArray(msgs)
+    ? msgs.filter((m) => {
+        if (!m) return false;
+        if (typeof m === "string") return FAIL_NAMES.has(m);
+        const name = m.Name;
+        return typeof name === "string" && FAIL_NAMES.has(name);
+      })
+    : [];
+
+  // 2) Pattern (emulación)
+  const emuMode = get(svc, "Device.Template.Tracks.VideoTracks[0].EmulationMode.Mode", "Off");
+  const patternName = get(svc, "Device.Template.Tracks.VideoTracks[0].EmulationMode.PatternName", null);
+
+  // 3) Still picture
+  const stillPictureEnabled = !!get(svc, "Device.Template.Tracks.VideoTracks[0].Variants[0].StillPicture", false);
+  const stillPictureFilename = get(svc, "Device.Template.Tracks.VideoTracks[0].Variants[0].StillPictureFilename", null);
+
+  // 4) Live input URL
+  const liveInputUrl = pickFirst(
+    get(svc, "Input[0].IPInputList[0].Url"),
+    get(svc, "Input.IPInputList[0].Url"),
+    get(svc, "IPInputList[0].Url"),
+    get(svc, "Input.Url"),
+    get(svc, "InputUrl")
   );
 
-  // Outputs[0].Outputs
-  let outputsRaw = pickFirst(
-    Array.isArray(svc?.Outputs) ? svc?.Outputs?.[0]?.Outputs : undefined,
-    Array.isArray(svc?.Outputs) ? svc?.Outputs?.[0] : undefined,
-    svc?.Outputs,
-    svc?.Output
-  );
-
-  let outputs;
-  if (Array.isArray(outputsRaw)) {
-    outputs = outputsRaw.map((o) => (typeof o === "string" ? o : JSON.stringify(o))).join(", ");
-  } else if (typeof outputsRaw === "object" && outputsRaw !== null) {
-    outputs = JSON.stringify(outputsRaw);
-  } else {
-    outputs = outputsRaw ?? "";
+  // Decisión (fail > pattern > still > live)
+  if (failMsgs.length > 0) {
+    const reason = failMsgs
+      .map((m) => (typeof m === "string" ? m : m?.Name || m?.Description))
+      .filter(Boolean)
+      .join(" | ");
+    return {
+      encodingState: state,
+      streaming,
+      mode: "fail",
+      sourceName: reason || liveInputUrl || "(input issue)",
+      reason: reason || null,
+      liveInputUrl,
+      emulationMode: emuMode,
+      patternName,
+      stillPictureEnabled,
+      stillPictureFilename,
+    };
   }
 
-  // State.State
-  const stateVal = pickFirst(svc?.State?.State, svc?.state?.state, svc?.State, svc?.state);
+  if (emuMode && String(emuMode).toLowerCase() === "pattern") {
+    return {
+      encodingState: state,
+      streaming,
+      mode: "pattern",
+      sourceName: patternName ?? "(pattern)",
+      reason: null,
+      liveInputUrl,
+      emulationMode: emuMode,
+      patternName,
+      stillPictureEnabled,
+      stillPictureFilename,
+    };
+  }
+
+  if (stillPictureEnabled) {
+    return {
+      encodingState: state,
+      streaming,
+      mode: "still",
+      sourceName: stillPictureFilename ?? "(still picture)",
+      reason: null,
+      liveInputUrl,
+      emulationMode: emuMode,
+      patternName,
+      stillPictureEnabled,
+      stillPictureFilename,
+    };
+  }
+
+  return {
+    encodingState: state,
+    streaming,
+    mode: "live",
+    sourceName: liveInputUrl ?? "",
+    reason: null,
+    liveInputUrl,
+    emulationMode: emuMode,
+    patternName,
+    stillPictureEnabled,
+    stillPictureFilename,
+  };
+}
+
+/* ───────────────────────── extracción por fila ───────────────────────── */
+function extractRow(hostLabel, ip, svc) {
+  const s = svc ?? {};
+  const name = pickFirst(get(s, "Name"), get(s, "name"), get(s, "ServiceName"), get(s, "serviceName"));
+
+  const inputUrl = pickFirst(
+    get(s, "Input[0].IPInputList[0].Url"),
+    get(s, "Input.IPInputList[0].Url"),
+    get(s, "IPInputList[0].Url"),
+    get(s, "Input.Url"),
+    get(s, "InputUrl")
+  );
+
+  const outputUrlExact = pickFirst(get(s, "Outputs[0][0].Outputs[0].Url"), get(s, "Outputs[0][0].Outputs.Url"));
+  const outputUrlFallback = pickFirst(
+    get(s, "Outputs[0].Outputs[0].Url"),
+    get(s, "Outputs[0].Outputs.Url"),
+    get(s, "Outputs[0][0].Outputs[0]"),
+    get(s, "Outputs[0].Url"),
+    get(s, "Outputs.Url"),
+    get(s, "Output.Url")
+  );
+  const outputUrl = pickFirst(outputUrlExact, outputUrlFallback);
+
+  const stateVal = pickFirst(get(s, "State.State"), get(s, "state.state"), get(s, "State"), get(s, "state"));
+
+  // Detección de fuente (live/pattern/still/fail)
+  const src = detectVideoSource(s);
+  const sourceText =
+    src.mode === "fail"
+      ? `fail: ${src.sourceName ?? ""}`
+      : src.mode === "pattern"
+      ? `pattern: ${src.sourceName ?? ""}`
+      : src.mode === "still"
+      ? `still: ${src.sourceName ?? ""}`
+      : `live: ${src.sourceName ?? ""}`;
 
   return {
     host: hostLabel,
     ip,
     name: name ?? "(sin nombre)",
     inputUrl: inputUrl ?? "",
-    outputs,
-    state: typeof stateVal === "object" ? JSON.stringify(stateVal) : stateVal ?? ""
+    outputs: outputUrl ?? "",
+    sourceMode: src.mode,
+    sourceName: src.sourceName ?? "",
+    sourceText,
+    state: typeof stateVal === "object" ? JSON.stringify(stateVal) : stateVal ?? "",
   };
 }
+
+/* ───────────────────────── fetch helpers ───────────────────────── */
 
 async function fetchWithTimeout(url, options = {}, timeoutMs = REQUEST_TIMEOUT_MS) {
   const ctrl = new AbortController();
@@ -122,12 +261,10 @@ async function queryHost(ip) {
   const headers = {
     Authorization: `Basic ${b64Basic(BASIC_USER, BASIC_PASS)}`,
     "Content-Type": "application/json",
-    Accept: "application/json"
+    Accept: "application/json",
   };
 
-  const url = USE_PROXY
-    ? `${PROXY_BASE}?host=${encodeURIComponent(ip)}`
-    : `${PROTOCOL}://${ip}/api/v1/servicesmngt/services`;
+  const url = USE_PROXY ? `${PROXY_BASE}?host=${encodeURIComponent(ip)}` : `${PROTOCOL}://${ip}/api/v1/servicesmngt/services`;
 
   const res = await fetchWithTimeout(url, { method: "GET", headers });
   if (!res.ok) throw new Error(`HTTP ${res.status} ${res.statusText}`);
@@ -144,7 +281,8 @@ async function queryHost(ip) {
   }
 }
 
-// CSV helpers
+/* ───────────────────────── CSV ───────────────────────── */
+
 function escapeCsvField(v) {
   if (v === null || v === undefined) return "";
   const s = String(v);
@@ -153,18 +291,11 @@ function escapeCsvField(v) {
 }
 
 function rowsToCsv(rows) {
-  const headers = ["Host", "IP", "Name", "Input.IPInputList.Url", "Outputs[0].Outputs", "State.State"];
+  const headers = ["Host", "IP", "Name", "Input.IPInputList.Url", "Outputs[0].Outputs.Url", "Fuente", "State.State"];
   const lines = [headers.map(escapeCsvField).join(",")];
   for (const r of rows) {
     lines.push(
-      [
-        r.host,
-        r.ip,
-        r.name,
-        r.inputUrl,
-        typeof r.outputs === "string" ? r.outputs : JSON.stringify(r.outputs),
-        r.state
-      ]
+      [r.host, r.ip, r.name, r.inputUrl, typeof r.outputs === "string" ? r.outputs : JSON.stringify(r.outputs), r.sourceText, r.state]
         .map(escapeCsvField)
         .join(",")
     );
@@ -183,6 +314,15 @@ function downloadText(filename, text) {
   a.remove();
   URL.revokeObjectURL(url);
 }
+
+/* Helpers UI */
+function hostHref(ip) {
+  if (!ip) return "#";
+  // Enlace a la ruta base de la IP: http://{IP}
+  return `${PROTOCOL}://${ip}`;
+}
+
+/* ───────────────────────── Componente ───────────────────────── */
 
 export default function ServicesMultiHost() {
   const [rows, setRows] = useState([]);
@@ -248,11 +388,14 @@ export default function ServicesMultiHost() {
     const q = query.trim().toLowerCase();
     if (!q) return rows;
     return rows.filter((r) =>
-      [r.host, r.ip, r.name, r.inputUrl, r.outputs, r.state]
-        .filter(Boolean)
-        .some((v) => String(v).toLowerCase().includes(q))
+      [r.host, r.ip, r.name, r.inputUrl, r.outputs, r.sourceText, r.state].filter(Boolean).some((v) => String(v).toLowerCase().includes(q))
     );
   }, [rows, query]);
+
+  const failingRows = useMemo(
+    () => filtered.filter((r) => r.sourceMode === "fail" || r.state === "Stopped"),
+    [filtered]
+  );
 
   const handleExportCsv = useCallback(() => {
     const stamp = new Date().toISOString().replace(/[:.]/g, "-").replace("T", "_").replace("Z", "");
@@ -268,7 +411,7 @@ export default function ServicesMultiHost() {
         <input
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Buscar por texto (host, IP, nombre, url, estado, outputs...)"
+          placeholder="Buscar (host, IP, nombre, url, fuente, estado, outputs...)"
           style={{ flex: 1, padding: 8 }}
         />
         <button onClick={loadAll} disabled={loading}>
@@ -288,54 +431,209 @@ export default function ServicesMultiHost() {
           <strong>Errores de conexión:</strong>
           <ul style={{ margin: 0, paddingInlineStart: 18 }}>
             {errors.map((er, i) => (
-              <li key={i} style={{ whiteSpace: "pre-wrap" }}>
-                {er}
-              </li>
+              <li key={i} style={{ whiteSpace: "pre-wrap" }}>{er}</li>
             ))}
           </ul>
         </div>
       )}
 
+      {/* Tabla de señales en falla (AJUSTE A CONTENIDO + incluye Fuente e IP como link) */}
+      {failingRows.length > 0 && (
+        <div style={{ marginBottom: 12 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+            <strong>Señales en falla</strong>
+            <span style={{ fontSize: 12, color: "#666" }}>({failingRows.length})</span>
+          </div>
+          <div
+            style={{
+              display: "inline-block",
+              border: "1px solid #f0c4c4",
+              background: "#fffafa",
+              padding: 0,
+            }}
+          >
+            <table
+              style={{
+                borderCollapse: "collapse",
+                tableLayout: "auto",
+                width: "auto",
+                display: "inline-table",
+                fontSize: 14,
+              }}
+            >
+              <thead style={{ background: "#fdeeee" }}>
+                <tr>
+                  <th style={{ ...thCompact, width: 36, maxWidth: 36, textAlign: "center" }}> </th>
+                  <th style={thCompact}>Name</th>
+                  <th style={thCompact}>IP</th>
+                  <th style={thCompact}>Fuente</th>
+                </tr>
+              </thead>
+              <tbody>
+                {failingRows.map((r, i) => (
+                  <tr key={`fail-${r.ip}-${i}`}>
+                    <td style={{ ...tdCompact, width: 36, maxWidth: 36, textAlign: "center" }}>
+                      <span
+                        style={{
+                          display: "inline-block",
+                          width: 12,
+                          height: 12,
+                          borderRadius: "50%",
+                          backgroundColor: "red",
+                        }}
+                        title="fail"
+                      />
+                    </td>
+                    <td style={tdCompact} title={r.name}>
+                      {r.name}
+                    </td>
+                    <td style={{ ...tdCompact }}>
+                      <a
+                        href={hostHref(r.ip)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{ textDecoration: "underline", whiteSpace: "nowrap" }}
+                        title={`${PROTOCOL}://${r.ip}`}
+                      >
+                        {r.ip}
+                      </a>
+                    </td>
+                    <td style={tdCompact} title={r.sourceText}>
+                      {r.sourceText}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* Tabla principal */}
       <div style={{ overflow: "auto", maxHeight: "75vh", border: "1px solid #ddd" }}>
-        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 14 }}>
+        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 14, tableLayout: "fixed" }}>
           <thead style={{ position: "sticky", top: 0, background: "#fafafa" }}>
             <tr>
               <th style={th}>Host</th>
               <th style={th}>IP</th>
               <th style={th}>Name</th>
-              <th style={th}>Input.IPInputList.Url</th>
-              <th style={th}>Outputs[0].Outputs</th>
-              <th style={th}>State.State</th>
+              <th style={th}>Multicast entrada</th>
+              <th style={th}>Multicast salida</th>
+              <th style={{ ...th, width: COL_WIDTHS.fuente, maxWidth: COL_WIDTHS.fuente }}>Fuente</th>
+              <th style={{ ...th, width: COL_WIDTHS.estado, maxWidth: COL_WIDTHS.estado }}>Estado</th>
             </tr>
           </thead>
           <tbody>
             {filtered.length === 0 ? (
               <tr>
-                <td colSpan={6} style={{ padding: 12, textAlign: "center", color: "#666" }}>
+                <td colSpan={7} style={{ padding: 12, textAlign: "center", color: "#666" }}>
                   {loading ? "Cargando..." : "Sin datos para mostrar"}
                 </td>
               </tr>
             ) : (
-              filtered.map((r, idx) => (
-                <tr key={`${r.ip}-${idx}`}>
-                  <td style={td}>{r.host}</td>
-                  <td style={td}>{r.ip}</td>
-                  <td style={td}>{r.name}</td>
-                  <td
-                    style={{ ...td, whiteSpace: "nowrap", maxWidth: 420, overflow: "hidden", textOverflow: "ellipsis" }}
-                    title={r.inputUrl}
-                  >
-                    {r.inputUrl}
-                  </td>
-                  <td
-                    style={{ ...td, maxWidth: 420, overflow: "hidden", textOverflow: "ellipsis" }}
-                    title={typeof r.outputs === "string" ? r.outputs : JSON.stringify(r.outputs)}
-                  >
-                    {typeof r.outputs === "string" ? r.outputs : JSON.stringify(r.outputs)}
-                  </td>
-                  <td style={td}>{r.state}</td>
-                </tr>
-              ))
+              filtered.map((r, idx) => {
+                const stateText = r.state === "Stopped" ? "Stopped (fail)" : r.state;
+                const isStateFail = r.sourceMode === "fail" || r.state === "Stopped";
+                return (
+                  <tr key={`${r.ip}-${idx}`}>
+                    <td style={td}>{r.host}</td>
+                    <td style={td}>
+                      <a
+                        href={hostHref(r.ip)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{ textDecoration: "underline", whiteSpace: "nowrap" }}
+                        title={`${PROTOCOL}://${r.ip}`}
+                      >
+                        {r.ip}
+                      </a>
+                    </td>
+                    <td style={td}>{r.name}</td>
+                    <td
+                      style={{ ...td, whiteSpace: "nowrap", maxWidth: 420, overflow: "hidden", textOverflow: "ellipsis" }}
+                      title={r.inputUrl}
+                    >
+                      {r.inputUrl}
+                    </td>
+                    <td
+                      style={{ ...td, maxWidth: 420, overflow: "hidden", textOverflow: "ellipsis" }}
+                      title={typeof r.outputs === "string" ? r.outputs : JSON.stringify(r.outputs)}
+                    >
+                      {typeof r.outputs === "string" ? r.outputs : JSON.stringify(r.outputs)}
+                    </td>
+
+                    {/* FUENTE: rojo solo si fail; en caso contrario VERDE */}
+                    <td
+                      style={{
+                        ...td,
+                        width: COL_WIDTHS.fuente,
+                        maxWidth: COL_WIDTHS.fuente,
+                        whiteSpace: "nowrap",
+                      }}
+                      title={r.sourceText}
+                    >
+                      <div style={{ display: "flex", alignItems: "center", gap: 6, minWidth: 0 }}>
+                        <span
+                          style={{
+                            display: "inline-block",
+                            width: 10,
+                            height: 10,
+                            borderRadius: "50%",
+                            flex: "0 0 auto",
+                            backgroundColor: r.sourceMode === "fail" ? "#d9534f" : "green",
+                          }}
+                        />
+                        <span
+                          style={{
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                            whiteSpace: "nowrap",
+                            minWidth: 0,
+                            flex: "1 1 auto",
+                          }}
+                        >
+                          {r.sourceText}
+                        </span>
+                      </div>
+                    </td>
+
+                    {/* ESTADO: rojo si fail o si texto es Stopped; lo demás en VERDE */}
+                    <td
+                      style={{
+                        ...td,
+                        width: COL_WIDTHS.estado,
+                        maxWidth: COL_WIDTHS.estado,
+                        whiteSpace: "nowrap",
+                      }}
+                      title={stateText}
+                    >
+                      <div style={{ display: "flex", alignItems: "center", gap: 6, minWidth: 0 }}>
+                        <span
+                          style={{
+                            display: "inline-block",
+                            width: 12,
+                            height: 12,
+                            borderRadius: "50%",
+                            flex: "0 0 auto",
+                            backgroundColor: isStateFail ? "red" : "green",
+                          }}
+                        />
+                        <span
+                          style={{
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                            whiteSpace: "nowrap",
+                            minWidth: 0,
+                            flex: "1 1 auto",
+                          }}
+                        >
+                          {stateText}
+                        </span>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })
             )}
           </tbody>
         </table>
@@ -344,15 +642,37 @@ export default function ServicesMultiHost() {
   );
 }
 
+/* Encabezados (centrados) y celdas */
 const th = {
-  textAlign: "left",
+  textAlign: "center",
   padding: "10px 8px",
   borderBottom: "1px solid #ddd",
   position: "sticky",
-  top: 0
+  top: 0,
+  overflow: "hidden",
+  textOverflow: "ellipsis",
+  whiteSpace: "nowrap",
 };
 
 const td = {
   padding: "8px 8px",
-  borderBottom: "1px solid #eee"
+  borderBottom: "1px solid #eee",
+  overflow: "hidden",
+  textOverflow: "ellipsis",
+  whiteSpace: "nowrap",
 };
+
+/* Encabezados/celdas compactas para la tabla de fallas (contenido ajustado) */
+const thCompact = {
+  textAlign: "center", // centrado en encabezados compactos también
+  padding: "8px 8px",
+  borderBottom: "1px solid #f0c4c4",
+  whiteSpace: "nowrap",
+};
+
+const tdCompact = {
+  padding: "6px 8px",
+  borderBottom: "1px solid #fdeeee",
+  whiteSpace: "nowrap",
+};
+ 
