@@ -82,7 +82,8 @@ const SatelliteForm = () => {
                 setTipoMap((prev) => ({ ...prev, [key]: id }));
                 return id;
             }
-        } catch (e) {
+        } catch (error) {
+            console.warn("No se pudo crear TipoEquipo 'satelite'", error);
             try {
                 const res = await api.getTipoEquipo();
                 const arr = res?.data || [];
@@ -93,7 +94,9 @@ const SatelliteForm = () => {
                     setTipoMap((prev) => ({ ...prev, [key]: found._id }));
                     return found._id;
                 }
-            } catch { /* no-op */ }
+            } catch (refreshError) {
+                console.warn("No se pudo refrescar TipoEquipo tras error", refreshError);
+            }
             throw new Error("No existe ni se pudo crear el TipoEquipo 'satelite'.");
         }
     };

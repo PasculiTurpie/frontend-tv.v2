@@ -80,7 +80,7 @@ const ModalChannel = ({
         }
       }}
     >
-      {({ errors, touched }) => (
+      {() => (
         <ModalComponent
           modalOpen={modalOpen}
           title={title}

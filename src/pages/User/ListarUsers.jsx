@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import Loader from "../../components/Loader/Loader";
 import { Link } from "react-router-dom";
 import Swal from "sweetalert2";
@@ -15,7 +15,7 @@ const ListarUsers = () => {
     const [page, setPage] = useState(1);
     const [pageSize, setPageSize] = useState(10);
 
-    const getAllUsers = () => {
+    const refreshList = useCallback(() => {
         setIsLoading(true);
         api
             .getUserInfo()
@@ -35,13 +35,11 @@ const ListarUsers = () => {
                 });
             })
             .finally(() => setIsLoading(false));
-    };
+    }, []);
 
     useEffect(() => {
         refreshList();
-    }, []);
-
-    const refreshList = () => getAllUsers();
+    }, [refreshList]);
 
     const deleteUser = async (id) => {
         const result = await Swal.fire({

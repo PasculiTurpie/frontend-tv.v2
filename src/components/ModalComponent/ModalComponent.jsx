@@ -6,8 +6,6 @@ const ModalComponent = ({
     modalOpen,
     title,
     setModalOpen,
-    handleOk,
-    handleCancel,
     children,
 }) => {
     const handleCloseModal = () => {

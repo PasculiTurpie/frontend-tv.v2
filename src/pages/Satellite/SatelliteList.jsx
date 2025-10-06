@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import "../../index.css";
 import Loader from "../../components/Loader/Loader";
@@ -14,33 +14,26 @@ export const SatelliteList = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [itemId, setItemId] = useState("");
 
-    const getAllSatellites = () => {
+    const refreshList = useCallback(() => {
+        setIsLoading(true);
         api.getSatellites()
             .then((response) => {
-
                 setSatellites(response);
-                setIsLoading(false); // <- mover aquí
             })
             .catch((error) => {
-
-
                 Swal.fire({
                     icon: "error",
                     title: "Oops...",
                     text: `${error.response.data.message}`,
                     footer: '<a href="#">Contactar a administrador</a>',
                 });
-                setIsLoading(false); // también en caso de error
-            });
-    };
+            })
+            .finally(() => setIsLoading(false));
+    }, []);
 
     useEffect(() => {
         refreshList();
-    }, []);
-
-    const refreshList = () => {
-        getAllSatellites();
-    };
+    }, [refreshList]);
 
     const deleteSatellite = async (id) => {
         const result = await Swal.fire({
@@ -56,7 +49,7 @@ export const SatelliteList = () => {
         if (result.isConfirmed) {
             try {
                 await api.deleteSatelliteId(id);
-                getAllSatellites(); // Refresca la lista después de confirmar
+                refreshList(); // Refresca la lista después de confirmar
                 await Swal.fire({
                     title: "¡Eliminado!",
                     text: "El registro ha sido eliminado",

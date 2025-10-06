@@ -1,7 +1,6 @@
-import React, { useEffect, useState } from "react";
-
+import { useEffect, useState } from "react";
 import api from "../../utils/api";
-import { Formik, Form, Field, ErrorMessage } from "formik";
+import { Formik, Form, Field } from "formik";
 import * as Yup from "yup";
 import Swal from "sweetalert2";
 import stylesIrd from "./Ird.module.css";
@@ -13,7 +12,7 @@ const ipMulticastRegex =
 const ipVideoMulticast = /^(192.168)?\.(\d{1,3}\.)\d{1,3}$/;
 
 const UpdateIrdSchema = Yup.object().shape({
-    urlIrd: Yup.string().matches(/(?:https?\:\/\/\w+\.\w+\.\w+.+)/, "Ingresa una url válida"),
+    urlIrd: Yup.string().matches(/(?:https?:\/\/\w+\.\w+\.\w+.+)/, "Ingresa una url válida"),
     ipAdminIrd: Yup.string().matches(
         /^172\.19\.\d{1,3}\.\d{1,3}$/,
         "Ingresa una ip válida"
@@ -35,7 +34,7 @@ const UpdateIrdSchema = Yup.object().shape({
     vctReceptor: Yup.string(),
     outputReceptor: Yup.string(),
     swAdmin: Yup.string(),
-        portSw: Yup.string(),
+    portSw: Yup.string(),
     multicastReceptor: Yup.string().matches(
         ipMulticastRegex,
         "Debe ser una multicast válida"

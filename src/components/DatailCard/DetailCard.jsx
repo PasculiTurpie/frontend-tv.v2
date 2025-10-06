@@ -31,7 +31,8 @@ const DetailCard = () => {
           setSignalDetail(res.data || null);
           setContacts(res.data?.contact || []);
         }
-      } catch (e) {
+      } catch (err) {
+        console.error("No se pudo cargar el detalle de la señal", err);
         if (!ignore) {
           setError("No se pudo cargar el detalle de la señal.");
         }
@@ -46,7 +47,7 @@ const DetailCard = () => {
   }, [id]);
 
   // Ir a diagrama asociado a la signal
-    const handleClickDiagram = async () => {
+  const handleClickDiagram = async () => {
     if (!id) {
       Swal.fire({
         title: "Señal no disponible",
@@ -58,9 +59,9 @@ const DetailCard = () => {
 
     try {
       const res = await api.getChannelDiagramBySignal(id);
-      console.log(res)
-        const payload = res;
-        console.log(payload)
+      console.log(res);
+      const payload = res;
+      console.log(payload);
 
       // Normalizar posible respuesta (objeto o array)
       const asArray = Array.isArray(payload) ? payload : payload ? [payload] : [];
@@ -68,8 +69,8 @@ const DetailCard = () => {
       // Buscar un channel cuyo campo "signal" coincida con el id de la señal
       const foundChannel = asArray.find((item) => {
         const signal = item?.signal;
-          if (!signal) return false;
-          console.log(signal)
+        if (!signal) return false;
+        console.log(signal);
 
         if (typeof signal === "string") {
           return String(signal) === String(id);
