@@ -354,7 +354,7 @@ const ChannelDiagram = () => {
         <div className="channel-diagram__canvas">
           {isReadOnly && (
             <div className="diagram-readonly-banner">
-              Modo solo lectura. Inicia sesión para editar el diagrama.
+              Modo solo lectura.
             </div>
           )}
           <ReactFlow
