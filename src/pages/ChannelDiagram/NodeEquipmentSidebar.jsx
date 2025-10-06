@@ -34,20 +34,12 @@ const NodeEquipmentSidebar = ({ node }) => {
     return fromData ?? fromRoot ?? null;
   }, [node]);
 
-  const irdId = useMemo(() => {
-    if (!node) return null;
-    const fromNode =
-      extractId(node?.data?.irdId ?? node?.data?.irdRef ?? node?.data?.ird) ??
-      extractId(node?.irdId ?? node?.irdRef ?? node?.ird);
-    if (fromNode) return fromNode;
-    return extractId(equipoState.data?.irdRef ?? equipoState.data?.ird);
-  }, [node, equipoState.data]);
-
   useEffect(() => {
     let active = true;
 
     if (!equipoId) {
       setEquipoState(createEmptyState());
+      setIrdState(createEmptyState());
       return () => {
         active = false;
       };
@@ -80,7 +72,19 @@ const NodeEquipmentSidebar = ({ node }) => {
   useEffect(() => {
     let active = true;
 
-    if (!node || !irdId) {
+    if (!node) {
+      setIrdState(createEmptyState());
+      return () => {
+        active = false;
+      };
+    }
+
+    const equipoData = equipoState.data;
+    const irdCandidate =
+      extractId(node?.data?.irdId ?? node?.data?.irdRef ?? node?.data?.ird) ??
+      extractId(equipoData?.irdRef ?? equipoData?.ird);
+
+    if (!irdCandidate) {
       setIrdState(createEmptyState());
       return () => {
         active = false;
@@ -90,7 +94,7 @@ const NodeEquipmentSidebar = ({ node }) => {
     setIrdState({ loading: true, data: null, error: null });
 
     api
-      .getIdIrd(irdId)
+      .getIdIrd(irdCandidate)
       .then((res) => {
         if (!active) return;
         const data = res?.data ?? res;
@@ -108,7 +112,7 @@ const NodeEquipmentSidebar = ({ node }) => {
     return () => {
       active = false;
     };
-  }, [node, irdId]);
+  }, [node, equipoState.data]);
 
   return (
     <aside className="channel-diagram__sidebar">
