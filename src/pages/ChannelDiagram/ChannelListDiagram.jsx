@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import api from "../../utils/api";
@@ -55,13 +54,20 @@ const ChannelListDiagram = () => {
       cancelButtonText: "Cancelar",
     }).then((result) => {
       if (result.isConfirmed) {
-        axios
-          .delete(`http://localhost:3000/api/v2/channels/${id}`)
+        api
+          .deleteChannelDiagram(id)
           .then(() => {
             Swal.fire("Eliminado!", "El canal fue eliminado.", "success");
             fetchChannels();
           })
-          .catch(() => Swal.fire("Error", "No se pudo eliminar el canal", "error"));
+          .catch((error) => {
+            const message =
+              error?.response?.data?.error ||
+              error?.response?.data?.message ||
+              error?.message ||
+              "No se pudo eliminar el canal";
+            Swal.fire("Error", message, "error");
+          });
       }
     });
   };

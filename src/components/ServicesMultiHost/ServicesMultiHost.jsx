@@ -1,21 +1,16 @@
 // src/pages/ServicesMultiHost.jsx
 import React, { useEffect, useMemo, useRef, useState, useCallback } from "react";
+import api from "../../utils/api";
 
 /**
  * Listado de Señales desde múltiples hosts Titan
- * - Consulta en paralelo http://<IP>/api/v1/servicesmngt/services
- * - Basic Auth: Operator / titan
+ * - Consulta en paralelo las APIs Titans a través del backend (/api/v2/titans)
  * - Columnas: Name, Input.IPInputList.Url, Outputs[0].Outputs, Fuente (pattern/still/live/fail), State.State
- * - Proxy ACTIVADO por defecto (PROXY_BASE = "/proxy/services")
  * - Botón Exportar CSV (aplica al filtrado)
  */
 
-// Protocolo para llamadas directas (solo si USE_PROXY=false)
 const PROTOCOL = "http";
-
-// Usa proxy por defecto (Vite reenvía a backend)
-const USE_PROXY = true;
-const PROXY_BASE = "/proxy/services";
+const TITAN_SERVICES_PATH = "/services";
 
 // Hosts proporcionados
 const HOSTS = [
@@ -33,13 +28,6 @@ const HOSTS = [
   { label: "TL-HOST_158", ip: "172.19.14.158" },
 ];
 
-// Credenciales (mueve a .env en producción)
-const BASIC_USER = "Operator";
-const BASIC_PASS = "titan";
-
-// Timeout y reintentos por host
-const REQUEST_TIMEOUT_MS = 10_000;
-const RETRIES_PER_HOST = 1;
 
 // Anchos fijos de columnas críticas (tabla principal)
 const COL_WIDTHS = {
@@ -48,17 +36,6 @@ const COL_WIDTHS = {
 };
 
 /* ───────────────────────── utils ───────────────────────── */
-
-function b64Basic(user, pass) {
-  const raw = `${user}:${pass}`;
-  if (typeof btoa === "function") {
-    return btoa(raw);
-  }
-  if (typeof globalThis !== "undefined" && globalThis.Buffer) {
-    return globalThis.Buffer.from(raw, "utf8").toString("base64");
-  }
-  throw new Error("No base64 encoder available in this environment");
-}
 
 function pickFirst(...cands) {
   for (const v of cands) if (v !== undefined && v !== null) return v;
@@ -249,41 +226,127 @@ function extractRow(hostLabel, ip, svc) {
   };
 }
 
-/* ───────────────────────── fetch helpers ───────────────────────── */
+/* ───────────────────────── Titans helpers ───────────────────────── */
 
-async function fetchWithTimeout(url, options = {}, timeoutMs = REQUEST_TIMEOUT_MS) {
-  const ctrl = new AbortController();
-  const id = setTimeout(() => ctrl.abort(), timeoutMs);
+function describeError(error) {
+  if (!error) return "Error desconocido";
+  if (typeof error === "string") return error;
+  const response = error.response;
+  if (response) {
+    const status = response.status ?? "?";
+    const statusText = response.statusText ? ` ${response.statusText}` : "";
+    const data = response.data;
+    let detail = "";
+    if (data) {
+      if (typeof data === "string") detail = data;
+      else if (typeof data?.error === "string") detail = data.error;
+      else if (typeof data?.message === "string") detail = data.message;
+      else {
+        try {
+          detail = JSON.stringify(data);
+        } catch (e) {
+          detail = String(data);
+        }
+      }
+      if (detail) detail = ` - ${detail}`;
+    }
+    return `HTTP ${status}${statusText}${detail}`.trim();
+  }
+  if (error?.message) return error.message;
   try {
-    const res = await fetch(url, { ...options, signal: ctrl.signal });
-    return res;
-  } finally {
-    clearTimeout(id);
+    return JSON.stringify(error);
+  } catch (e) {
+    return String(error);
   }
 }
 
-async function queryHost(ip) {
-  const headers = {
-    Authorization: `Basic ${b64Basic(BASIC_USER, BASIC_PASS)}`,
-    "Content-Type": "application/json",
-    Accept: "application/json",
-  };
-
-  const url = USE_PROXY ? `${PROXY_BASE}?host=${encodeURIComponent(ip)}` : `${PROTOCOL}://${ip}/api/v1/servicesmngt/services`;
-
-  const res = await fetchWithTimeout(url, { method: "GET", headers });
-  if (!res.ok) throw new Error(`HTTP ${res.status} ${res.statusText}`);
-
-  try {
-    return await res.json();
-  } catch {
-    const text = await res.text();
+function describeTitanEntryError(entry) {
+  if (!entry) return "sin datos";
+  if (typeof entry === "string") return entry;
+  if (entry.error) {
+    if (typeof entry.error === "string") return entry.error;
+    if (entry.error?.message) return entry.error.message;
     try {
-      return JSON.parse(text);
-    } catch {
-      throw new Error("Respuesta no es JSON válido");
+      return JSON.stringify(entry.error);
+    } catch (e) {
+      return String(entry.error);
     }
   }
+  if (entry.message) return entry.message;
+  if (entry.status || entry.statusText) {
+    const status = entry.status ?? "?";
+    const text = entry.statusText ? ` ${entry.statusText}` : "";
+    return `HTTP ${status}${text}`.trim();
+  }
+  return "error desconocido";
+}
+
+function unwrapTitanPayload(entry) {
+  if (!entry || typeof entry !== "object") return entry;
+  if (entry.data !== undefined) return entry.data;
+  if (entry.payload !== undefined) return entry.payload;
+  if (entry.body !== undefined) return entry.body;
+  if (entry.result !== undefined) return entry.result;
+  return entry;
+}
+
+function normalizeTitanMultiResponse(payload) {
+  if (!payload) return [];
+  if (Array.isArray(payload)) return payload;
+  if (Array.isArray(payload.results)) return payload.results;
+  if (Array.isArray(payload.data)) return payload.data;
+  if (Array.isArray(payload.items)) return payload.items;
+  if (Array.isArray(payload.hosts)) return payload.hosts;
+  return [];
+}
+
+function getEntryHost(entry) {
+  if (!entry) return null;
+  return (
+    entry.host ??
+    entry.ip ??
+    entry.hostIp ??
+    entry.hostname ??
+    (typeof entry === "object" && typeof entry.host === "string" ? entry.host : null)
+  );
+}
+
+function isEntryOk(entry) {
+  if (!entry) return false;
+  if (typeof entry.ok === "boolean") return entry.ok;
+  if ("error" in entry && entry.error) return false;
+  if (entry.status !== undefined) {
+    const status = Number(entry.status);
+    if (!Number.isNaN(status)) return status >= 200 && status < 300;
+  }
+  return true;
+}
+
+function processTitanEntries(entries, hostMap) {
+  const rows = [];
+  const errors = [];
+  const seenHosts = new Set();
+
+  for (const entry of entries) {
+    const hostIp = getEntryHost(entry);
+    if (hostIp) seenHosts.add(hostIp);
+    const hostInfo = hostMap.get(hostIp) || {
+      label: hostIp ?? "(desconocido)",
+      ip: hostIp ?? "(desconocido)",
+    };
+
+    if (isEntryOk(entry)) {
+      const payload = unwrapTitanPayload(entry);
+      const services = extractServicesArray(payload);
+      rows.push(
+        ...services.map((svc) => extractRow(hostInfo.label, hostInfo.ip, svc))
+      );
+    } else {
+      errors.push(`${hostInfo.label} (${hostInfo.ip}): ${describeTitanEntryError(entry)}`);
+    }
+  }
+
+  return { rows, errors, seenHosts };
 }
 
 /* ───────────────────────── CSV ───────────────────────── */
@@ -343,34 +406,75 @@ export default function ServicesMultiHost() {
   const loadAll = useCallback(async () => {
     setLoading(true);
     setErrors([]);
+
+    const hostMap = new Map(HOSTS.map((item) => [item.ip, item]));
+    const hostIps = HOSTS.map((item) => item.ip);
+    let nextRows = [];
+    let nextErrors = [];
+
+    const pushRowsFromHost = (hostInfo, payload) => {
+      const services = extractServicesArray(payload);
+      nextRows.push(
+        ...services.map((svc) => extractRow(hostInfo.label, hostInfo.ip, svc))
+      );
+    };
+
     try {
-      const results = await Promise.allSettled(
-        HOSTS.map(async ({ label, ip }) => {
-          let lastErr = null;
-          for (let attempt = 0; attempt <= RETRIES_PER_HOST; attempt++) {
-            try {
-              const resp = await queryHost(ip);
-              const arr = extractServicesArray(resp);
-              return arr.map((svc) => extractRow(label, ip, svc));
-            } catch (e) {
-              lastErr = e;
-            }
+      const multiResponse = await api.getTitanServicesMulti(
+        hostIps,
+        TITAN_SERVICES_PATH
+      );
+      const entries = normalizeTitanMultiResponse(multiResponse);
+      const processed = processTitanEntries(entries, hostMap);
+
+      nextRows = [...processed.rows];
+      nextErrors = [...processed.errors];
+
+      const missingHosts = hostIps.filter((ip) => !processed.seenHosts.has(ip));
+      if (missingHosts.length > 0) {
+        const settled = await Promise.allSettled(
+          missingHosts.map((ip) =>
+            api.getTitanServices(ip, TITAN_SERVICES_PATH)
+          )
+        );
+
+        settled.forEach((result, index) => {
+          const ip = missingHosts[index];
+          const hostInfo = hostMap.get(ip) || { label: ip, ip };
+          if (result.status === "fulfilled") {
+            pushRowsFromHost(hostInfo, result.value);
+          } else {
+            nextErrors.push(
+              `${hostInfo.label} (${hostInfo.ip}): ${describeError(result.reason)}`
+            );
           }
-          throw new Error(`${label} (${ip}): ${lastErr?.message ?? "Error"}`);
-        })
+        });
+      }
+    } catch (err) {
+      nextRows = [];
+      nextErrors = [`Titans multi-host: ${describeError(err)}`];
+
+      const settled = await Promise.allSettled(
+        HOSTS.map((host) =>
+          api.getTitanServices(host.ip, TITAN_SERVICES_PATH)
+        )
       );
 
-      const okRows = [];
-      const errs = [];
-      for (const r of results) {
-        if (r.status === "fulfilled") okRows.push(...r.value);
-        else errs.push(String(r.reason));
-      }
-      setRows(okRows);
-      setErrors(errs);
-    } finally {
-      setLoading(false);
+      settled.forEach((result, index) => {
+        const hostInfo = HOSTS[index];
+        if (result.status === "fulfilled") {
+          pushRowsFromHost(hostInfo, result.value);
+        } else {
+          nextErrors.push(
+            `${hostInfo.label} (${hostInfo.ip}): ${describeError(result.reason)}`
+          );
+        }
+      });
     }
+
+    setRows(nextRows);
+    setErrors(nextErrors);
+    setLoading(false);
   }, []);
 
   useEffect(() => {
