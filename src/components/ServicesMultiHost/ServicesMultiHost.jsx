@@ -10,7 +10,18 @@ import api from "../../utils/api";
  */
 
 const PROTOCOL = "http";
-const TITAN_SERVICES_PATH = "/services";
+const TITAN_SERVICES_PATH = "/api/v1/servicesmngt/services";
+const env =
+  typeof import.meta !== "undefined" && import.meta?.env
+    ? import.meta.env
+    : {};
+const TITAN_USERNAME = env.VITE_TITAN_USERNAME || "Operator";
+const TITAN_PASSWORD = env.VITE_TITAN_PASSWORD || "titan";
+const TITAN_REQUEST_OPTIONS = {
+  path: TITAN_SERVICES_PATH,
+  username: TITAN_USERNAME,
+  password: TITAN_PASSWORD,
+};
 
 // Hosts proporcionados
 const HOSTS = [
@@ -244,7 +255,7 @@ function describeError(error) {
       else {
         try {
           detail = JSON.stringify(data);
-        } catch (e) {
+        } catch {
           detail = String(data);
         }
       }
@@ -255,7 +266,7 @@ function describeError(error) {
   if (error?.message) return error.message;
   try {
     return JSON.stringify(error);
-  } catch (e) {
+  } catch {
     return String(error);
   }
 }
@@ -268,7 +279,7 @@ function describeTitanEntryError(entry) {
     if (entry.error?.message) return entry.error.message;
     try {
       return JSON.stringify(entry.error);
-    } catch (e) {
+    } catch {
       return String(entry.error);
     }
   }
@@ -422,7 +433,7 @@ export default function ServicesMultiHost() {
     try {
       const multiResponse = await api.getTitanServicesMulti(
         hostIps,
-        TITAN_SERVICES_PATH
+        TITAN_REQUEST_OPTIONS
       );
       const entries = normalizeTitanMultiResponse(multiResponse);
       const processed = processTitanEntries(entries, hostMap);
@@ -434,7 +445,7 @@ export default function ServicesMultiHost() {
       if (missingHosts.length > 0) {
         const settled = await Promise.allSettled(
           missingHosts.map((ip) =>
-            api.getTitanServices(ip, TITAN_SERVICES_PATH)
+            api.getTitanServices(ip, TITAN_REQUEST_OPTIONS)
           )
         );
 
@@ -456,7 +467,7 @@ export default function ServicesMultiHost() {
 
       const settled = await Promise.allSettled(
         HOSTS.map((host) =>
-          api.getTitanServices(host.ip, TITAN_SERVICES_PATH)
+          api.getTitanServices(host.ip, TITAN_REQUEST_OPTIONS)
         )
       );
 

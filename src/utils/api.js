@@ -12,6 +12,29 @@ function onRefreshed() {
     queue.length = 0;
 }
 
+const env = typeof import.meta !== "undefined" ? import.meta.env ?? {} : {};
+
+const DEFAULT_TITAN_OPTIONS = Object.freeze({
+    path: env.VITE_TITAN_SERVICES_PATH || "/api/v1/servicesmngt/services",
+    username: env.VITE_TITAN_USERNAME || "Operator",
+    password: env.VITE_TITAN_PASSWORD || "titan",
+});
+
+function normalizeTitanOptions(pathOrOptions) {
+    if (typeof pathOrOptions === "string") {
+        return { path: pathOrOptions };
+    }
+    if (pathOrOptions && typeof pathOrOptions === "object") {
+        const { path, username, password } = pathOrOptions;
+        const normalized = {};
+        if (path !== undefined) normalized.path = path;
+        if (username !== undefined) normalized.username = username;
+        if (password !== undefined) normalized.password = password;
+        return normalized;
+    }
+    return {};
+}
+
 class Api {
     constructor(url) {
         this._axios = axios.create({ baseURL: url, withCredentials: true });
@@ -281,15 +304,31 @@ class Api {
     }
 
     // ====== TITANS ======
-    getTitanServices(host, path = "/services") {
+    getTitanServices(host, pathOrOptions = undefined) {
+        const options = normalizeTitanOptions(pathOrOptions);
+        const path = options.path ?? DEFAULT_TITAN_OPTIONS.path;
+        const username = options.username ?? DEFAULT_TITAN_OPTIONS.username;
+        const password = options.password ?? DEFAULT_TITAN_OPTIONS.password;
+
+        const params = { host, path };
+        if (username) params.username = username;
+        if (password) params.password = password;
+
         return this._axios
             .get(`/titans/services`, {
-                params: { host, path },
+                params,
             })
             .then((r) => r.data);
     }
-    getTitanServicesMulti(hosts, path = "/services") {
+    getTitanServicesMulti(hosts, pathOrOptions = undefined) {
+        const options = normalizeTitanOptions(pathOrOptions);
+        const path = options.path ?? DEFAULT_TITAN_OPTIONS.path;
+        const username = options.username ?? DEFAULT_TITAN_OPTIONS.username;
+        const password = options.password ?? DEFAULT_TITAN_OPTIONS.password;
+
         const params = { path };
+        if (username) params.username = username;
+        if (password) params.password = password;
         if (Array.isArray(hosts)) {
             params.hosts = hosts.join(",");
         } else if (typeof hosts === "string") {
