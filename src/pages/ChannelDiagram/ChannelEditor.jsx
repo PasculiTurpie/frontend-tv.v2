@@ -13,7 +13,6 @@ import {
 import Select from "react-select";
 import "@xyflow/react/dist/style.css";
 import Swal from "sweetalert2";
-import axios from "axios";
 import api from "../../utils/api";
 import "./ChannelDiagram.css";
 
@@ -90,10 +89,12 @@ function ChannelEditor() {
     }
     setLoading(true);
     try {
-      const res = await axios.get(
-        `http://localhost:3000/api/v2/channels?signal=${signalId}`
-      );
-      const channelsFound = Array.isArray(res.data) ? res.data : [];
+      const res = await api.getChannelDiagramBySignal(signalId);
+      const channelsFound = Array.isArray(res)
+        ? res
+        : Array.isArray(res?.data)
+        ? res.data
+        : [];
       if (channelsFound.length > 0) {
         const ch = channelsFound[0];
         setChannelData(ch);
@@ -185,26 +186,18 @@ function ChannelEditor() {
       edges,
     };
     try {
-      let response;
-      if (channelData?._id) {
-        response = await axios.put(
-          `http://localhost:3000/api/v2/channels/${channelData._id}`,
-          payload
-        );
-      } else {
-        response = await axios.post(
-          `http://localhost:3000/api/v2/channels`,
-          payload
-        );
-      }
+      const response = channelData?._id
+        ? await api.updateChannelDiagram(channelData._id, payload)
+        : await api.createChannelDiagram(payload);
       Swal.fire("Éxito", "Cambios guardados correctamente", "success");
-      setChannelData(response.data);
+      setChannelData(response);
     } catch (error) {
-      Swal.fire(
-        "Error",
-        "Error al guardar: " + (error.response?.data?.error || error.message),
-        "error"
-      );
+      const message =
+        error?.response?.data?.error ||
+        error?.response?.data?.message ||
+        error?.message ||
+        "Error desconocido";
+      Swal.fire("Error", "Error al guardar: " + message, "error");
     }
   };
 

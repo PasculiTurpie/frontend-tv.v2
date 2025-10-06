@@ -268,9 +268,35 @@ class Api {
             .get(`/channels`, { params: { signal: signalId } })
             .then((r) => r.data);
     }
+    updateChannelDiagram(id, payload) {
+        return this._axios.put(`/channels/${id}`, payload).then((r) => r.data);
+    }
+    deleteChannelDiagram(id) {
+        return this._axios.delete(`/channels/${id}`).then((r) => r.data);
+    }
     updateChannelFlow(id, payload) {
         return this._axios
             .put(`/channels/${id}/flow`, payload)
+            .then((r) => r.data);
+    }
+
+    // ====== TITANS ======
+    getTitanServices(host, path = "/services") {
+        return this._axios
+            .get(`/titans/services`, {
+                params: { host, path },
+            })
+            .then((r) => r.data);
+    }
+    getTitanServicesMulti(hosts, path = "/services") {
+        const params = { path };
+        if (Array.isArray(hosts)) {
+            params.hosts = hosts.join(",");
+        } else if (typeof hosts === "string") {
+            params.hosts = hosts;
+        }
+        return this._axios
+            .get(`/titans/services/multi`, { params })
             .then((r) => r.data);
     }
 
@@ -337,6 +363,6 @@ class Api {
 }
 
 const api = new Api(
-    import.meta.env.VITE_API_URL || "http://localhost:3000/api/v2"
+    import.meta.env.VITE_API_BASE_URL || "http://localhost:3000/api/v2"
 );
 export default api;
