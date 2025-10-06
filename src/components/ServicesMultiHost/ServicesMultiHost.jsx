@@ -28,16 +28,22 @@ const HOSTS = [
   { label: "TL-HOST_109", ip: "172.19.14.109" },
   { label: "TL-HOST_112", ip: "172.19.14.112" },
   { label: "TL-HOST_113", ip: "172.19.14.113" },
+  { label: "TL-HOST_114", ip: "172.19.14.114" },
   { label: "TL-HOST_118", ip: "172.19.14.118" },
   { label: "TL-HOST_120", ip: "172.19.14.120" },
   { label: "TL-HOST_121", ip: "172.19.14.121" },
   { label: "TL-HOST_123", ip: "172.19.14.123" },
+  { label: "TL-HOST_124", ip: "172.19.14.124" },
   { label: "TL-HOST_125", ip: "172.19.14.125" },
   { label: "TL-HOST_140", ip: "172.19.14.140" },
   { label: "TL-HOST_156", ip: "172.19.14.156" },
   { label: "TL-HOST_157", ip: "172.19.14.157" },
   { label: "TL-HOST_158", ip: "172.19.14.158" },
+  { label: "TL-HOST_161", ip: "172.19.14.161" },
+  { label: "TL-HOST_164", ip: "172.19.14.164" },
+  { label: "TL-HOST_188", ip: "172.19.14.188" },
 ];
+
 
 
 // Anchos fijos de columnas críticas (tabla principal)
