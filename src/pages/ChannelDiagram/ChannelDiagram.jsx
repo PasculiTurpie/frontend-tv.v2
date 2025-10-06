@@ -17,6 +17,7 @@ import CustomDirectionalEdge from "./CustomDirectionalEdge";
 import CustomWaypointEdge from "./CustomWaypointEdge";
 import "./ChannelDiagram.css";
 import { UserContext } from "../../components/context/UserContext";
+import NodeEquipmentSidebar from "./NodeEquipmentSidebar";
 
 /* ───────── utils ───────── */
 
@@ -163,6 +164,7 @@ const ChannelDiagram = () => {
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   const [error, setError] = useState(null);
   const [channelId, setChannelId] = useState(null);
+  const [selectedNodeId, setSelectedNodeId] = useState(null);
 
   // refs para leer el estado más reciente dentro del debounce
   const nodesRef = useRef(nodes);
@@ -173,6 +175,11 @@ const ChannelDiagram = () => {
   useEffect(() => {
     edgesRef.current = edges;
   }, [edges]);
+
+  const selectedNode = useMemo(
+    () => nodes.find((node) => node.id === selectedNodeId) || null,
+    [nodes, selectedNodeId]
+  );
 
   const saveTimer = useRef(null);
 
@@ -310,6 +317,19 @@ const ChannelDiagram = () => {
   const handleNodesChange = useCallback((changes) => onNodesChange(changes), [onNodesChange]);
   const handleEdgesChange = useCallback((changes) => onEdgesChange(changes), [onEdgesChange]);
 
+  const handleNodeClick = useCallback((_, node) => {
+    setSelectedNodeId(node?.id ?? null);
+  }, []);
+
+  const handlePaneClick = useCallback(() => {
+    setSelectedNodeId(null);
+  }, []);
+
+  const handleSelectionChange = useCallback((selection) => {
+    const node = Array.isArray(selection?.nodes) ? selection.nodes[0] : null;
+    setSelectedNodeId(node?.id ?? null);
+  }, []);
+
   /* ───────── Render ───────── */
 
   if (loading) {
@@ -329,34 +349,42 @@ const ChannelDiagram = () => {
   }
 
   return (
-    <div style={{ width: "100%", height: "100vh", position: "relative" }}>
-      {isReadOnly && (
-        <div className="diagram-readonly-banner">
-          Modo solo lectura. Inicia sesión para editar el diagrama.
+    <div className="channel-diagram__wrapper">
+      <div className="channel-diagram__layout">
+        <div className="channel-diagram__canvas">
+          {isReadOnly && (
+            <div className="diagram-readonly-banner">
+              Modo solo lectura. Inicia sesión para editar el diagrama.
+            </div>
+          )}
+          <ReactFlow
+            className="channel-diagram__flow"
+            nodes={nodes}
+            edges={edges}
+            nodeTypes={nodeTypes}
+            edgeTypes={edgeTypes}
+            nodesDraggable={isAuth}
+            nodesConnectable={isAuth}
+            elementsSelectable={true}
+            edgesUpdatable={isAuth}
+            edgeUpdaterRadius={20}
+            onNodeDragStop={handleNodeDragStop}
+            onEdgeUpdate={handleEdgeUpdate}
+            onConnect={handleConnect}
+            onNodesChange={handleNodesChange}
+            onEdgesChange={handleEdgesChange}
+            onNodeClick={handleNodeClick}
+            onPaneClick={handlePaneClick}
+            onSelectionChange={handleSelectionChange}
+            fitView
+          >
+            <Background variant="dots" gap={16} size={1} />
+            <Controls position="bottom-right" />
+            <MiniMap />
+          </ReactFlow>
         </div>
-      )}
-      <ReactFlow
-        style={{ width: "100%", height: "100%" }}
-        nodes={nodes}
-        edges={edges}
-        nodeTypes={nodeTypes}
-        edgeTypes={edgeTypes}
-        nodesDraggable={isAuth}
-        nodesConnectable={isAuth}
-        elementsSelectable={true}
-        edgesUpdatable={isAuth}
-        edgeUpdaterRadius={20}
-        onNodeDragStop={handleNodeDragStop}
-        onEdgeUpdate={handleEdgeUpdate}
-        onConnect={handleConnect}
-        onNodesChange={handleNodesChange}
-        onEdgesChange={handleEdgesChange}
-        fitView
-      >
-        <Background variant="dots" gap={16} size={1} />
-        <Controls position="bottom-right" />
-        <MiniMap />
-      </ReactFlow>
+        <NodeEquipmentSidebar node={selectedNode} />
+      </div>
     </div>
   );
 };
