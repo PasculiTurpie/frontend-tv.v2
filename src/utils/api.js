@@ -14,10 +14,18 @@ function onRefreshed() {
 
 const env = typeof import.meta !== "undefined" ? import.meta.env ?? {} : {};
 
+const RAW_TITAN_TIMEOUT = env.VITE_TITAN_TIMEOUT;
+const PARSED_TITAN_TIMEOUT = Number(RAW_TITAN_TIMEOUT);
+const DEFAULT_TITAN_TIMEOUT = Number.isNaN(PARSED_TITAN_TIMEOUT)
+    ? 10_000
+    : PARSED_TITAN_TIMEOUT;
+
 const DEFAULT_TITAN_OPTIONS = Object.freeze({
     path: env.VITE_TITAN_SERVICES_PATH || "/api/v1/servicesmngt/services",
     username: env.VITE_TITAN_USERNAME || "Operator",
     password: env.VITE_TITAN_PASSWORD || "titan",
+    protocol: env.VITE_TITAN_PROTOCOL || "http",
+    timeout: DEFAULT_TITAN_TIMEOUT,
 });
 
 function normalizeTitanOptions(pathOrOptions) {
@@ -25,11 +33,18 @@ function normalizeTitanOptions(pathOrOptions) {
         return { path: pathOrOptions };
     }
     if (pathOrOptions && typeof pathOrOptions === "object") {
-        const { path, username, password } = pathOrOptions;
+        const { path, username, password, protocol, timeout } = pathOrOptions;
         const normalized = {};
         if (path !== undefined) normalized.path = path;
         if (username !== undefined) normalized.username = username;
         if (password !== undefined) normalized.password = password;
+        if (protocol !== undefined) normalized.protocol = protocol;
+        if (timeout !== undefined) {
+            const parsedTimeout = Number(timeout);
+            if (!Number.isNaN(parsedTimeout)) {
+                normalized.timeout = parsedTimeout;
+            }
+        }
         return normalized;
     }
     return {};
@@ -304,39 +319,84 @@ class Api {
     }
 
     // ====== TITANS ======
-    getTitanServices(host, pathOrOptions = undefined) {
-        const options = normalizeTitanOptions(pathOrOptions);
-        const path = options.path ?? DEFAULT_TITAN_OPTIONS.path;
-        const username = options.username ?? DEFAULT_TITAN_OPTIONS.username;
-        const password = options.password ?? DEFAULT_TITAN_OPTIONS.password;
-
-        const params = { host, path };
-        if (username) params.username = username;
-        if (password) params.password = password;
-
-        return this._axios
-            .get(`/titans/services`, {
-                params,
-            })
-            .then((r) => r.data);
-    }
-    getTitanServicesMulti(hosts, pathOrOptions = undefined) {
-        const options = normalizeTitanOptions(pathOrOptions);
-        const path = options.path ?? DEFAULT_TITAN_OPTIONS.path;
-        const username = options.username ?? DEFAULT_TITAN_OPTIONS.username;
-        const password = options.password ?? DEFAULT_TITAN_OPTIONS.password;
-
-        const params = { path };
-        if (username) params.username = username;
-        if (password) params.password = password;
-        if (Array.isArray(hosts)) {
-            params.hosts = hosts.join(",");
-        } else if (typeof hosts === "string") {
-            params.hosts = hosts;
+    async getTitanServices(host, pathOrOptions = undefined) {
+        if (!host) {
+            throw new Error("Titan host is required");
         }
-        return this._axios
-            .get(`/titans/services/multi`, { params })
-            .then((r) => r.data);
+
+        const options = {
+            ...DEFAULT_TITAN_OPTIONS,
+            ...normalizeTitanOptions(pathOrOptions),
+        };
+
+        const path = options.path ?? DEFAULT_TITAN_OPTIONS.path;
+        const username = options.username ?? DEFAULT_TITAN_OPTIONS.username;
+        const password = options.password ?? DEFAULT_TITAN_OPTIONS.password;
+        const protocol = options.protocol ?? DEFAULT_TITAN_OPTIONS.protocol;
+        const timeout = options.timeout ?? DEFAULT_TITAN_OPTIONS.timeout;
+
+        const baseUrl = `${protocol}://${host}`;
+        const targetUrl = new URL(path, baseUrl).toString();
+
+        const config = {
+            headers: { Accept: "application/json" },
+            timeout,
+        };
+
+        if (username || password) {
+            config.auth = {
+                username: username ?? "",
+                password: password ?? "",
+            };
+        }
+
+        const response = await axios.get(targetUrl, config);
+        return response.data;
+    }
+    async getTitanServicesMulti(hosts, pathOrOptions = undefined) {
+        const normalizedHosts = Array.isArray(hosts)
+            ? hosts
+            : typeof hosts === "string"
+            ? hosts
+                  .split(",")
+                  .map((item) => item.trim())
+                  .filter(Boolean)
+            : [];
+
+        const uniqueHosts = Array.from(new Set(normalizedHosts));
+
+        const results = await Promise.allSettled(
+            uniqueHosts.map(async (host) => {
+                const payload = await this.getTitanServices(host, pathOrOptions);
+                return { ok: true, host, ip: host, data: payload };
+            })
+        );
+
+        return results.map((entry, index) => {
+            const host = uniqueHosts[index];
+            if (entry.status === "fulfilled") {
+                return entry.value;
+            }
+
+            const error = entry.reason;
+            const output = { ok: false, host, ip: host };
+
+            if (error && typeof error === "object") {
+                if (error.response) {
+                    output.status = error.response.status;
+                    output.statusText = error.response.statusText;
+                    output.error = error.response.data ?? error.response.statusText;
+                } else if (error.message) {
+                    output.error = error.message;
+                } else {
+                    output.error = error;
+                }
+            } else {
+                output.error = error;
+            }
+
+            return output;
+        });
     }
 
     // ====== AUDIT ======
