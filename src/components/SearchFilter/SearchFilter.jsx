@@ -17,37 +17,49 @@ const SearchFilter = () => {
 
   const navigate = useNavigate();
 
-  const dataSearchInfo = async () => {
-    try {
-      setIsLoading(true);
-      const response = await api.searchFilter(keyword);
-
-      if (response.data.length > 0) {
-        setDataSearch(response.data);
-        setNoResults(false);
-        setHasError(false);
-      } else {
-        setDataSearch([]);
-        setNoResults(true);
-        setHasError(false);
-      }
-    } catch (error) {
-      console.error("Error al obtener las señales:", error);
-      setHasError(true);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   useEffect(() => {
+    let cancelled = false;
+
+    const fetchData = async () => {
+      try {
+        setIsLoading(true);
+        const response = await api.searchFilter(keyword);
+
+        if (cancelled) return;
+
+        if (response.data.length > 0) {
+          setDataSearch(response.data);
+          setNoResults(false);
+          setHasError(false);
+        } else {
+          setDataSearch([]);
+          setNoResults(true);
+          setHasError(false);
+        }
+      } catch (error) {
+        if (cancelled) return;
+        console.error("Error al obtener las señales:", error);
+        setHasError(true);
+      } finally {
+        if (!cancelled) {
+          setIsLoading(false);
+        }
+      }
+    };
+
     if (keyword && keyword.trim() !== "") {
-      dataSearchInfo();
+      setImageLoading({});
+      fetchData();
     } else {
       setDataSearch([]);
       setNoResults(true);
       setIsLoading(false);
     }
-  }, [querySearch]);
+
+    return () => {
+      cancelled = true;
+    };
+  }, [keyword]);
 
   const handleClick = (e) => {
     const card = e.target.closest(".card__container");

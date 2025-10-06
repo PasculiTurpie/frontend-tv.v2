@@ -262,7 +262,7 @@ class Api {
     }
     getChannelDiagramBySignal(signalId) {
         if (!signalId) {
-            return this.getChannelDiagramById(id);
+            return Promise.resolve([]);
         }
         return this._axios
             .get(`/channels`, { params: { signal: signalId } })

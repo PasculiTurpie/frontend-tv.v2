@@ -20,7 +20,6 @@ const ModalForm = ({
     handleCancel,
     itemId,
     refreshList,
-    metodo,
 }) => {
     const [polarizations, setPolarizations] = useState([]);
     const [initialValues, setInitialValues] = useState(null);

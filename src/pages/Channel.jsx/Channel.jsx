@@ -20,20 +20,11 @@ const SchemaChannel = Yup.object().shape({
 });
 const Channel = () => {
     const [tipoTechs, setTipoTechs] = useState([]);
-    /* const [contactos, setContactos] = useState([]) */
 
-    const getTipoTech = () => {
+    useEffect(() => {
         api.getTipoTech().then((res) => {
             setTipoTechs(res.data);
         });
-    };
-
-    const refreshList = () => {
-        getTipoTech();
-    };
-
-    useEffect(() => {
-        refreshList();
     }, []);
 
     return (
@@ -66,7 +57,7 @@ const Channel = () => {
                     validationSchema={SchemaChannel}
                     onSubmit={async (values, { resetForm }) => {
                         try {
-                            const response = await api.createSignal(values);
+                            await api.createSignal(values);
                             Swal.fire({
                                 title: "Contacto guardado exitosamente",
                                 icon: "success",

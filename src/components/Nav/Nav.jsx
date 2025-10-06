@@ -6,7 +6,7 @@ import api from "../../utils/api"; // 👈 importante: usamos api.logout()
 import Swal from "sweetalert2";
 
 const Nav = () => {
-    const { isAuth, setIsAuth, setUser, refreshAuth } = useContext(UserContext);
+    const { isAuth, setIsAuth, setUser } = useContext(UserContext);
     const navigate = useNavigate();
 
     const onLogout = async () => {

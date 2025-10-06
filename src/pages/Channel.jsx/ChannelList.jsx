@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import api from "../../utils/api";
 import ModalChannel from "./ModalChannel";
@@ -16,7 +16,7 @@ const ChannelList = () => {
     const [page, setPage] = useState(1);
     const [pageSize, setPageSize] = useState(10);
 
-    const getAllChannel = () => {
+    const refreshList = useCallback(() => {
         setIsLoading(true);
         api
             .getSignal()
@@ -37,15 +37,11 @@ const ChannelList = () => {
                 });
             })
             .finally(() => setIsLoading(false));
-    };
+    }, []);
 
     useEffect(() => {
         refreshList();
-    }, []);
-
-    const refreshList = () => {
-        getAllChannel();
-    };
+    }, [refreshList]);
 
     // Datos paginados
     const total = channels.length;

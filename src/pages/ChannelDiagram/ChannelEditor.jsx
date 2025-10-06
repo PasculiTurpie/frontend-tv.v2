@@ -76,11 +76,12 @@ function ChannelEditor() {
       }));
       setChannels(options);
     } catch (error) {
+      console.error("No se pudo cargar las señales", error);
       Swal.fire("Error", "No se pudo cargar las señales", "error");
     }
   };
 
-  const loadChannelBySignal = async (signalId) => {
+  const loadChannelBySignal = useCallback(async (signalId) => {
     if (!signalId) {
       setChannelData(null);
       setNodes([]);
@@ -104,11 +105,12 @@ function ChannelEditor() {
         setEdges([]);
       }
     } catch (error) {
+      console.error("Error al cargar el canal", error);
       Swal.fire("Error", "Error al cargar el canal", "error");
     } finally {
       setLoading(false);
     }
-  };
+  }, [setChannelData, setEdges, setLoading, setNodes]);
 
   useEffect(() => {
     loadSignals();
@@ -116,7 +118,7 @@ function ChannelEditor() {
 
   useEffect(() => {
     loadChannelBySignal(selectedSignal?.value);
-  }, [selectedSignal]);
+  }, [loadChannelBySignal, selectedSignal]);
 
   const onConnect = useCallback(
     (connection) => {

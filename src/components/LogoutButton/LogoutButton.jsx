@@ -1,4 +1,3 @@
-import axios from "axios";
 import { useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import { UserContext } from "../context/UserContext";
@@ -7,11 +6,8 @@ import './LogoutButton.css'
 import api from "../../utils/api";
 
 const LogoutButton = () => {
-  const { setUser, user, setIsAuth } = useContext(UserContext);
+  const { setUser, setIsAuth } = useContext(UserContext);
   const navigate = useNavigate();
-
-  // Validar que user exista antes de destructurar email
-  const email = user?.email;
 
   const handleLogout = async () => {
     try {

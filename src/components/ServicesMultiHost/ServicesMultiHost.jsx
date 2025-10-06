@@ -50,9 +50,14 @@ const COL_WIDTHS = {
 /* ───────────────────────── utils ───────────────────────── */
 
 function b64Basic(user, pass) {
-  return typeof btoa === "function"
-    ? btoa(`${user}:${pass}`)
-    : Buffer.from(`${user}:${pass}`).toString("base64");
+  const raw = `${user}:${pass}`;
+  if (typeof btoa === "function") {
+    return btoa(raw);
+  }
+  if (typeof globalThis !== "undefined" && globalThis.Buffer) {
+    return globalThis.Buffer.from(raw, "utf8").toString("base64");
+  }
+  throw new Error("No base64 encoder available in this environment");
 }
 
 function pickFirst(...cands) {

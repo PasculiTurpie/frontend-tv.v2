@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import api from "../../utils/api";
 import Swal from "sweetalert2";
@@ -16,7 +16,7 @@ const ContactoList = () => {
     const [page, setPage] = useState(1);
     const [pageSize, setPageSize] = useState(10);
 
-    const getAllContact = () => {
+    const refreshList = useCallback(() => {
         setIsLoading(true);
         api
             .getContact()
@@ -40,13 +40,11 @@ const ContactoList = () => {
                 });
             })
             .finally(() => setIsLoading(false));
-    };
-
-    const refreshList = () => getAllContact();
+    }, []);
 
     useEffect(() => {
         refreshList();
-    }, []);
+    }, [refreshList]);
 
     const deleteContact = async (id) => {
         const result = await Swal.fire({

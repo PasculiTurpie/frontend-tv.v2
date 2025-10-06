@@ -34,7 +34,7 @@ const Contacto = () => {
                     validationSchema={SchemaContacto}
                     onSubmit={async (values, { resetForm }) => {
                         try {
-                            const response = await api.createContact(values);
+                            await api.createContact(values);
                             Swal.fire({
                                 title: "Contacto guardado exitosamente",
                                 icon: "success",

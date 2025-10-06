@@ -45,7 +45,7 @@ const IrdSchema = Yup.object().shape({
 });
 
 // ------------------------ COMPONENTE ------------------------
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 
 const IrdForm = () => {
     const [tipoMap, setTipoMap] = useState({}); // { 'ird': ObjectId, ... }
@@ -90,7 +90,8 @@ const IrdForm = () => {
                 setTipoMap((prev) => ({ ...prev, [key]: id }));
                 return id;
             }
-        } catch (e) {
+        } catch (error) {
+            console.warn("No se pudo crear TipoEquipo 'ird'", error);
             // Si falla crear, reintenta refrescar el listado por si existe
             try {
                 const res = await api.getTipoEquipo();
@@ -102,8 +103,8 @@ const IrdForm = () => {
                     setTipoMap((prev) => ({ ...prev, [key]: found._id }));
                     return found._id;
                 }
-            } catch (e2) {
-                // no-op
+            } catch (refreshError) {
+                console.warn("No se pudo refrescar TipoEquipo tras error", refreshError);
             }
             throw new Error("No existe ni se pudo crear el TipoEquipo 'ird'.");
         }

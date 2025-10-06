@@ -71,7 +71,7 @@ const ModalEquipment = ({
         }
       }}
     >
-      {({ errors, touched }) => (
+      {() => (
         <ModalComponent modalOpen={modalOpen} title={title} setModalOpen={setModalOpen}>
           <Form className={stylesEquipment.form__add}>
             <div className={stylesEquipment.rows__group}>

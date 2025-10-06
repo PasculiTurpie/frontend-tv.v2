@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import Loader from "../../components/Loader/Loader";
 import api from "../../utils/api";
@@ -16,7 +16,7 @@ const IrdListar = () => {
     const [page, setPage] = useState(1);
     const [pageSize, setPageSize] = useState(10);
 
-    const getAllIrds = () => {
+    const refreshList = useCallback(() => {
         setIsLoading(true);
         api
             .getIrd()
@@ -39,15 +39,11 @@ const IrdListar = () => {
                 });
             })
             .finally(() => setIsLoading(false));
-    };
+    }, []);
 
     useEffect(() => {
         refreshList();
-    }, []);
-
-    const refreshList = () => {
-        getAllIrds();
-    };
+    }, [refreshList]);
 
     const deleteEncoderIrd = async (id) => {
         const result = await Swal.fire({

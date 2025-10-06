@@ -11,3 +11,5 @@ const normalizeHandle = (h) => {
   // si viene algo inesperado, mejor no forzar
   return undefined;
 };
+
+export default normalizeHandle;

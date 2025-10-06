@@ -1,5 +1,5 @@
 import { Form, Formik } from "formik";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import * as Yup from "yup";
 import Swal from "sweetalert2";
@@ -36,7 +36,7 @@ const ListEquipment = () => {
     const rangeStart = total === 0 ? 0 : (page - 1) * pageSize + 1;
     const rangeEnd = Math.min(page * pageSize, total);
 
-    const getAllEquipos = () => {
+    const refreshList = useCallback(() => {
         setIsLoading(true);
         api
             .getEquipo()
@@ -52,15 +52,11 @@ const ListEquipment = () => {
                 });
             })
             .finally(() => setIsLoading(false));
-    };
+    }, []);
 
     useEffect(() => {
         refreshList();
-    }, []);
-
-    const refreshList = () => {
-        getAllEquipos();
-    };
+    }, [refreshList]);
 
     const deleteEquipment = async (id) => {
         const result = await Swal.fire({
