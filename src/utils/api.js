@@ -1,4 +1,12 @@
 import axios from "axios";
+import {
+    clearPersistedExpiry,
+    getCurrentExpiry,
+    normalizeDuration,
+    normalizeExpiry,
+    persistExpiry,
+    readCookieExpiry,
+} from "./sessionExpiry";
 
 // --- Control de refresh único + cola ---
 let isRefreshing = false;
@@ -50,6 +58,96 @@ function normalizeTitanOptions(pathOrOptions) {
     return {};
 }
 
+function extractExpiryFromData(data) {
+    if (!data || typeof data !== "object") return null;
+
+    const directKeys = [
+        "at_exp",
+        "accessExp",
+        "access_exp",
+        "accessTokenExp",
+        "accessTokenExpiresAt",
+        "access_token_exp",
+        "access_token_expires_at",
+        "expiresAt",
+        "exp",
+        "tokenExp",
+        "token_exp",
+        "expires",
+    ];
+
+    const durationKeys = [
+        "expiresIn",
+        "expires_in",
+        "accessExpiresIn",
+        "access_expires_in",
+        "accessTokenExpiresIn",
+        "ttl",
+    ];
+
+    const sources = [
+        data,
+        data.meta,
+        data.access,
+        data.token,
+        data.tokens,
+        data.tokens?.access,
+        data.session,
+        data.session?.access,
+    ];
+
+    for (const source of sources) {
+        if (!source || typeof source !== "object") continue;
+
+        for (const key of directKeys) {
+            if (Object.prototype.hasOwnProperty.call(source, key)) {
+                const expMs = normalizeExpiry(source[key]);
+                if (expMs) return expMs;
+            }
+        }
+
+        for (const key of durationKeys) {
+            if (Object.prototype.hasOwnProperty.call(source, key)) {
+                const expMs = normalizeDuration(source[key]);
+                if (expMs) return expMs;
+            }
+        }
+    }
+
+    return null;
+}
+
+function resolveAndPersistExpiry(response) {
+    const dataExpiry = extractExpiryFromData(response?.data);
+    const cookieExpiry = readCookieExpiry();
+    const existing = cookieExpiry ?? getCurrentExpiry();
+    const candidate = dataExpiry ?? cookieExpiry ?? existing ?? null;
+    const persisted = persistExpiry(candidate);
+    return persisted ?? candidate ?? existing ?? null;
+}
+
+function dispatchAuthEvent(name, expiresAt) {
+    window.dispatchEvent(
+        new CustomEvent(name, {
+            detail: {
+                expiresAt: expiresAt ?? null,
+            },
+        })
+    );
+}
+
+function handleAuthLogin(response) {
+    const expiresAt = resolveAndPersistExpiry(response);
+    dispatchAuthEvent("auth:login", expiresAt);
+    return expiresAt;
+}
+
+function handleAuthRefresh(response) {
+    const expiresAt = resolveAndPersistExpiry(response);
+    dispatchAuthEvent("auth:refreshed", expiresAt);
+    return expiresAt;
+}
+
 class Api {
     constructor(url) {
         this._axios = axios.create({ baseURL: url, withCredentials: true });
@@ -79,14 +177,13 @@ class Api {
                             .then((r) => {
                                 isRefreshing = false;
                                 onRefreshed();
-                                window.dispatchEvent(
-                                    new Event("auth:refreshed")
-                                );
+                                handleAuthRefresh(r);
                                 return r;
                             })
                             .catch((e) => {
                                 isRefreshing = false;
                                 onRefreshed();
+                                clearPersistedExpiry();
                                 throw e;
                             });
                     }
@@ -111,13 +208,23 @@ class Api {
     // ====== AUTH ======
     login(values) {
         return this._axios.post("/auth/login", values).then((res) => {
-            window.dispatchEvent(new Event("auth:login"));
+            handleAuthLogin(res);
             return res.data;
         });
     }
 
     logout() {
-        return this._axios.post("/auth/logout").then((res) => res.data);
+        return this._axios.post("/auth/logout").then((res) => {
+            clearPersistedExpiry();
+            return res.data;
+        });
+    }
+
+    refresh() {
+        return this._axios.post("/auth/refresh").then((res) => {
+            handleAuthRefresh(res);
+            return res.data;
+        });
     }
 
     profile() {
