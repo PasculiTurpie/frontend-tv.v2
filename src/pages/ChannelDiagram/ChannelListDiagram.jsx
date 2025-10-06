@@ -96,7 +96,7 @@ const ChannelListDiagram = () => {
   );
 
   return (
-    <div className="outlet-main" style={{ maxWidth: 900, margin: "auto" }}>
+    <div className="outlet-main" style={{ maxWidth: 900, margin: "0 auto" }}>
       <h2>Lista de Channels</h2>
       <button
         className="button btn-primary"
