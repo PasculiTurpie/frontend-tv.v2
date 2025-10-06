@@ -1,6 +1,7 @@
 // src/pages/ChannelDiagram/RouterNode.jsx
-import React, { useCallback, useRef, useState } from "react";
+import React, { useCallback, useContext, useRef, useState } from "react";
 import { Handle, Position, useReactFlow } from "@xyflow/react";
+import { UserContext } from "../../components/context/UserContext";
 
 const styles = {
   box: {
@@ -30,17 +31,20 @@ const vSlots = [6, 17, 28, 39, 50, 61, 72, 83, 94]; // 9 puertos verticales
 
 export default function RouterNode({ id, data }) {
   const rf = useReactFlow();
+  const { isAuth } = useContext(UserContext);
   const [editing, setEditing] = useState(false);
   const [value, setValue] = useState(() => data?.label ?? "Router");
   const inputRef = useRef(null);
 
   const startEdit = useCallback((e) => {
+    if (!isAuth) return;
     e.stopPropagation();
     setValue(String(data?.label ?? "Router"));
     setEditing(true);
-  }, [data?.label]);
+  }, [data?.label, isAuth]);
 
   const commit = useCallback(() => {
+    if (!isAuth) return;
     setEditing(false);
     rf.setNodes((nds) =>
       nds.map((n) =>
@@ -49,7 +53,7 @@ export default function RouterNode({ id, data }) {
     );
     // que el autosave arriba escuche
     window.dispatchEvent(new Event("flow:save"));
-  }, [id, value, rf]);
+  }, [id, value, rf, isAuth]);
 
   const onKeyDown = useCallback((e) => {
     if (e.key === "Enter") commit();
@@ -62,7 +66,11 @@ export default function RouterNode({ id, data }) {
   return (
     <div style={styles.box} title={data?.tooltip || data?.label || "Router"}>
       {!editing ? (
-        <div style={styles.title} onDoubleClick={startEdit} title="Doble click para editar">
+        <div
+          style={{ ...styles.title, cursor: isAuth ? "text" : "default" }}
+          onDoubleClick={startEdit}
+          title={isAuth ? "Doble click para editar" : "Solo lectura"}
+        >
           {data?.label ?? "Router"}
         </div>
       ) : (

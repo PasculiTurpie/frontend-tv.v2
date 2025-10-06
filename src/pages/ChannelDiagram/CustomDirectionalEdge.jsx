@@ -1,11 +1,12 @@
 // src/pages/ChannelDiagram/CustomDirectionalEdge.jsx
-import React, { useCallback, useMemo, useRef, useState } from "react";
+import React, { useCallback, useContext, useMemo, useRef, useState } from "react";
 import {
   BaseEdge,
   EdgeLabelRenderer,
   getSmoothStepPath,
   useReactFlow,
 } from "@xyflow/react";
+import { UserContext } from "../../components/context/UserContext";
 
 /** Offset para separar visualmente ida/vuelta */
 const PARALLEL_OFFSET = 10;
@@ -35,7 +36,7 @@ function offsetPathStep({
 }
 
 /** Label editable + draggable (centro) */
-function EditableDraggableLabel({ id, x, y, text, onDragStart, onDragMove, onDragEnd }) {
+function EditableDraggableLabel({ id, x, y, text, onDragStart, onDragMove, onDragEnd, canEdit }) {
   const rf = useReactFlow();
   const dragRef = useRef({ dragging: false, startOffset: { x: 0, y: 0 } });
   const [editing, setEditing] = useState(false);
@@ -43,13 +44,15 @@ function EditableDraggableLabel({ id, x, y, text, onDragStart, onDragMove, onDra
   const inputRef = useRef(null);
 
   const startEdit = useCallback((e) => {
+    if (!canEdit) return;
     e.stopPropagation();
     e.preventDefault();
     setValue(String(text ?? ""));
     setEditing(true);
-  }, [text]);
+  }, [text, canEdit]);
 
   const commit = useCallback(() => {
+    if (!canEdit) return;
     setEditing(false);
     rf.setEdges((eds) =>
       eds.map((e) =>
@@ -57,7 +60,7 @@ function EditableDraggableLabel({ id, x, y, text, onDragStart, onDragMove, onDra
       )
     );
     window.dispatchEvent(new Event("flow:save")); // autosave arriba
-  }, [id, value, rf]);
+  }, [id, value, rf, canEdit]);
 
   const onKeyDown = useCallback((e) => {
     if (e.key === "Enter") commit();
@@ -69,7 +72,7 @@ function EditableDraggableLabel({ id, x, y, text, onDragStart, onDragMove, onDra
 
   const onPointerDown = useCallback(
     (e) => {
-      if (editing) return;
+      if (editing || !canEdit) return;
       e.stopPropagation();
       e.preventDefault();
 
@@ -115,7 +118,7 @@ function EditableDraggableLabel({ id, x, y, text, onDragStart, onDragMove, onDra
       window.addEventListener("touchmove", onMove, { passive: false });
       window.addEventListener("touchend", onUp);
     },
-    [editing, x, y, rf, onDragStart, onDragMove, onDragEnd]
+    [editing, canEdit, x, y, rf, onDragStart, onDragMove, onDragEnd]
   );
 
   return (
@@ -135,12 +138,12 @@ function EditableDraggableLabel({ id, x, y, text, onDragStart, onDragMove, onDra
             padding: "4px 8px",
             fontSize: 12,
             boxShadow: "0 1px 4px rgba(0,0,0,0.08)",
-            cursor: "grab",
+            cursor: canEdit ? "grab" : "default",
             userSelect: "none",
             whiteSpace: "nowrap",
           }}
           className="nodrag nopan"
-          title="Doble click para editar. Arrastra para mover."
+          title={canEdit ? "Doble click para editar. Arrastra para mover." : "Solo lectura"}
         >
           {text}
         </div>
@@ -189,6 +192,7 @@ export default function CustomDirectionalEdge(props) {
   } = props;
 
   const rf = useReactFlow();
+  const { isAuth } = useContext(UserContext);
   const isReverse = !!data?.__reversed;
 
   // Path + punto central
@@ -216,12 +220,13 @@ export default function CustomDirectionalEdge(props) {
   // Arrastre del label central (para guardar en store)
   const onDragStart = useCallback(() => { }, []);
   const onDragMove = useCallback((next) => {
+    if (!isAuth) return;
     rf.setEdges((eds) =>
       eds.map((e) =>
         e.id === id ? { ...e, data: { ...(e.data || {}), labelPos: next } } : e
       )
     );
-  }, [rf, id]);
+  }, [rf, id, isAuth]);
   const onDragEnd = useCallback(() => { }, []);
 
   // Posición del badge multicast cerca del ORIGEN del enlace
@@ -249,6 +254,7 @@ export default function CustomDirectionalEdge(props) {
         onDragStart={onDragStart}
         onDragMove={onDragMove}
         onDragEnd={onDragEnd}
+        canEdit={isAuth}
       />
 
       {/* Badge multicast (solo si existe) */}
