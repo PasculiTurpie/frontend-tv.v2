@@ -4,7 +4,7 @@ import api from "../../utils/api";
 
 /**
  * Listado de Señales desde múltiples hosts Titan
- * - Consulta en paralelo las APIs Titans a través del backend (/api/v2/titans)
+ * - Consulta en paralelo las APIs Titans directamente (sin proxy intermedio)
  * - Columnas: Name, Input.IPInputList.Url, Outputs[0].Outputs, Fuente (pattern/still/live/fail), State.State
  * - Botón Exportar CSV (aplica al filtrado)
  */
