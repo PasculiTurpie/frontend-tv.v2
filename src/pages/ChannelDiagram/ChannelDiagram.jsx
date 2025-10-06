@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, useCallback, useRef } from "react";
+import { useEffect, useMemo, useState, useCallback, useRef, useContext } from "react";
 import {
   ReactFlow,
   Background,
@@ -16,6 +16,7 @@ import RouterNode from "./RouterNode";
 import CustomDirectionalEdge from "./CustomDirectionalEdge";
 import CustomWaypointEdge from "./CustomWaypointEdge";
 import "./ChannelDiagram.css";
+import { UserContext } from "../../components/context/UserContext";
 
 /* ───────── utils ───────── */
 
@@ -154,6 +155,9 @@ const ChannelDiagram = () => {
     []
   );
 
+  const { isAuth } = useContext(UserContext);
+  const isReadOnly = !isAuth;
+
   const [loading, setLoading] = useState(true);
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
@@ -197,6 +201,18 @@ const ChannelDiagram = () => {
   }, [saveDiagram]);
 
   useEffect(() => {
+    const handleFlowSave = () => {
+      if (!isAuth) return;
+      requestSave();
+    };
+
+    window.addEventListener("flow:save", handleFlowSave);
+    return () => {
+      window.removeEventListener("flow:save", handleFlowSave);
+    };
+  }, [isAuth, requestSave]);
+
+  useEffect(() => {
     let cancelled = false;
     (async () => {
       try {
@@ -236,12 +252,14 @@ const ChannelDiagram = () => {
 
   // Drag de nodos: guardamos al soltar
   const handleNodeDragStop = useCallback(() => {
+    if (!isAuth) return;
     requestSave();
-  }, [requestSave]);
+  }, [isAuth, requestSave]);
 
   // Reconexión de edges
   const handleEdgeUpdate = useCallback(
     (oldEdge, newConnection) => {
+      if (!isAuth) return;
       setEdges((eds) =>
         eds.map((e) =>
           e.id === oldEdge.id
@@ -258,12 +276,13 @@ const ChannelDiagram = () => {
       );
       requestSave();
     },
-    [setEdges, requestSave]
+    [isAuth, setEdges, requestSave]
   );
 
   // Crear nuevos edges
   const handleConnect = useCallback(
     (connection) => {
+      if (!isAuth) return;
       const direction = "ida";
       const color = getEdgeColor(undefined, direction);
       setEdges((eds) =>
@@ -284,7 +303,7 @@ const ChannelDiagram = () => {
       );
       requestSave();
     },
-    [setEdges, requestSave]
+    [isAuth, setEdges, requestSave]
   );
 
   // Passthrough para que React Flow actualice posiciones
@@ -310,17 +329,22 @@ const ChannelDiagram = () => {
   }
 
   return (
-    <div style={{ width: "100%", height: "100vh" }}>
+    <div style={{ width: "100%", height: "100vh", position: "relative" }}>
+      {isReadOnly && (
+        <div className="diagram-readonly-banner">
+          Modo solo lectura. Inicia sesión para editar el diagrama.
+        </div>
+      )}
       <ReactFlow
         style={{ width: "100%", height: "100%" }}
         nodes={nodes}
         edges={edges}
         nodeTypes={nodeTypes}
         edgeTypes={edgeTypes}
-        nodesDraggable={true}
-        nodesConnectable={true}
+        nodesDraggable={isAuth}
+        nodesConnectable={isAuth}
         elementsSelectable={true}
-        edgesUpdatable={true}
+        edgesUpdatable={isAuth}
         edgeUpdaterRadius={20}
         onNodeDragStop={handleNodeDragStop}
         onEdgeUpdate={handleEdgeUpdate}
