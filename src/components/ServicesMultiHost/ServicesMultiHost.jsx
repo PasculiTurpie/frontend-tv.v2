@@ -628,7 +628,7 @@ export default function ServicesMultiHost() {
         }
       `}</style>
 
-      <h2 style={{ margin: 0, marginBottom: 8 }}>Listado de señales (Titan)</h2>
+      <h2 style={{ margin: 0, marginBottom: 8 }}>Listado de señales (Titan)</h2> <h5 className="total-titans">Total {filtered.length} señales</h5>
 
       <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 12 }}>
         <input
