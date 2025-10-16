@@ -2,7 +2,11 @@
 import { useEffect, useRef } from "react";
 import Swal from "sweetalert2";
 import api from "../utils/api";
-import { getCookie } from "../utils/cookies";
+import {
+  clearPersistedExpiry,
+  getCurrentExpiry,
+  persistExpiry,
+} from "../utils/sessionExpiry";
 
 const WARN_SECONDS = 60;         // mostrar modal cuando falten <= 60s
 const AUTO_REFRESH_SECONDS = 30; // auto-refresh cuando falten <= 30s
@@ -18,13 +22,10 @@ export default function useSessionRefresher() {
     if (countdownInterval.current) clearInterval(countdownInterval.current);
   };
 
-  const scheduleFromCookie = () => {
+  const scheduleFromExpiry = (explicit) => {
     clearAll();
-    const atExpStr = getCookie("at_exp");
-    if (!atExpStr) return;
-
-    const expMs = parseInt(atExpStr, 10) * 1000;
-    if (!Number.isFinite(expMs)) return;
+    const expMs = explicit ? persistExpiry(explicit) ?? getCurrentExpiry() : getCurrentExpiry();
+    if (!expMs) return;
 
     const msToExp = expMs - Date.now();
     if (msToExp <= 0) return;
@@ -41,9 +42,8 @@ export default function useSessionRefresher() {
   };
 
   const showWarningModal = () => {
-    const atExpStr = getCookie("at_exp");
-    if (!atExpStr) return;
-    const expMs = parseInt(atExpStr, 10) * 1000;
+    const expMs = getCurrentExpiry();
+    if (!expMs) return;
 
     Swal.fire({
       title: "Tu sesión está por expirar",
@@ -75,43 +75,46 @@ export default function useSessionRefresher() {
         await api.logout();
         Swal.fire({ icon: "success", title: "Usuario deslogueado", timer: 1200, showConfirmButton: false });
         window.location.href = "/auth/login";
+        clearPersistedExpiry();
       }
     });
   };
 
   const manualRefresh = async () => {
     try {
-      await api._axios.post("/auth/refresh");
+      await api.refresh();
       Swal.fire({ icon: "success", title: "Sesión renovada", timer: 1200, showConfirmButton: false });
-      scheduleFromCookie();
+      scheduleFromExpiry();
     } catch {
       Swal.fire({ icon: "error", title: "No se pudo renovar", text: "Vuelve a iniciar sesión" });
       await api.logout();
       window.location.href = "/auth/login";
+      clearPersistedExpiry();
     }
   };
 
   const autoRefresh = async () => {
     try {
-      await api._axios.post("/auth/refresh");
-      scheduleFromCookie();
+      await api.refresh();
+      scheduleFromExpiry();
     } catch {
       Swal.fire({ icon: "error", title: "Sesión expirada", text: "Por favor inicia sesión nuevamente" });
       await api.logout();
       window.location.href = "/auth/login";
+      clearPersistedExpiry();
     }
   };
 
   const onVisibility = () => {
-    if (document.visibilityState === "visible") scheduleFromCookie();
+    if (document.visibilityState === "visible") scheduleFromExpiry();
   };
 
   // ▶️ Nuevo: reprogramar después de login/refresh
-  const onAuthLogin = () => scheduleFromCookie();
-  const onAuthRefreshed = () => scheduleFromCookie();
+  const onAuthLogin = (event) => scheduleFromExpiry(event?.detail?.expiresAt);
+  const onAuthRefreshed = (event) => scheduleFromExpiry(event?.detail?.expiresAt);
 
   useEffect(() => {
-    scheduleFromCookie();
+    scheduleFromExpiry();
     document.addEventListener("visibilitychange", onVisibility);
     window.addEventListener("auth:login", onAuthLogin);
     window.addEventListener("auth:refreshed", onAuthRefreshed);
